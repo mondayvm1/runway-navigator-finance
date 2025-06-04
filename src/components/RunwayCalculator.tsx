@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import RunwayChart from "./RunwayChart";
 import NetWorthSummary from "./NetWorthSummary";
 import AccountSection, { AccountItem } from "./AccountSection";
 import SnapshotManager from "./SnapshotManager";
+import SnapshotChart from "./SnapshotChart";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
@@ -82,10 +84,29 @@ const RunwayCalculator = () => {
     return total;
   };
 
-  const addAccount = (category: keyof typeof accountData, defaultName: string = "New Account") => {
+  const getDefaultAccountName = (category: keyof typeof accountData): string => {
+    const categoryNames = {
+      cash: 'Checking Account',
+      investments: 'Investment Account',
+      credit: 'Credit Card',
+      loans: 'Personal Loan',
+      otherAssets: 'Real Estate'
+    };
+    
+    const existingCount = accountData[category].length;
+    const baseName = categoryNames[category];
+    
+    if (existingCount === 0) {
+      return baseName;
+    }
+    
+    return `${baseName} ${existingCount + 1}`;
+  };
+
+  const addAccount = (category: keyof typeof accountData) => {
     const newAccount: AccountItem = {
       id: uuidv4(),
-      name: defaultName,
+      name: getDefaultAccountName(category),
       balance: 0
     };
     
@@ -137,6 +158,8 @@ const RunwayCalculator = () => {
       
       <SnapshotManager onCreateSnapshot={createSnapshot} onSaveData={saveData} />
       
+      <SnapshotChart />
+      
       <NetWorthSummary 
         assets={getTotalAssets()} 
         liabilities={getTotalLiabilities()}
@@ -148,7 +171,7 @@ const RunwayCalculator = () => {
           accounts={accountData.cash}
           icon={<Wallet size={18} className="text-green-600" />}
           isHidden={hiddenCategories.cash}
-          onAddAccount={() => addAccount('cash', 'New Cash Account')}
+          onAddAccount={() => addAccount('cash')}
           onUpdateAccount={(id, balance) => updateAccount('cash', id, balance)}
           onUpdateAccountName={(id, name) => handleUpdateAccountName('cash', id, name)}
           onToggleHidden={() => toggleCategoryHidden('cash')}
@@ -159,7 +182,7 @@ const RunwayCalculator = () => {
           accounts={accountData.investments}
           icon={<ChartPie size={18} className="text-blue-600" />}
           isHidden={hiddenCategories.investments}
-          onAddAccount={() => addAccount('investments', 'New Investment')}
+          onAddAccount={() => addAccount('investments')}
           onUpdateAccount={(id, balance) => updateAccount('investments', id, balance)}
           onUpdateAccountName={(id, name) => handleUpdateAccountName('investments', id, name)}
           onToggleHidden={() => toggleCategoryHidden('investments')}
@@ -171,7 +194,7 @@ const RunwayCalculator = () => {
           icon={<CreditCard size={18} className="text-red-600" />}
           isNegative={true}
           isHidden={hiddenCategories.credit}
-          onAddAccount={() => addAccount('credit', 'New Credit Card')}
+          onAddAccount={() => addAccount('credit')}
           onUpdateAccount={(id, balance) => updateAccount('credit', id, balance)}
           onUpdateAccountName={(id, name) => handleUpdateAccountName('credit', id, name)}
           onToggleHidden={() => toggleCategoryHidden('credit')}
@@ -183,7 +206,7 @@ const RunwayCalculator = () => {
           icon={<BadgeEuro size={18} className="text-orange-600" />}
           isNegative={true}
           isHidden={hiddenCategories.loans}
-          onAddAccount={() => addAccount('loans', 'New Loan')}
+          onAddAccount={() => addAccount('loans')}
           onUpdateAccount={(id, balance) => updateAccount('loans', id, balance)}
           onUpdateAccountName={(id, name) => handleUpdateAccountName('loans', id, name)}
           onToggleHidden={() => toggleCategoryHidden('loans')}
@@ -194,7 +217,7 @@ const RunwayCalculator = () => {
           accounts={accountData.otherAssets}
           icon={<Coins size={18} className="text-purple-600" />}
           isHidden={hiddenCategories.otherAssets}
-          onAddAccount={() => addAccount('otherAssets', 'New Asset')}
+          onAddAccount={() => addAccount('otherAssets')}
           onUpdateAccount={(id, balance) => updateAccount('otherAssets', id, balance)}
           onUpdateAccountName={(id, name) => handleUpdateAccountName('otherAssets', id, name)}
           onToggleHidden={() => toggleCategoryHidden('otherAssets')}

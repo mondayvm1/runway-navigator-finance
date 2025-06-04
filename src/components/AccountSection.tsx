@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Eye, EyeOff } from "lucide-react";
 import { formatCurrency } from "../utils/formatters";
 
 export interface AccountItem {
@@ -15,8 +15,10 @@ interface AccountSectionProps {
   accounts: AccountItem[];
   icon: React.ReactNode;
   isNegative?: boolean;
+  isHidden?: boolean;
   onAddAccount?: () => void;
   onUpdateAccount?: (id: string, balance: number) => void;
+  onToggleHidden?: () => void;
 }
 
 const AccountSection = ({ 
@@ -24,8 +26,10 @@ const AccountSection = ({
   accounts, 
   icon, 
   isNegative = false,
+  isHidden = false,
   onAddAccount,
-  onUpdateAccount
+  onUpdateAccount,
+  onToggleHidden
 }: AccountSectionProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
@@ -45,8 +49,21 @@ const AccountSection = ({
             {title}
           </span>
         </div>
-        <div className={`font-semibold ${isNegative ? 'text-red-600' : ''}`}>
-          {formatCurrency(displayBalance)}
+        <div className="flex items-center gap-2">
+          <div className={`font-semibold ${isNegative ? 'text-red-600' : ''} ${isHidden ? 'opacity-50' : ''}`}>
+            {isHidden ? '***' : formatCurrency(displayBalance)}
+          </div>
+          {onToggleHidden && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleHidden();
+              }}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              {isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          )}
         </div>
       </div>
       

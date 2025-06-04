@@ -7,66 +7,44 @@ import { toast } from "sonner";
 import RunwayChart from "./RunwayChart";
 import NetWorthSummary from "./NetWorthSummary";
 import AccountSection, { AccountItem } from "./AccountSection";
-import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie } from "lucide-react";
+import SnapshotManager from "./SnapshotManager";
+import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
-
-interface AccountData {
-  cash: AccountItem[];
-  investments: AccountItem[];
-  credit: AccountItem[];
-  loans: AccountItem[];
-  otherAssets: AccountItem[];
-}
-
-const defaultAccountData: AccountData = {
-  cash: [{ id: uuidv4(), name: "Checking", balance: 1500 }],
-  investments: [{ id: uuidv4(), name: "Brokerage", balance: 5000 }],
-  credit: [{ id: uuidv4(), name: "Credit Card", balance: 2500 }],
-  loans: [{ id: uuidv4(), name: "Student Loan", balance: 15000 }],
-  otherAssets: [{ id: uuidv4(), name: "Car", balance: 12000 }],
-};
+import { useAuth } from '@/hooks/useAuth';
+import { useFinancialData } from '@/hooks/useFinancialData';
 
 const RunwayCalculator = () => {
-  const [accountData, setAccountData] = useState<AccountData>(defaultAccountData);
-  const [monthlyExpenses, setMonthlyExpenses] = useState(2500);
+  const { user, signOut } = useAuth();
+  const {
+    accountData,
+    setAccountData,
+    monthlyExpenses,
+    setMonthlyExpenses,
+    hiddenCategories,
+    setHiddenCategories,
+    saveData,
+    createSnapshot,
+  } = useFinancialData();
+
   const [runway, setRunway] = useState({
     days: 0,
     months: 0,
   });
 
   useEffect(() => {
-    // Load saved data from localStorage when component mounts
-    const savedData = localStorage.getItem("financeRunwayData");
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        setAccountData(parsedData.accountData || defaultAccountData);
-        setMonthlyExpenses(parsedData.monthlyExpenses || 2500);
-        calculateRunway(parsedData.accountData || defaultAccountData, parsedData.monthlyExpenses || 2500);
-      } catch (error) {
-        console.error("Error parsing saved data:", error);
-      }
-    }
-  }, []);
+    calculateRunway();
+  }, [accountData, monthlyExpenses, hiddenCategories]);
 
-  useEffect(() => {
-    // Save data to localStorage whenever it changes
-    localStorage.setItem("financeRunwayData", JSON.stringify({
-      accountData,
-      monthlyExpenses
-    }));
-  }, [accountData, monthlyExpenses]);
-
-  const calculateRunway = (accounts: AccountData, expenses: number) => {
-    if (expenses <= 0) {
+  const calculateRunway = () => {
+    if (monthlyExpenses <= 0) {
       setRunway({ days: 0, months: 0 });
       return;
     }
 
-    const totalCash = accounts.cash.reduce((sum, account) => sum + account.balance, 0);
-    const dailyExpenses = expenses / 30;
+    const totalCash = accountData.cash.reduce((sum, account) => sum + account.balance, 0);
+    const dailyExpenses = monthlyExpenses / 30;
     const totalDays = Math.floor(totalCash / dailyExpenses);
-    const totalMonths = (totalCash / expenses).toFixed(1);
+    const totalMonths = (totalCash / monthlyExpenses).toFixed(1);
 
     setRunway({
       days: totalDays,
@@ -75,31 +53,36 @@ const RunwayCalculator = () => {
   };
 
   const handleCalculate = () => {
-    calculateRunway(accountData, monthlyExpenses);
+    calculateRunway();
     toast.success("Financial overview updated!");
   };
 
-  const handleReset = () => {
-    setAccountData(defaultAccountData);
-    setMonthlyExpenses(2500);
-    calculateRunway(defaultAccountData, 2500);
-    toast.info("Values have been reset");
-  };
-
   const getTotalAssets = (): number => {
-    const cashTotal = accountData.cash.reduce((sum, account) => sum + account.balance, 0);
-    const investmentsTotal = accountData.investments.reduce((sum, account) => sum + account.balance, 0);
-    const otherAssetsTotal = accountData.otherAssets.reduce((sum, account) => sum + account.balance, 0);
-    return cashTotal + investmentsTotal + otherAssetsTotal;
+    let total = 0;
+    if (!hiddenCategories.cash) {
+      total += accountData.cash.reduce((sum, account) => sum + account.balance, 0);
+    }
+    if (!hiddenCategories.investments) {
+      total += accountData.investments.reduce((sum, account) => sum + account.balance, 0);
+    }
+    if (!hiddenCategories.otherAssets) {
+      total += accountData.otherAssets.reduce((sum, account) => sum + account.balance, 0);
+    }
+    return total;
   };
 
   const getTotalLiabilities = (): number => {
-    const creditTotal = accountData.credit.reduce((sum, account) => sum + account.balance, 0);
-    const loansTotal = accountData.loans.reduce((sum, account) => sum + account.balance, 0);
-    return creditTotal + loansTotal;
+    let total = 0;
+    if (!hiddenCategories.credit) {
+      total += accountData.credit.reduce((sum, account) => sum + account.balance, 0);
+    }
+    if (!hiddenCategories.loans) {
+      total += accountData.loans.reduce((sum, account) => sum + account.balance, 0);
+    }
+    return total;
   };
 
-  const addAccount = (category: keyof AccountData, defaultName: string = "New Account") => {
+  const addAccount = (category: keyof typeof accountData, defaultName: string = "New Account") => {
     const newAccount: AccountItem = {
       id: uuidv4(),
       name: defaultName,
@@ -112,7 +95,7 @@ const RunwayCalculator = () => {
     }));
   };
 
-  const updateAccount = (category: keyof AccountData, id: string, balance: number) => {
+  const updateAccount = (category: keyof typeof accountData, id: string, balance: number) => {
     setAccountData(prev => ({
       ...prev,
       [category]: prev[category].map(account => 
@@ -121,11 +104,34 @@ const RunwayCalculator = () => {
     }));
   };
 
+  const toggleCategoryHidden = (category: keyof typeof hiddenCategories) => {
+    setHiddenCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Signed out successfully!");
+  };
+
   return (
     <Card className="p-6 shadow-lg">
-      <h2 className="text-2xl font-semibold mb-6 text-blue-700 flex items-center">
-        <Landmark className="mr-2" /> Financial Overview
-      </h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-semibold text-blue-700 flex items-center">
+          <Landmark className="mr-2" /> Financial Overview
+        </h2>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-600">Welcome, {user?.email}</span>
+          <Button onClick={handleSignOut} variant="outline" size="sm" className="flex items-center gap-2">
+            <LogOut size={16} />
+            Sign Out
+          </Button>
+        </div>
+      </div>
+      
+      <SnapshotManager onCreateSnapshot={createSnapshot} onSaveData={saveData} />
       
       <NetWorthSummary 
         assets={getTotalAssets()} 
@@ -137,16 +143,20 @@ const RunwayCalculator = () => {
           title="Cash" 
           accounts={accountData.cash}
           icon={<Wallet size={18} className="text-green-600" />}
+          isHidden={hiddenCategories.cash}
           onAddAccount={() => addAccount('cash', 'New Cash Account')}
           onUpdateAccount={(id, balance) => updateAccount('cash', id, balance)}
+          onToggleHidden={() => toggleCategoryHidden('cash')}
         />
         
         <AccountSection 
           title="Investments" 
           accounts={accountData.investments}
           icon={<ChartPie size={18} className="text-blue-600" />}
+          isHidden={hiddenCategories.investments}
           onAddAccount={() => addAccount('investments', 'New Investment')}
           onUpdateAccount={(id, balance) => updateAccount('investments', id, balance)}
+          onToggleHidden={() => toggleCategoryHidden('investments')}
         />
         
         <AccountSection 
@@ -154,8 +164,10 @@ const RunwayCalculator = () => {
           accounts={accountData.credit}
           icon={<CreditCard size={18} className="text-red-600" />}
           isNegative={true}
+          isHidden={hiddenCategories.credit}
           onAddAccount={() => addAccount('credit', 'New Credit Card')}
           onUpdateAccount={(id, balance) => updateAccount('credit', id, balance)}
+          onToggleHidden={() => toggleCategoryHidden('credit')}
         />
         
         <AccountSection 
@@ -163,16 +175,20 @@ const RunwayCalculator = () => {
           accounts={accountData.loans}
           icon={<BadgeEuro size={18} className="text-orange-600" />}
           isNegative={true}
+          isHidden={hiddenCategories.loans}
           onAddAccount={() => addAccount('loans', 'New Loan')}
           onUpdateAccount={(id, balance) => updateAccount('loans', id, balance)}
+          onToggleHidden={() => toggleCategoryHidden('loans')}
         />
         
         <AccountSection 
           title="Other Assets" 
           accounts={accountData.otherAssets}
           icon={<Coins size={18} className="text-purple-600" />}
+          isHidden={hiddenCategories.otherAssets}
           onAddAccount={() => addAccount('otherAssets', 'New Asset')}
           onUpdateAccount={(id, balance) => updateAccount('otherAssets', id, balance)}
+          onToggleHidden={() => toggleCategoryHidden('otherAssets')}
         />
         
         <div>
@@ -200,9 +216,6 @@ const RunwayCalculator = () => {
       <div className="flex space-x-3 mb-8">
         <Button onClick={handleCalculate} className="flex-1 bg-blue-600 hover:bg-blue-700">
           Update Overview
-        </Button>
-        <Button onClick={handleReset} variant="outline" className="flex-1">
-          Reset
         </Button>
       </div>
       

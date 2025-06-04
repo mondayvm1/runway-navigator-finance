@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -227,6 +226,32 @@ export const useFinancialData = () => {
     }
   };
 
+  const updateAccountName = async (category: keyof AccountData, id: string, name: string) => {
+    if (!user || !currentSnapshotId) return;
+
+    try {
+      // Update in local state first
+      setAccountData(prev => ({
+        ...prev,
+        [category]: prev[category].map(account => 
+          account.id === id ? { ...account, name } : account
+        )
+      }));
+
+      // Update in database
+      const { error } = await supabase
+        .from('user_accounts')
+        .update({ name })
+        .eq('snapshot_id', currentSnapshotId)
+        .eq('account_id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating account name:', error);
+      toast.error('Failed to update account name');
+    }
+  };
+
   return {
     accountData,
     setAccountData,
@@ -236,6 +261,7 @@ export const useFinancialData = () => {
     setHiddenCategories,
     saveData,
     createSnapshot,
+    updateAccountName,
     currentSnapshotId,
   };
 };

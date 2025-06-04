@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,6 +23,7 @@ const RunwayCalculator = () => {
     setHiddenCategories,
     saveData,
     createSnapshot,
+    updateAccountName,
   } = useFinancialData();
 
   const [runway, setRunway] = useState({
@@ -104,6 +104,10 @@ const RunwayCalculator = () => {
     }));
   };
 
+  const handleUpdateAccountName = (category: keyof typeof accountData, id: string, name: string) => {
+    updateAccountName(category, id, name);
+  };
+
   const toggleCategoryHidden = (category: keyof typeof hiddenCategories) => {
     setHiddenCategories(prev => ({
       ...prev,
@@ -146,6 +150,7 @@ const RunwayCalculator = () => {
           isHidden={hiddenCategories.cash}
           onAddAccount={() => addAccount('cash', 'New Cash Account')}
           onUpdateAccount={(id, balance) => updateAccount('cash', id, balance)}
+          onUpdateAccountName={(id, name) => handleUpdateAccountName('cash', id, name)}
           onToggleHidden={() => toggleCategoryHidden('cash')}
         />
         
@@ -156,6 +161,7 @@ const RunwayCalculator = () => {
           isHidden={hiddenCategories.investments}
           onAddAccount={() => addAccount('investments', 'New Investment')}
           onUpdateAccount={(id, balance) => updateAccount('investments', id, balance)}
+          onUpdateAccountName={(id, name) => handleUpdateAccountName('investments', id, name)}
           onToggleHidden={() => toggleCategoryHidden('investments')}
         />
         
@@ -167,6 +173,7 @@ const RunwayCalculator = () => {
           isHidden={hiddenCategories.credit}
           onAddAccount={() => addAccount('credit', 'New Credit Card')}
           onUpdateAccount={(id, balance) => updateAccount('credit', id, balance)}
+          onUpdateAccountName={(id, name) => handleUpdateAccountName('credit', id, name)}
           onToggleHidden={() => toggleCategoryHidden('credit')}
         />
         
@@ -178,6 +185,7 @@ const RunwayCalculator = () => {
           isHidden={hiddenCategories.loans}
           onAddAccount={() => addAccount('loans', 'New Loan')}
           onUpdateAccount={(id, balance) => updateAccount('loans', id, balance)}
+          onUpdateAccountName={(id, name) => handleUpdateAccountName('loans', id, name)}
           onToggleHidden={() => toggleCategoryHidden('loans')}
         />
         
@@ -188,6 +196,7 @@ const RunwayCalculator = () => {
           isHidden={hiddenCategories.otherAssets}
           onAddAccount={() => addAccount('otherAssets', 'New Asset')}
           onUpdateAccount={(id, balance) => updateAccount('otherAssets', id, balance)}
+          onUpdateAccountName={(id, name) => handleUpdateAccountName('otherAssets', id, name)}
           onToggleHidden={() => toggleCategoryHidden('otherAssets')}
         />
         

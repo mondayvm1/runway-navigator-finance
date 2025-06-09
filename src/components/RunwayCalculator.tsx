@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import NetWorthSummary from "./NetWorthSummary";
 import AccountSection, { AccountItem } from "./AccountSection";
 import SnapshotManager from "./SnapshotManager";
 import SnapshotChart from "./SnapshotChart";
+import GamificationCard from "./GamificationCard";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';

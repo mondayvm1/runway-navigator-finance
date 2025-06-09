@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -107,7 +106,8 @@ const RunwayCalculator = () => {
     const newAccount: AccountItem = {
       id: uuidv4(),
       name: getDefaultAccountName(category),
-      balance: 0
+      balance: 0,
+      interestRate: getDefaultInterestRate(category)
     };
     
     setAccountData(prev => ({
@@ -116,11 +116,31 @@ const RunwayCalculator = () => {
     }));
   };
 
+  const getDefaultInterestRate = (category: keyof typeof accountData): number => {
+    const defaultRates = {
+      cash: 0.5,
+      investments: 8.0,
+      credit: 24.99,
+      loans: 7.5,
+      otherAssets: 3.0
+    };
+    return defaultRates[category] || 0;
+  };
+
   const updateAccount = (category: keyof typeof accountData, id: string, balance: number) => {
     setAccountData(prev => ({
       ...prev,
       [category]: prev[category].map(account => 
         account.id === id ? { ...account, balance } : account
+      )
+    }));
+  };
+
+  const updateAccountInterestRate = (category: keyof typeof accountData, id: string, interestRate: number) => {
+    setAccountData(prev => ({
+      ...prev,
+      [category]: prev[category].map(account => 
+        account.id === id ? { ...account, interestRate } : account
       )
     }));
   };
@@ -160,10 +180,19 @@ const RunwayCalculator = () => {
       
       <SnapshotChart />
       
-      <NetWorthSummary 
-        assets={getTotalAssets()} 
-        liabilities={getTotalLiabilities()}
-      />
+      <div className="grid md:grid-cols-2 gap-6 mb-6">
+        <NetWorthSummary 
+          assets={getTotalAssets()} 
+          liabilities={getTotalLiabilities()}
+        />
+        
+        <GamificationCard
+          netWorth={getTotalAssets() - getTotalLiabilities()}
+          runway={runway.months}
+          snapshotCount={3} // You might want to track this from snapshots
+          totalAssets={getTotalAssets()}
+        />
+      </div>
       
       <div className="space-y-4 mb-6">
         <AccountSection 
@@ -174,6 +203,7 @@ const RunwayCalculator = () => {
           onAddAccount={() => addAccount('cash')}
           onUpdateAccount={(id, balance) => updateAccount('cash', id, balance)}
           onUpdateAccountName={(id, name) => handleUpdateAccountName('cash', id, name)}
+          onUpdateInterestRate={(id, rate) => updateAccountInterestRate('cash', id, rate)}
           onToggleHidden={() => toggleCategoryHidden('cash')}
         />
         
@@ -185,6 +215,7 @@ const RunwayCalculator = () => {
           onAddAccount={() => addAccount('investments')}
           onUpdateAccount={(id, balance) => updateAccount('investments', id, balance)}
           onUpdateAccountName={(id, name) => handleUpdateAccountName('investments', id, name)}
+          onUpdateInterestRate={(id, rate) => updateAccountInterestRate('investments', id, rate)}
           onToggleHidden={() => toggleCategoryHidden('investments')}
         />
         
@@ -197,6 +228,7 @@ const RunwayCalculator = () => {
           onAddAccount={() => addAccount('credit')}
           onUpdateAccount={(id, balance) => updateAccount('credit', id, balance)}
           onUpdateAccountName={(id, name) => handleUpdateAccountName('credit', id, name)}
+          onUpdateInterestRate={(id, rate) => updateAccountInterestRate('credit', id, rate)}
           onToggleHidden={() => toggleCategoryHidden('credit')}
         />
         
@@ -209,6 +241,7 @@ const RunwayCalculator = () => {
           onAddAccount={() => addAccount('loans')}
           onUpdateAccount={(id, balance) => updateAccount('loans', id, balance)}
           onUpdateAccountName={(id, name) => handleUpdateAccountName('loans', id, name)}
+          onUpdateInterestRate={(id, rate) => updateAccountInterestRate('loans', id, rate)}
           onToggleHidden={() => toggleCategoryHidden('loans')}
         />
         
@@ -220,6 +253,7 @@ const RunwayCalculator = () => {
           onAddAccount={() => addAccount('otherAssets')}
           onUpdateAccount={(id, balance) => updateAccount('otherAssets', id, balance)}
           onUpdateAccountName={(id, name) => handleUpdateAccountName('otherAssets', id, name)}
+          onUpdateInterestRate={(id, rate) => updateAccountInterestRate('otherAssets', id, rate)}
           onToggleHidden={() => toggleCategoryHidden('otherAssets')}
         />
         

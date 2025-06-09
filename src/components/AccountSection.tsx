@@ -1,13 +1,17 @@
 
-import { useState } from "react";
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { ChevronDown, ChevronRight, Eye, EyeOff, Edit2, Check, X } from "lucide-react";
-import { formatCurrency } from "../utils/formatters";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Plus, Eye, EyeOff, Edit3, Check, X } from "lucide-react";
+import InterestRateInput from "./InterestRateInput";
+import CreditCardCalculator from "./CreditCardCalculator";
 
 export interface AccountItem {
   id: string;
   name: string;
   balance: number;
+  interestRate?: number;
 }
 
 interface AccountSectionProps {
@@ -16,149 +20,142 @@ interface AccountSectionProps {
   icon: React.ReactNode;
   isNegative?: boolean;
   isHidden?: boolean;
-  onAddAccount?: () => void;
-  onUpdateAccount?: (id: string, balance: number) => void;
-  onUpdateAccountName?: (id: string, name: string) => void;
-  onToggleHidden?: () => void;
+  onAddAccount: () => void;
+  onUpdateAccount: (id: string, balance: number) => void;
+  onUpdateAccountName: (id: string, name: string) => void;
+  onUpdateInterestRate?: (id: string, rate: number) => void;
+  onToggleHidden: () => void;
 }
 
 const AccountSection = ({ 
   title, 
   accounts, 
   icon, 
-  isNegative = false,
+  isNegative = false, 
   isHidden = false,
-  onAddAccount,
-  onUpdateAccount,
+  onAddAccount, 
+  onUpdateAccount, 
   onUpdateAccountName,
-  onToggleHidden
+  onUpdateInterestRate,
+  onToggleHidden 
 }: AccountSectionProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [editingNameId, setEditingNameId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState('');
-  
-  const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
-  const displayBalance = isNegative ? -totalBalance : totalBalance;
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
 
-  const startEditingName = (account: AccountItem) => {
-    setEditingNameId(account.id);
+  const handleNameEdit = (account: AccountItem) => {
+    setEditingId(account.id);
     setEditingName(account.name);
   };
 
-  const saveAccountName = (id: string) => {
-    if (editingName.trim() && onUpdateAccountName) {
-      onUpdateAccountName(id, editingName.trim());
-    }
-    setEditingNameId(null);
-    setEditingName('');
+  const handleNameSave = (id: string) => {
+    onUpdateAccountName(id, editingName);
+    setEditingId(null);
   };
 
-  const cancelEditingName = () => {
-    setEditingNameId(null);
-    setEditingName('');
+  const handleNameCancel = () => {
+    setEditingId(null);
+    setEditingName("");
   };
-  
+
+  const total = accounts.reduce((sum, account) => sum + account.balance, 0);
+  const shouldShowCalculator = (title === 'Credit' || title === 'Loans') && !isHidden;
+
   return (
-    <Card className="mb-3 overflow-hidden">
-      <div 
-        className="p-3 bg-gray-100 flex items-center justify-between cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center gap-2">
-          {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-          <span className="flex items-center gap-2">
-            {icon}
-            {title}
-          </span>
+    <Card className="p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center space-x-2">
+          {icon}
+          <h3 className="text-lg font-semibold">{title}</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleHidden}
+            className="ml-2"
+          >
+            {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
         </div>
-        <div className="flex items-center gap-2">
-          <div className={`font-semibold ${isNegative ? 'text-red-600' : ''} ${isHidden ? 'opacity-50' : ''}`}>
-            {isHidden ? '***' : formatCurrency(displayBalance)}
-          </div>
-          {onToggleHidden && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleHidden();
-              }}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              {isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          )}
+        <div className="text-lg font-bold">
+          {isNegative ? '-' : ''}${total.toLocaleString()}
         </div>
       </div>
       
-      {isExpanded && (
-        <div className="p-3">
-          {accounts.length === 0 ? (
-            <div className="text-gray-500 text-center py-2">No {title.toLowerCase()} accounts</div>
-          ) : (
-            <div className="space-y-3">
-              {accounts.map(account => (
-                <div key={account.id} className="flex justify-between items-center border-b pb-2">
-                  <div className="flex items-center gap-2 flex-1">
-                    {editingNameId === account.id ? (
-                      <div className="flex items-center gap-2 flex-1">
-                        <input
-                          type="text"
+      {!isHidden && (
+        <>
+          <div className="space-y-2 mb-3">
+            {accounts.map((account) => (
+              <div key={account.id} className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <div className="flex-1">
+                    {editingId === account.id ? (
+                      <div className="flex items-center space-x-2">
+                        <Input
                           value={editingName}
                           onChange={(e) => setEditingName(e.target.value)}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') saveAccountName(account.id);
-                            if (e.key === 'Escape') cancelEditingName();
-                          }}
-                          className="flex-1 p-1 border rounded text-sm"
-                          autoFocus
+                          className="flex-1"
+                          onKeyPress={(e) => e.key === 'Enter' && handleNameSave(account.id)}
                         />
-                        <button
-                          onClick={() => saveAccountName(account.id)}
-                          className="text-green-600 hover:text-green-800"
-                        >
-                          <Check size={14} />
-                        </button>
-                        <button
-                          onClick={cancelEditingName}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <X size={14} />
-                        </button>
+                        <Button size="sm" onClick={() => handleNameSave(account.id)}>
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={handleNameCancel}>
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 flex-1">
-                        <span className="flex-1">{account.name}</span>
-                        <button
-                          onClick={() => startEditingName(account)}
-                          className="text-gray-400 hover:text-gray-600"
+                      <div className="flex items-center justify-between">
+                        <span 
+                          className="cursor-pointer hover:text-blue-600 flex-1"
+                          onClick={() => handleNameEdit(account)}
                         >
-                          <Edit2 size={14} />
-                        </button>
+                          {account.name}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleNameEdit(account)}
+                          className="ml-2"
+                        >
+                          <Edit3 className="h-3 w-3" />
+                        </Button>
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-2 items-center">
-                    <input 
-                      type="number"
-                      className="w-32 p-1 border rounded text-right"
-                      value={account.balance}
-                      onChange={(e) => onUpdateAccount && onUpdateAccount(account.id, parseFloat(e.target.value) || 0)}
+                  <Input
+                    type="number"
+                    placeholder="Balance"
+                    value={account.balance || ""}
+                    onChange={(e) => onUpdateAccount(account.id, parseFloat(e.target.value) || 0)}
+                    className="w-32"
+                  />
+                </div>
+                
+                {onUpdateInterestRate && (
+                  <div className="ml-4 flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Interest Rate:</span>
+                    <InterestRateInput
+                      value={account.interestRate || 0}
+                      onUpdate={(rate) => onUpdateInterestRate(account.id, rate)}
+                      accountType={title.toLowerCase()}
                     />
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                )}
+                
+                {shouldShowCalculator && account.balance > 0 && account.interestRate && (
+                  <CreditCardCalculator
+                    balance={account.balance}
+                    interestRate={account.interestRate}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
           
-          <button 
-            className="mt-3 text-sm text-blue-600 hover:underline flex items-center"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddAccount && onAddAccount();
-            }}
-          >
-            + Add {title.toLowerCase()} account
-          </button>
-        </div>
+          <Button onClick={onAddAccount} variant="outline" className="w-full">
+            <Plus className="mr-2 h-4 w-4" />
+            Add {title} Account
+          </Button>
+        </>
       )}
     </Card>
   );

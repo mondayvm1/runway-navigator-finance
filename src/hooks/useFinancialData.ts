@@ -20,6 +20,13 @@ interface HiddenCategories {
   otherAssets: boolean;
 }
 
+export interface AccountItem {
+  id: string;
+  name: string;
+  balance: number;
+  interestRate?: number;
+}
+
 export const useFinancialData = () => {
   const { user } = useAuth();
   const [accountData, setAccountData] = useState<AccountData>({

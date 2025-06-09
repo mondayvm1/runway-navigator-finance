@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import RunwayChart from "./RunwayChart";
 import NetWorthSummary from "./NetWorthSummary";
-import AccountSection, { AccountItem } from "./AccountSection";
+import AccountSection from "./AccountSection";
 import SnapshotManager from "./SnapshotManager";
 import SnapshotChart from "./SnapshotChart";
 import GamificationCard from "./GamificationCard";
@@ -14,7 +14,7 @@ import MassImportDialog from "./MassImportDialog";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
-import { useFinancialData } from '@/hooks/useFinancialData';
+import { useFinancialData, AccountItem } from '@/hooks/useFinancialData';
 
 const RunwayCalculator = () => {
   const { user, signOut } = useAuth();

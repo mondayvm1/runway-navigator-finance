@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,13 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Eye, EyeOff, Edit3, Check, X } from "lucide-react";
 import InterestRateInput from "./InterestRateInput";
 import CreditCardCalculator from "./CreditCardCalculator";
-
-export interface AccountItem {
-  id: string;
-  name: string;
-  balance: number;
-  interestRate?: number;
-}
+import { AccountItem } from "@/hooks/useFinancialData";
 
 interface AccountSectionProps {
   title: string;

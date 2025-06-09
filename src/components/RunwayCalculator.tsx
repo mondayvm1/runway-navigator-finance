@@ -10,6 +10,7 @@ import SnapshotManager from "./SnapshotManager";
 import SnapshotChart from "./SnapshotChart";
 import GamificationCard from "./GamificationCard";
 import DataRecoveryButton from "./DataRecoveryButton";
+import MassImportDialog from "./MassImportDialog";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
@@ -166,6 +167,35 @@ const RunwayCalculator = () => {
     toast.success("Signed out successfully!");
   };
 
+  const handleMassImport = (importedData: {
+    accounts: {
+      cash: AccountItem[];
+      investments: AccountItem[];
+      credit: AccountItem[];
+      loans: AccountItem[];
+      otherAssets: AccountItem[];
+    };
+    monthlyExpenses: number;
+  }) => {
+    // Merge imported data with existing data
+    setAccountData(prev => ({
+      cash: [...prev.cash, ...importedData.accounts.cash],
+      investments: [...prev.investments, ...importedData.accounts.investments],
+      credit: [...prev.credit, ...importedData.accounts.credit],
+      loans: [...prev.loans, ...importedData.accounts.loans],
+      otherAssets: [...prev.otherAssets, ...importedData.accounts.otherAssets]
+    }));
+
+    if (importedData.monthlyExpenses > 0) {
+      setMonthlyExpenses(importedData.monthlyExpenses);
+    }
+
+    // Auto-save after import
+    setTimeout(() => {
+      saveData();
+    }, 100);
+  };
+
   return (
     <Card className="p-6 shadow-lg">
       <div className="flex items-center justify-between mb-6">
@@ -181,12 +211,13 @@ const RunwayCalculator = () => {
         </div>
       </div>
       
-      <div className="mb-6">
+      <div className="mb-6 flex items-center gap-4">
         <DataRecoveryButton 
           onRefreshData={loadData}
           loading={loading}
           dataFound={dataFound}
         />
+        <MassImportDialog onImport={handleMassImport} />
       </div>
       
       <SnapshotManager onCreateSnapshot={createSnapshot} onSaveData={saveData} />

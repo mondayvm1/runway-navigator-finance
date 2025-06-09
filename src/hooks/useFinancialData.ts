@@ -44,6 +44,8 @@ export const useFinancialData = () => {
     loans: false,
     otherAssets: false
   });
+  const [loading, setLoading] = useState(false);
+  const [dataFound, setDataFound] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -54,15 +56,23 @@ export const useFinancialData = () => {
   const loadData = async () => {
     if (!user) return;
 
+    setLoading(true);
+    console.log('Loading financial data for user:', user.id);
+
     try {
-      // Load accounts
+      // Load accounts with detailed logging
       const { data: accounts, error: accountsError } = await supabase
         .from('user_accounts')
         .select('*')
         .eq('user_id', user.id)
         .is('snapshot_id', null);
 
-      if (accountsError) throw accountsError;
+      if (accountsError) {
+        console.error('Error loading accounts:', accountsError);
+        throw accountsError;
+      }
+
+      console.log('Loaded accounts:', accounts);
 
       // Group accounts by category
       const groupedAccounts: AccountData = {
@@ -73,6 +83,7 @@ export const useFinancialData = () => {
         otherAssets: []
       };
 
+      let totalAccounts = 0;
       accounts?.forEach(account => {
         const accountItem: AccountItem = {
           id: account.account_id,
@@ -83,10 +94,15 @@ export const useFinancialData = () => {
 
         if (account.category in groupedAccounts) {
           groupedAccounts[account.category as keyof AccountData].push(accountItem);
+          totalAccounts++;
         }
       });
 
+      console.log('Grouped accounts:', groupedAccounts);
+      console.log('Total accounts found:', totalAccounts);
+
       setAccountData(groupedAccounts);
+      setDataFound(totalAccounts > 0);
 
       // Load monthly expenses
       const { data: expenses, error: expensesError } = await supabase
@@ -96,15 +112,30 @@ export const useFinancialData = () => {
         .is('snapshot_id', null)
         .maybeSingle();
 
-      if (expensesError) throw expensesError;
+      if (expensesError) {
+        console.error('Error loading expenses:', expensesError);
+        throw expensesError;
+      }
+
+      console.log('Loaded expenses:', expenses);
 
       if (expenses) {
         setMonthlyExpenses(Number(expenses.amount));
+        console.log('Monthly expenses set to:', Number(expenses.amount));
+      }
+
+      // Show recovery status
+      if (totalAccounts > 0 || expenses) {
+        toast.success(`Data recovered! Found ${totalAccounts} accounts and ${expenses ? 'monthly expenses' : 'no monthly expenses'}`);
+      } else {
+        toast.info('No previous data found. You can start entering your financial information.');
       }
 
     } catch (error) {
       console.error('Error loading data:', error);
-      toast.error('Failed to load financial data');
+      toast.error('Failed to load financial data. Please try refreshing the page.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -112,6 +143,8 @@ export const useFinancialData = () => {
     if (!user) return;
 
     try {
+      console.log('Saving financial data...');
+      
       // Save accounts
       const accountsToSave = [];
       Object.entries(accountData).forEach(([category, accounts]) => {
@@ -127,12 +160,19 @@ export const useFinancialData = () => {
         });
       });
 
+      console.log('Accounts to save:', accountsToSave);
+
       // Delete existing accounts for this user (not snapshots)
-      await supabase
+      const { error: deleteError } = await supabase
         .from('user_accounts')
         .delete()
         .eq('user_id', user.id)
         .is('snapshot_id', null);
+
+      if (deleteError) {
+        console.error('Error deleting existing accounts:', deleteError);
+        throw deleteError;
+      }
 
       // Insert new accounts
       if (accountsToSave.length > 0) {
@@ -140,15 +180,23 @@ export const useFinancialData = () => {
           .from('user_accounts')
           .insert(accountsToSave);
 
-        if (accountsError) throw accountsError;
+        if (accountsError) {
+          console.error('Error inserting accounts:', accountsError);
+          throw accountsError;
+        }
       }
 
       // Save monthly expenses
-      await supabase
+      const { error: deleteExpensesError } = await supabase
         .from('monthly_expenses')
         .delete()
         .eq('user_id', user.id)
         .is('snapshot_id', null);
+
+      if (deleteExpensesError) {
+        console.error('Error deleting existing expenses:', deleteExpensesError);
+        throw deleteExpensesError;
+      }
 
       const { error: expensesError } = await supabase
         .from('monthly_expenses')
@@ -157,8 +205,12 @@ export const useFinancialData = () => {
           amount: monthlyExpenses
         });
 
-      if (expensesError) throw expensesError;
+      if (expensesError) {
+        console.error('Error inserting expenses:', expensesError);
+        throw expensesError;
+      }
 
+      console.log('Data saved successfully');
       toast.success('Data saved successfully!');
     } catch (error) {
       console.error('Error saving data:', error);
@@ -244,5 +296,8 @@ export const useFinancialData = () => {
     saveData,
     createSnapshot,
     updateAccountName,
+    loading,
+    dataFound,
+    loadData, // Expose loadData for manual refresh
   };
 };

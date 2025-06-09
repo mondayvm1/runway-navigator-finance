@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,7 @@ import AccountSection, { AccountItem } from "./AccountSection";
 import SnapshotManager from "./SnapshotManager";
 import SnapshotChart from "./SnapshotChart";
 import GamificationCard from "./GamificationCard";
+import DataRecoveryButton from "./DataRecoveryButton";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,6 +27,9 @@ const RunwayCalculator = () => {
     saveData,
     createSnapshot,
     updateAccountName,
+    loading,
+    dataFound,
+    loadData,
   } = useFinancialData();
 
   const [runway, setRunway] = useState({
@@ -178,6 +181,14 @@ const RunwayCalculator = () => {
         </div>
       </div>
       
+      <div className="mb-6">
+        <DataRecoveryButton 
+          onRefreshData={loadData}
+          loading={loading}
+          dataFound={dataFound}
+        />
+      </div>
+      
       <SnapshotManager onCreateSnapshot={createSnapshot} onSaveData={saveData} />
       
       <SnapshotChart />
@@ -191,7 +202,7 @@ const RunwayCalculator = () => {
         <GamificationCard
           netWorth={getTotalAssets() - getTotalLiabilities()}
           runway={runway.months}
-          snapshotCount={3} // You might want to track this from snapshots
+          snapshotCount={3}
           totalAssets={getTotalAssets()}
         />
       </div>

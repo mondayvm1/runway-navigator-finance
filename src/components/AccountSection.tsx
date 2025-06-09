@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Eye, EyeOff, Edit3, Check, X } from "lucide-react";
+import { Plus, Eye, EyeOff, Edit3, Check, X, Trash2 } from "lucide-react";
 import InterestRateInput from "./InterestRateInput";
 import CreditCardCalculator from "./CreditCardCalculator";
 import { AccountItem } from "@/hooks/useFinancialData";
@@ -17,6 +18,7 @@ interface AccountSectionProps {
   onUpdateAccount: (id: string, balance: number) => void;
   onUpdateAccountName: (id: string, name: string) => void;
   onUpdateInterestRate?: (id: string, rate: number) => void;
+  onRemoveAccount: (id: string) => void;
   onToggleHidden: () => void;
 }
 
@@ -30,6 +32,7 @@ const AccountSection = ({
   onUpdateAccount, 
   onUpdateAccountName,
   onUpdateInterestRate,
+  onRemoveAccount,
   onToggleHidden 
 }: AccountSectionProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -52,6 +55,7 @@ const AccountSection = ({
 
   const total = accounts.reduce((sum, account) => sum + account.balance, 0);
   const shouldShowCalculator = (title === 'Credit' || title === 'Loans') && !isHidden;
+  const shouldShowInterestRate = title === 'Credit' || title === 'Loans';
 
   return (
     <Card className="p-4">
@@ -103,14 +107,24 @@ const AccountSection = ({
                         >
                           {account.name}
                         </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleNameEdit(account)}
-                          className="ml-2"
-                        >
-                          <Edit3 className="h-3 w-3" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleNameEdit(account)}
+                            className="ml-2"
+                          >
+                            <Edit3 className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onRemoveAccount(account.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -123,7 +137,7 @@ const AccountSection = ({
                   />
                 </div>
                 
-                {onUpdateInterestRate && (
+                {shouldShowInterestRate && onUpdateInterestRate && (
                   <div className="ml-4 flex items-center justify-between">
                     <span className="text-sm text-gray-600">Interest Rate:</span>
                     <InterestRateInput

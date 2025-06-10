@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -94,9 +95,9 @@ export const useFinancialData = () => {
           balance: Number(account.balance),
           interestRate: 0, // Default, will be enhanced later
           // Credit card specific fields
-          creditLimit: account.credit_limit,
-          dueDate: account.due_date,
-          minimumPayment: account.minimum_payment
+          creditLimit: account.credit_limit ? Number(account.credit_limit) : undefined,
+          dueDate: account.due_date || undefined,
+          minimumPayment: account.minimum_payment ? Number(account.minimum_payment) : undefined
         };
 
         if (account.category in groupedAccounts) {
@@ -162,6 +163,9 @@ export const useFinancialData = () => {
             name: account.name,
             category: category,
             balance: account.balance,
+            credit_limit: account.creditLimit || null,
+            due_date: account.dueDate || null,
+            minimum_payment: account.minimumPayment || null,
             is_hidden: hiddenCategories[category as keyof HiddenCategories]
           });
         });
@@ -251,6 +255,9 @@ export const useFinancialData = () => {
             name: account.name,
             category: category,
             balance: account.balance,
+            credit_limit: account.creditLimit || null,
+            due_date: account.dueDate || null,
+            minimum_payment: account.minimumPayment || null,
             snapshot_id: snapshot.id,
             is_hidden: hiddenCategories[category as keyof HiddenCategories]
           });

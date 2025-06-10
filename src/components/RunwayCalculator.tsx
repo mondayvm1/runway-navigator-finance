@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,8 @@ import SnapshotChart from "./SnapshotChart";
 import GamificationCard from "./GamificationCard";
 import DataRecoveryButton from "./DataRecoveryButton";
 import MassImportDialog from "./MassImportDialog";
-import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2 } from "lucide-react";
+import SnapshotViewer from "./SnapshotViewer";
+import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
 import { useFinancialData, AccountItem } from '@/hooks/useFinancialData';
@@ -37,6 +39,8 @@ const RunwayCalculator = () => {
     days: 0,
     months: 0,
   });
+
+  const [showSnapshotViewer, setShowSnapshotViewer] = useState(false);
 
   useEffect(() => {
     calculateRunway();
@@ -222,198 +226,206 @@ const RunwayCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <div className="container mx-auto px-4 py-8">
-        <header className="text-center mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-blue-800 mb-2">Personal Finance Dashboard</h1>
-          <p className="text-xl text-gray-600">Track your complete financial picture</p>
-        </header>
-
-        <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="md:col-span-2">
-              <Card className="p-6 shadow-lg">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-semibold text-blue-700 flex items-center">
-                    <Landmark className="mr-2" /> Financial Overview
-                  </h2>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-gray-600">Welcome, {user?.email}</span>
-                    <Button onClick={handleSignOut} variant="outline" size="sm" className="flex items-center gap-2">
-                      <LogOut size={16} />
-                      Sign Out
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="mb-6 flex items-center gap-4">
-                  <DataRecoveryButton 
-                    onRefreshData={loadData}
-                    loading={loading}
-                    dataFound={dataFound}
-                  />
-                  <MassImportDialog onImport={handleMassImport} />
-                  <Button 
-                    onClick={handleMassDelete}
-                    variant="destructive"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <Trash2 size={16} />
-                    Clear All Data
-                  </Button>
-                </div>
-                
-                <SnapshotManager onCreateSnapshot={createSnapshot} onSaveData={saveData} />
-                
-                <SnapshotChart />
-                
-                <div className="mb-6">
-                  <NetWorthSummary 
-                    assets={getTotalAssets()} 
-                    liabilities={getTotalLiabilities()}
-                  />
-                </div>
-                
-                <div className="space-y-4 mb-6">
-                  <AccountSection 
-                    title="Cash" 
-                    accounts={accountData.cash}
-                    icon={<Wallet size={18} className="text-green-600" />}
-                    isHidden={hiddenCategories.cash}
-                    onAddAccount={() => addAccount('cash')}
-                    onUpdateAccount={(id, balance) => updateAccount('cash', id, balance)}
-                    onUpdateAccountName={(id, name) => handleUpdateAccountName('cash', id, name)}
-                    onUpdateInterestRate={(id, rate) => updateAccountInterestRate('cash', id, rate)}
-                    onRemoveAccount={(id) => removeAccount('cash', id)}
-                    onToggleHidden={() => toggleCategoryHidden('cash')}
-                  />
-                  
-                  <AccountSection 
-                    title="Investments" 
-                    accounts={accountData.investments}
-                    icon={<ChartPie size={18} className="text-blue-600" />}
-                    isHidden={hiddenCategories.investments}
-                    onAddAccount={() => addAccount('investments')}
-                    onUpdateAccount={(id, balance) => updateAccount('investments', id, balance)}
-                    onUpdateAccountName={(id, name) => handleUpdateAccountName('investments', id, name)}
-                    onUpdateInterestRate={(id, rate) => updateAccountInterestRate('investments', id, rate)}
-                    onRemoveAccount={(id) => removeAccount('investments', id)}
-                    onToggleHidden={() => toggleCategoryHidden('investments')}
-                  />
-                  
-                  <AccountSection 
-                    title="Credit" 
-                    accounts={accountData.credit}
-                    icon={<CreditCard size={18} className="text-red-600" />}
-                    isNegative={true}
-                    isHidden={hiddenCategories.credit}
-                    onAddAccount={() => addAccount('credit')}
-                    onUpdateAccount={(id, balance) => updateAccount('credit', id, balance)}
-                    onUpdateAccountName={(id, name) => handleUpdateAccountName('credit', id, name)}
-                    onUpdateInterestRate={(id, rate) => updateAccountInterestRate('credit', id, rate)}
-                    onRemoveAccount={(id) => removeAccount('credit', id)}
-                    onToggleHidden={() => toggleCategoryHidden('credit')}
-                  />
-                  
-                  <AccountSection 
-                    title="Loans" 
-                    accounts={accountData.loans}
-                    icon={<BadgeEuro size={18} className="text-orange-600" />}
-                    isNegative={true}
-                    isHidden={hiddenCategories.loans}
-                    onAddAccount={() => addAccount('loans')}
-                    onUpdateAccount={(id, balance) => updateAccount('loans', id, balance)}
-                    onUpdateAccountName={(id, name) => handleUpdateAccountName('loans', id, name)}
-                    onUpdateInterestRate={(id, rate) => updateAccountInterestRate('loans', id, rate)}
-                    onRemoveAccount={(id) => removeAccount('loans', id)}
-                    onToggleHidden={() => toggleCategoryHidden('loans')}
-                  />
-                  
-                  <AccountSection 
-                    title="Other Assets" 
-                    accounts={accountData.otherAssets}
-                    icon={<Coins size={18} className="text-purple-600" />}
-                    isHidden={hiddenCategories.otherAssets}
-                    onAddAccount={() => addAccount('otherAssets')}
-                    onUpdateAccount={(id, balance) => updateAccount('otherAssets', id, balance)}
-                    onUpdateAccountName={(id, name) => handleUpdateAccountName('otherAssets', id, name)}
-                    onUpdateInterestRate={(id, rate) => updateAccountInterestRate('otherAssets', id, rate)}
-                    onRemoveAccount={(id) => removeAccount('otherAssets', id)}
-                    onToggleHidden={() => toggleCategoryHidden('otherAssets')}
-                  />
-                  
-                  <div>
-                    <label htmlFor="monthlyExpenses" className="block text-sm font-medium text-gray-700 mb-1">
-                      Monthly Expenses
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <DollarSign className="h-5 w-5 text-gray-400" />
-                      </div>
-                      <Input
-                        id="monthlyExpenses"
-                        name="monthlyExpenses"
-                        type="number"
-                        min="0"
-                        className="pl-10"
-                        placeholder="Enter your monthly expenses"
-                        value={monthlyExpenses || ""}
-                        onChange={(e) => setMonthlyExpenses(parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex space-x-3 mb-8">
-                  <Button onClick={handleCalculate} className="flex-1 bg-blue-600 hover:bg-blue-700">
-                    Update Overview
-                  </Button>
-                </div>
-                
-                {(runway.days > 0 || runway.months > 0) && (
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-medium text-gray-700 mb-3">Financial Runway</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-blue-50 p-4 rounded-lg text-center">
-                        <div className="flex justify-center mb-2">
-                          <Clock className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div className="text-sm text-gray-500">Runway in Days</div>
-                        <div className="text-3xl font-bold text-blue-700">{runway.days}</div>
-                      </div>
-                      
-                      <div className="bg-green-50 p-4 rounded-lg text-center">
-                        <div className="flex justify-center mb-2">
-                          <CalendarDays className="h-6 w-6 text-green-600" />
-                        </div>
-                        <div className="text-sm text-gray-500">Runway in Months</div>
-                        <div className="text-3xl font-bold text-green-700">{runway.months}</div>
-                      </div>
-                    </div>
-                    
-                    <RunwayChart 
-                      savings={accountData.cash.reduce((sum, account) => sum + account.balance, 0)} 
-                      monthlyExpenses={monthlyExpenses} 
-                      months={runway.months} 
-                    />
-                  </div>
-                )}
-              </Card>
+    <div className="max-w-6xl mx-auto">
+      <div className="grid lg:grid-cols-4 gap-6">
+        {/* Main Content - Takes up 3 columns */}
+        <div className="lg:col-span-3 space-y-6">
+          {/* Header Section */}
+          <Card className="p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-semibold text-blue-700 flex items-center">
+                <Landmark className="mr-2" /> Financial Overview
+              </h2>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">Welcome, {user?.email}</span>
+                <Button onClick={handleSignOut} variant="outline" size="sm" className="flex items-center gap-2">
+                  <LogOut size={16} />
+                  Sign Out
+                </Button>
+              </div>
             </div>
-            <div className="space-y-4">
-              <GamificationCard
-                netWorth={getTotalAssets() - getTotalLiabilities()}
-                runway={runway.months}
-                snapshotCount={3}
-                totalAssets={getTotalAssets()}
+            
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 mb-6">
+              <DataRecoveryButton 
+                onRefreshData={loadData}
+                loading={loading}
+                dataFound={dataFound}
               />
-              {/* ... keep existing InfoCard components */}
+              <MassImportDialog onImport={handleMassImport} />
+              <Button 
+                onClick={handleMassDelete}
+                variant="destructive"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Trash2 size={16} />
+                Clear All Data
+              </Button>
+              <Button 
+                onClick={() => setShowSnapshotViewer(true)}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Camera size={16} />
+                View Snapshots
+              </Button>
             </div>
+          </Card>
+
+          {/* Snapshot Management */}
+          <SnapshotManager onCreateSnapshot={createSnapshot} onSaveData={saveData} />
+          
+          {/* Net Worth Summary */}
+          <NetWorthSummary 
+            assets={getTotalAssets()} 
+            liabilities={getTotalLiabilities()}
+          />
+          
+          {/* Monthly Expenses */}
+          <Card className="p-6">
+            <div className="space-y-4">
+              <label htmlFor="monthlyExpenses" className="block text-lg font-medium text-gray-700">
+                Monthly Expenses
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <DollarSign className="h-5 w-5 text-gray-400" />
+                </div>
+                <Input
+                  id="monthlyExpenses"
+                  name="monthlyExpenses"
+                  type="number"
+                  min="0"
+                  className="pl-10"
+                  placeholder="Enter your monthly expenses"
+                  value={monthlyExpenses || ""}
+                  onChange={(e) => setMonthlyExpenses(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+              <Button onClick={handleCalculate} className="w-full bg-blue-600 hover:bg-blue-700">
+                Update Overview
+              </Button>
+            </div>
+          </Card>
+
+          {/* Account Sections */}
+          <div className="space-y-4">
+            <AccountSection 
+              title="Cash" 
+              accounts={accountData.cash}
+              icon={<Wallet size={18} className="text-green-600" />}
+              isHidden={hiddenCategories.cash}
+              onAddAccount={() => addAccount('cash')}
+              onUpdateAccount={(id, balance) => updateAccount('cash', id, balance)}
+              onUpdateAccountName={(id, name) => handleUpdateAccountName('cash', id, name)}
+              onRemoveAccount={(id) => removeAccount('cash', id)}
+              onToggleHidden={() => toggleCategoryHidden('cash')}
+            />
+            
+            <AccountSection 
+              title="Investments" 
+              accounts={accountData.investments}
+              icon={<ChartPie size={18} className="text-blue-600" />}
+              isHidden={hiddenCategories.investments}
+              onAddAccount={() => addAccount('investments')}
+              onUpdateAccount={(id, balance) => updateAccount('investments', id, balance)}
+              onUpdateAccountName={(id, name) => handleUpdateAccountName('investments', id, name)}
+              onRemoveAccount={(id) => removeAccount('investments', id)}
+              onToggleHidden={() => toggleCategoryHidden('investments')}
+            />
+            
+            <AccountSection 
+              title="Credit" 
+              accounts={accountData.credit}
+              icon={<CreditCard size={18} className="text-red-600" />}
+              isNegative={true}
+              isHidden={hiddenCategories.credit}
+              onAddAccount={() => addAccount('credit')}
+              onUpdateAccount={(id, balance) => updateAccount('credit', id, balance)}
+              onUpdateAccountName={(id, name) => handleUpdateAccountName('credit', id, name)}
+              onUpdateInterestRate={(id, rate) => updateAccountInterestRate('credit', id, rate)}
+              onRemoveAccount={(id) => removeAccount('credit', id)}
+              onToggleHidden={() => toggleCategoryHidden('credit')}
+            />
+            
+            <AccountSection 
+              title="Loans" 
+              accounts={accountData.loans}
+              icon={<BadgeEuro size={18} className="text-orange-600" />}
+              isNegative={true}
+              isHidden={hiddenCategories.loans}
+              onAddAccount={() => addAccount('loans')}
+              onUpdateAccount={(id, balance) => updateAccount('loans', id, balance)}
+              onUpdateAccountName={(id, name) => handleUpdateAccountName('loans', id, name)}
+              onUpdateInterestRate={(id, rate) => updateAccountInterestRate('loans', id, rate)}
+              onRemoveAccount={(id) => removeAccount('loans', id)}
+              onToggleHidden={() => toggleCategoryHidden('loans')}
+            />
+            
+            <AccountSection 
+              title="Other Assets" 
+              accounts={accountData.otherAssets}
+              icon={<Coins size={18} className="text-purple-600" />}
+              isHidden={hiddenCategories.otherAssets}
+              onAddAccount={() => addAccount('otherAssets')}
+              onUpdateAccount={(id, balance) => updateAccount('otherAssets', id, balance)}
+              onUpdateAccountName={(id, name) => handleUpdateAccountName('otherAssets', id, name)}
+              onRemoveAccount={(id) => removeAccount('otherAssets', id)}
+              onToggleHidden={() => toggleCategoryHidden('otherAssets')}
+            />
           </div>
+
+          {/* Runway Results */}
+          {(runway.days > 0 || runway.months > 0) && (
+            <Card className="p-6">
+              <h3 className="text-lg font-medium text-gray-700 mb-4">Financial Runway</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <div className="flex justify-center mb-2">
+                    <Clock className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="text-sm text-gray-500">Runway in Days</div>
+                  <div className="text-3xl font-bold text-blue-700">{runway.days}</div>
+                </div>
+                
+                <div className="bg-green-50 p-4 rounded-lg text-center">
+                  <div className="flex justify-center mb-2">
+                    <CalendarDays className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div className="text-sm text-gray-500">Runway in Months</div>
+                  <div className="text-3xl font-bold text-green-700">{runway.months}</div>
+                </div>
+              </div>
+              
+              <RunwayChart 
+                savings={accountData.cash.reduce((sum, account) => sum + account.balance, 0)} 
+                monthlyExpenses={monthlyExpenses} 
+                months={runway.months} 
+              />
+            </Card>
+          )}
+        </div>
+
+        {/* Right Sidebar - Takes up 1 column */}
+        <div className="lg:col-span-1 space-y-4">
+          <GamificationCard
+            netWorth={getTotalAssets() - getTotalLiabilities()}
+            runway={runway.months}
+            snapshotCount={3}
+            totalAssets={getTotalAssets()}
+          />
+          
+          <SnapshotChart />
         </div>
       </div>
+
+      {/* Snapshot Viewer Modal */}
+      {showSnapshotViewer && (
+        <SnapshotViewer onClose={() => setShowSnapshotViewer(false)} />
+      )}
     </div>
   );
 };

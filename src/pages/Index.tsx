@@ -54,35 +54,12 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <div className="container mx-auto px-4 py-8">
-        <header className="text-center mb-10">
+        <header className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-blue-800 mb-2">Personal Finance Dashboard</h1>
           <p className="text-xl text-gray-600">Track your complete financial picture</p>
         </header>
 
-        <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="md:col-span-2">
-              <RunwayCalculator />
-            </div>
-            <div className="space-y-4">
-              <InfoCard 
-                title="Snapshots"
-                content="Take snapshots of your financial state to track changes over time and compare different scenarios."
-                icon="Camera"
-              />
-              <InfoCard 
-                title="Hide Categories"
-                content="Use the eye icon to hide account categories from calculations. Perfect for planning scenarios!"
-                icon="Eye"
-              />
-              <InfoCard 
-                title="Cloud Sync"
-                content="Your data is automatically saved to the cloud and synced across all your devices."
-                icon="Cloud"
-              />
-            </div>
-          </div>
-        </div>
+        <RunwayCalculator />
       </div>
     </div>
   );

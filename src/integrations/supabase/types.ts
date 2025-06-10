@@ -368,8 +368,11 @@ export type Database = {
           balance: number
           category: string
           created_at: string
+          credit_limit: number | null
+          due_date: string | null
           id: string
           is_hidden: boolean
+          minimum_payment: number | null
           name: string
           snapshot_id: string | null
           updated_at: string
@@ -380,8 +383,11 @@ export type Database = {
           balance?: number
           category: string
           created_at?: string
+          credit_limit?: number | null
+          due_date?: string | null
           id?: string
           is_hidden?: boolean
+          minimum_payment?: number | null
           name: string
           snapshot_id?: string | null
           updated_at?: string
@@ -392,8 +398,11 @@ export type Database = {
           balance?: number
           category?: string
           created_at?: string
+          credit_limit?: number | null
+          due_date?: string | null
           id?: string
           is_hidden?: boolean
+          minimum_payment?: number | null
           name?: string
           snapshot_id?: string | null
           updated_at?: string

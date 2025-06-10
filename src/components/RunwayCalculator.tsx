@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -46,6 +45,19 @@ const RunwayCalculator = () => {
     calculateRunway();
   }, [accountData, monthlyExpenses, hiddenCategories]);
 
+  // Auto-save data whenever it changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (user && (accountData.cash.length > 0 || accountData.investments.length > 0 || 
+          accountData.credit.length > 0 || accountData.loans.length > 0 || 
+          accountData.otherAssets.length > 0 || monthlyExpenses > 0)) {
+        saveData();
+      }
+    }, 1000); // Save after 1 second of inactivity
+
+    return () => clearTimeout(timeoutId);
+  }, [accountData, monthlyExpenses, hiddenCategories, user, saveData]);
+
   const calculateRunway = () => {
     if (monthlyExpenses <= 0) {
       setRunway({ days: 0, months: 0 });
@@ -65,6 +77,7 @@ const RunwayCalculator = () => {
 
   const handleCalculate = () => {
     calculateRunway();
+    saveData(); // Save data when user clicks calculate
     toast.success("Financial overview updated!");
   };
 
@@ -201,10 +214,8 @@ const RunwayCalculator = () => {
       setMonthlyExpenses(importedData.monthlyExpenses);
     }
 
-    // Auto-save after import
-    setTimeout(() => {
-      saveData();
-    }, 100);
+    // Auto-save will trigger from the useEffect
+    toast.success("Data imported successfully!");
   };
 
   const handleMassDelete = () => {
@@ -218,10 +229,7 @@ const RunwayCalculator = () => {
       });
       setMonthlyExpenses(0);
       toast.success("All data cleared!");
-      // Auto-save after delete
-      setTimeout(() => {
-        saveData();
-      }, 100);
+      // Auto-save will trigger from the useEffect
     }
   };
 
@@ -282,6 +290,9 @@ const RunwayCalculator = () => {
             assets={getTotalAssets()} 
             liabilities={getTotalLiabilities()}
           />
+
+          {/* Financial Progress Chart - Moved here to make it bigger */}
+          <SnapshotChart />
           
           {/* Monthly Expenses */}
           <Card className="p-6">
@@ -417,8 +428,6 @@ const RunwayCalculator = () => {
             snapshotCount={3}
             totalAssets={getTotalAssets()}
           />
-          
-          <SnapshotChart />
         </div>
       </div>
 

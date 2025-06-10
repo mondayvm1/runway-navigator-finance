@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,6 +8,10 @@ export interface AccountItem {
   name: string;
   balance: number;
   interestRate: number;
+  // Credit card specific fields
+  creditLimit?: number;
+  dueDate?: string;
+  minimumPayment?: number;
 }
 
 interface AccountData {
@@ -89,7 +92,11 @@ export const useFinancialData = () => {
           id: account.account_id,
           name: account.name,
           balance: Number(account.balance),
-          interestRate: 0 // Default, will be enhanced later
+          interestRate: 0, // Default, will be enhanced later
+          // Credit card specific fields
+          creditLimit: account.credit_limit,
+          dueDate: account.due_date,
+          minimumPayment: account.minimum_payment
         };
 
         if (account.category in groupedAccounts) {

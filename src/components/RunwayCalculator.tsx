@@ -159,6 +159,15 @@ const RunwayCalculator = () => {
     }));
   };
 
+  const updateAccountData = (category: keyof typeof accountData, id: string, updates: Partial<AccountItem>) => {
+    setAccountData(prev => ({
+      ...prev,
+      [category]: prev[category].map(account => 
+        account.id === id ? { ...account, ...updates } : account
+      )
+    }));
+  };
+
   const updateAccountInterestRate = (category: keyof typeof accountData, id: string, interestRate: number) => {
     setAccountData(prev => ({
       ...prev,
@@ -357,6 +366,7 @@ const RunwayCalculator = () => {
               onUpdateAccount={(id, balance) => updateAccount('credit', id, balance)}
               onUpdateAccountName={(id, name) => handleUpdateAccountName('credit', id, name)}
               onUpdateInterestRate={(id, rate) => updateAccountInterestRate('credit', id, rate)}
+              onUpdateAccountData={(id, updates) => updateAccountData('credit', id, updates)}
               onRemoveAccount={(id) => removeAccount('credit', id)}
               onToggleHidden={() => toggleCategoryHidden('credit')}
             />

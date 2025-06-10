@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Eye, EyeOff, Edit3, Check, X, Trash2 } from "lucide-react";
 import InterestRateInput from "./InterestRateInput";
 import CreditCardCalculator from "./CreditCardCalculator";
+import CreditCardManager from "./CreditCardManager";
 import { AccountItem } from "@/hooks/useFinancialData";
 
 interface AccountSectionProps {
@@ -18,6 +18,7 @@ interface AccountSectionProps {
   onUpdateAccount: (id: string, balance: number) => void;
   onUpdateAccountName: (id: string, name: string) => void;
   onUpdateInterestRate?: (id: string, rate: number) => void;
+  onUpdateAccountData?: (id: string, updates: Partial<AccountItem>) => void;
   onRemoveAccount: (id: string) => void;
   onToggleHidden: () => void;
 }
@@ -32,6 +33,7 @@ const AccountSection = ({
   onUpdateAccount, 
   onUpdateAccountName,
   onUpdateInterestRate,
+  onUpdateAccountData,
   onRemoveAccount,
   onToggleHidden 
 }: AccountSectionProps) => {
@@ -56,6 +58,7 @@ const AccountSection = ({
   const total = accounts.reduce((sum, account) => sum + account.balance, 0);
   const shouldShowCalculator = (title === 'Credit' || title === 'Loans') && !isHidden;
   const shouldShowInterestRate = title === 'Credit' || title === 'Loans';
+  const isCreditSection = title === 'Credit';
 
   return (
     <Card className="p-4">
@@ -148,7 +151,16 @@ const AccountSection = ({
                   </div>
                 )}
                 
-                {shouldShowCalculator && account.balance > 0 && account.interestRate && (
+                {/* Use new CreditCardManager for credit cards */}
+                {isCreditSection && account.balance > 0 && onUpdateAccountData && (
+                  <CreditCardManager
+                    account={account}
+                    onUpdateAccount={(id, updates) => onUpdateAccountData(id, updates)}
+                  />
+                )}
+                
+                {/* Keep old calculator for loans */}
+                {title === 'Loans' && account.balance > 0 && account.interestRate && (
                   <CreditCardCalculator
                     balance={account.balance}
                     interestRate={account.interestRate}

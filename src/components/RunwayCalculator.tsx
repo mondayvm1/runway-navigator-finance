@@ -35,6 +35,7 @@ const RunwayCalculator = () => {
     loading,
     dataFound,
     loadData,
+    restoreFromSnapshotData,
   } = useFinancialData();
 
   const [runway, setRunway] = useState({
@@ -274,9 +275,8 @@ const RunwayCalculator = () => {
     };
     monthlyExpenses: number;
   }) => {
-    // Replace current data with snapshot data
-    setAccountData(snapshotData.accountData);
-    setMonthlyExpenses(snapshotData.monthlyExpenses);
+    // Use the new restore function from the hook
+    restoreFromSnapshotData(snapshotData);
     
     // Auto-save will trigger from the useEffect to persist the restored data
     toast.success("Financial data restored successfully!");
@@ -309,6 +309,7 @@ const RunwayCalculator = () => {
                 onRefreshData={loadData}
                 loading={loading}
                 dataFound={dataFound}
+                onShowSnapshots={() => setShowSnapshotViewer(true)}
               />
               <MassImportDialog onImport={handleMassImport} />
               <Button 

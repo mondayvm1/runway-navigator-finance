@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -136,7 +135,18 @@ export const useFinancialData = () => {
       if (totalAccounts > 0 || expenses) {
         toast.success(`Data recovered! Found ${totalAccounts} accounts and ${expenses ? 'monthly expenses' : 'no monthly expenses'}`);
       } else {
-        toast.info('No previous data found. You can start entering your financial information.');
+        // Check if snapshots exist for potential recovery
+        const { data: snapshots } = await supabase
+          .from('financial_snapshots')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1);
+
+        if (snapshots && snapshots.length > 0) {
+          toast.info('No current data found, but snapshots are available for recovery. Use "View Snapshots" to restore your data.');
+        } else {
+          toast.info('No previous data found. You can start entering your financial information.');
+        }
       }
 
     } catch (error) {
@@ -145,6 +155,16 @@ export const useFinancialData = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const restoreFromSnapshotData = (snapshotData: {
+    accountData: AccountData;
+    monthlyExpenses: number;
+  }) => {
+    setAccountData(snapshotData.accountData);
+    setMonthlyExpenses(snapshotData.monthlyExpenses);
+    setDataFound(true);
+    console.log('Data restored from snapshot:', snapshotData);
   };
 
   const saveData = async () => {
@@ -312,6 +332,7 @@ export const useFinancialData = () => {
     updateAccountName,
     loading,
     dataFound,
-    loadData, // Expose loadData for manual refresh
+    loadData,
+    restoreFromSnapshotData, // New function to restore from snapshot data
   };
 };

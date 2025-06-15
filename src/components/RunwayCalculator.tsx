@@ -3,7 +3,6 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import RunwayChart from "./RunwayChart";
 import NetWorthSummary from "./NetWorthSummary";
 import AccountSection from "./AccountSection";
 import SnapshotManager from "./SnapshotManager";
@@ -12,7 +11,10 @@ import GamificationCard from "./GamificationCard";
 import DataRecoveryButton from "./DataRecoveryButton";
 import MassImportDialog from "./MassImportDialog";
 import SnapshotViewer from "./SnapshotViewer";
-import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera } from "lucide-react";
+import IncomeManager, { IncomeEvent } from "./IncomeManager";
+import FinancialInsights from "./FinancialInsights";
+import EnhancedRunwayChart from "./EnhancedRunwayChart";
+import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
 import { useFinancialData, AccountItem } from '@/hooks/useFinancialData';
@@ -40,6 +42,7 @@ const RunwayCalculator = () => {
   });
 
   const [showSnapshotViewer, setShowSnapshotViewer] = useState(false);
+  const [incomeEvents, setIncomeEvents] = useState<IncomeEvent[]>([]);
 
   useEffect(() => {
     calculateRunway();
@@ -242,16 +245,29 @@ const RunwayCalculator = () => {
     }
   };
 
+  const addIncomeEvent = (event: Omit<IncomeEvent, 'id'>) => {
+    const newEvent: IncomeEvent = {
+      ...event,
+      id: uuidv4()
+    };
+    setIncomeEvents(prev => [...prev, newEvent].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+  };
+
+  const removeIncomeEvent = (id: string) => {
+    setIncomeEvents(prev => prev.filter(event => event.id !== id));
+  };
+
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="grid lg:grid-cols-4 gap-6">
+    <div className="max-w-7xl mx-auto">
+      <div className="grid lg:grid-cols-5 gap-6">
         {/* Main Content - Takes up 3 columns */}
         <div className="lg:col-span-3 space-y-6">
-          {/* Header Section */}
-          <Card className="p-6 shadow-lg">
+          {/* Header Section with enhanced styling */}
+          <Card className="p-6 shadow-lg bg-gradient-to-r from-blue-50 to-green-50">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-semibold text-blue-700 flex items-center">
-                <Landmark className="mr-2" /> Financial Overview
+                <Sparkles className="mr-2 text-yellow-500" /> 
+                Financial Dashboard v1
               </h2>
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-600">Welcome, {user?.email}</span>
@@ -300,8 +316,12 @@ const RunwayCalculator = () => {
             liabilities={getTotalLiabilities()}
           />
 
-          {/* Financial Progress Chart - Moved here to make it bigger */}
-          <SnapshotChart />
+          {/* Income Planning */}
+          <IncomeManager 
+            incomeEvents={incomeEvents}
+            onAddIncomeEvent={addIncomeEvent}
+            onRemoveIncomeEvent={removeIncomeEvent}
+          />
           
           {/* Monthly Expenses */}
           <Card className="p-6">
@@ -398,10 +418,10 @@ const RunwayCalculator = () => {
             />
           </div>
 
-          {/* Runway Results */}
+          {/* Enhanced Runway Results with Income Projection */}
           {(runway.days > 0 || runway.months > 0) && (
             <Card className="p-6">
-              <h3 className="text-lg font-medium text-gray-700 mb-4">Financial Runway</h3>
+              <h3 className="text-lg font-medium text-gray-700 mb-4">Financial Runway & Projections</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="bg-blue-50 p-4 rounded-lg text-center">
@@ -421,17 +441,32 @@ const RunwayCalculator = () => {
                 </div>
               </div>
               
-              <RunwayChart 
+              <EnhancedRunwayChart 
                 savings={accountData.cash.reduce((sum, account) => sum + account.balance, 0)} 
                 monthlyExpenses={monthlyExpenses} 
-                months={runway.months} 
+                months={runway.months}
+                incomeEvents={incomeEvents}
               />
             </Card>
           )}
         </div>
 
-        {/* Right Sidebar - Takes up 1 column */}
-        <div className="lg:col-span-1 space-y-4">
+        {/* Right Sidebar - Takes up 2 columns */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Financial Progress Chart */}
+          <SnapshotChart />
+          
+          {/* Financial Insights */}
+          <FinancialInsights
+            netWorth={getTotalAssets() - getTotalLiabilities()}
+            totalAssets={getTotalAssets()}
+            totalLiabilities={getTotalLiabilities()}
+            runway={runway}
+            creditAccounts={accountData.credit}
+            monthlyExpenses={monthlyExpenses}
+          />
+          
+          {/* Gamification Card */}
           <GamificationCard
             netWorth={getTotalAssets() - getTotalLiabilities()}
             runway={runway.months}

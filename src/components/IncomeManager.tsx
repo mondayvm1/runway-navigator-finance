@@ -29,7 +29,7 @@ const IncomeManager = ({ incomeEvents, onAddIncomeEvent, onRemoveIncomeEvent }: 
     name: '',
     amount: 0,
     date: '',
-    frequency: 'one-time' as const,
+    frequency: 'one-time' as 'one-time' | 'monthly' | 'yearly',
     endDate: ''
   });
 
@@ -45,7 +45,7 @@ const IncomeManager = ({ incomeEvents, onAddIncomeEvent, onRemoveIncomeEvent }: 
       name: '',
       amount: 0,
       date: '',
-      frequency: 'one-time',
+      frequency: 'one-time' as 'one-time' | 'monthly' | 'yearly',
       endDate: ''
     });
     setShowForm(false);
@@ -153,7 +153,7 @@ const IncomeManager = ({ incomeEvents, onAddIncomeEvent, onRemoveIncomeEvent }: 
               </div>
             </div>
             
-            {/* Fixed the TypeScript error by correcting the logical condition */}
+            {/* Fixed the TypeScript error by properly typing the frequency state */}
             {(newEvent.frequency === 'monthly' || newEvent.frequency === 'yearly') && (
               <div>
                 <Label className="text-xs text-gray-600">End Date (Optional)</Label>

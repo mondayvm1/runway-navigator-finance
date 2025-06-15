@@ -1,11 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/utils/formatters';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, RefreshCw, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface SnapshotData {
   id: string;
@@ -23,6 +25,7 @@ const SnapshotChart = () => {
   const { user } = useAuth();
   const [snapshotData, setSnapshotData] = useState<SnapshotData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -120,8 +123,53 @@ const SnapshotChart = () => {
       setSnapshotData(enrichedSnapshots);
     } catch (error) {
       console.error('Error loading snapshot data:', error);
+      toast.error('Failed to load snapshot data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadSnapshotData();
+    setRefreshing(false);
+    toast.success('Snapshot data refreshed!');
+  };
+
+  const handleClearAllSnapshots = async () => {
+    if (!user) return;
+
+    if (!window.confirm('Are you sure you want to delete ALL snapshots? This cannot be undone and will clear the progress chart.')) {
+      return;
+    }
+
+    try {
+      // Delete all snapshot accounts and expenses first
+      const { data: snapshots } = await supabase
+        .from('financial_snapshots')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (snapshots) {
+        for (const snapshot of snapshots) {
+          await supabase.from('user_accounts').delete().eq('snapshot_id', snapshot.id);
+          await supabase.from('monthly_expenses').delete().eq('snapshot_id', snapshot.id);
+        }
+      }
+
+      // Delete all snapshots
+      const { error } = await supabase
+        .from('financial_snapshots')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setSnapshotData([]);
+      toast.success('All snapshots cleared successfully');
+    } catch (error) {
+      console.error('Error clearing snapshots:', error);
+      toast.error('Failed to clear snapshots');
     }
   };
 
@@ -163,12 +211,29 @@ const SnapshotChart = () => {
   if (snapshotData.length < 2) {
     return (
       <Card className="p-6 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="h-5 w-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-800">Financial Progress</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <h3 className="text-lg font-semibold text-gray-800">Financial Progress</h3>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleRefresh}
+              variant="outline"
+              size="sm"
+              disabled={refreshing}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
         <div className="text-center text-gray-500 py-8">
           <p>Create at least 2 snapshots to see your financial progress over time.</p>
+          {snapshotData.length === 1 && (
+            <p className="text-sm mt-2">You have 1 snapshot. Create one more to see the chart!</p>
+          )}
         </div>
       </Card>
     );
@@ -176,9 +241,32 @@ const SnapshotChart = () => {
 
   return (
     <Card className="p-6 mb-6">
-      <div className="flex items-center gap-2 mb-4">
-        <TrendingUp className="h-5 w-5 text-blue-600" />
-        <h3 className="text-lg font-semibold text-gray-800">Financial Progress</h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="h-5 w-5 text-blue-600" />
+          <h3 className="text-lg font-semibold text-gray-800">Financial Progress</h3>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleRefresh}
+            variant="outline"
+            size="sm"
+            disabled={refreshing}
+            className="flex items-center gap-1"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button
+            onClick={handleClearAllSnapshots}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1 text-red-600 hover:text-red-700"
+          >
+            <Trash2 className="h-4 w-4" />
+            Clear All
+          </Button>
+        </div>
       </div>
       
       <div className="h-80 w-full">
@@ -243,6 +331,7 @@ const SnapshotChart = () => {
       
       <div className="mt-4 text-sm text-gray-600">
         <p>Track your financial progress across different snapshots. Solid lines show major metrics, dashed lines show account categories.</p>
+        <p className="mt-1 text-xs">Use "Refresh" to update the chart or "Clear All" to remove inaccurate historical data.</p>
       </div>
     </Card>
   );

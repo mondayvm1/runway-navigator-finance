@@ -14,6 +14,7 @@ import SnapshotViewer from "./SnapshotViewer";
 import IncomeManager, { IncomeEvent } from "./IncomeManager";
 import FinancialInsights from "./FinancialInsights";
 import EnhancedRunwayChart from "./EnhancedRunwayChart";
+import EnhancedSnapshotManager from "./EnhancedSnapshotManager";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
@@ -257,6 +258,12 @@ const RunwayCalculator = () => {
     setIncomeEvents(prev => prev.filter(event => event.id !== id));
   };
 
+  // Enhanced snapshot creation with description
+  const handleCreateSnapshot = async (name: string, description?: string) => {
+    console.log('Creating snapshot with name:', name, 'and description:', description);
+    return await createSnapshot(name);
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="grid lg:grid-cols-5 gap-6">
@@ -307,8 +314,8 @@ const RunwayCalculator = () => {
             </div>
           </Card>
 
-          {/* Snapshot Management */}
-          <SnapshotManager onCreateSnapshot={createSnapshot} onSaveData={saveData} />
+          {/* Enhanced Snapshot Management */}
+          <EnhancedSnapshotManager onCreateSnapshot={handleCreateSnapshot} onSaveData={saveData} />
           
           {/* Net Worth Summary */}
           <NetWorthSummary 

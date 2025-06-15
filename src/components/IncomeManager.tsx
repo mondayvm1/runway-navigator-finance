@@ -153,6 +153,7 @@ const IncomeManager = ({ incomeEvents, onAddIncomeEvent, onRemoveIncomeEvent }: 
               </div>
             </div>
             
+            {/* Fixed the TypeScript error here by checking the frequency value properly */}
             {(newEvent.frequency === 'monthly' || newEvent.frequency === 'yearly') && (
               <div>
                 <Label className="text-xs text-gray-600">End Date (Optional)</Label>

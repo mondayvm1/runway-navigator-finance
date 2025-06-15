@@ -15,7 +15,7 @@ import IncomeManager, { IncomeEvent } from "./IncomeManager";
 import FinancialInsights from "./FinancialInsights";
 import EnhancedRunwayChart from "./EnhancedRunwayChart";
 import EnhancedSnapshotManager from "./EnhancedSnapshotManager";
-import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles } from "lucide-react";
+import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles, TrendingUp } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
 import { useFinancialData, AccountItem } from '@/hooks/useFinancialData';
@@ -41,6 +41,8 @@ const RunwayCalculator = () => {
   const [runway, setRunway] = useState({
     days: 0,
     months: 0,
+    withIncomeMonths: 0,
+    additionalMonthsFromIncome: 0,
   });
 
   const [showSnapshotViewer, setShowSnapshotViewer] = useState(false);
@@ -48,7 +50,7 @@ const RunwayCalculator = () => {
 
   useEffect(() => {
     calculateRunway();
-  }, [accountData, monthlyExpenses, hiddenCategories]);
+  }, [accountData, monthlyExpenses, hiddenCategories, incomeEvents]);
 
   // Auto-save data whenever it changes
   useEffect(() => {
@@ -65,18 +67,71 @@ const RunwayCalculator = () => {
 
   const calculateRunway = () => {
     if (monthlyExpenses <= 0) {
-      setRunway({ days: 0, months: 0 });
+      setRunway({ days: 0, months: 0, withIncomeMonths: 0, additionalMonthsFromIncome: 0 });
       return;
     }
 
     const totalCash = accountData.cash.reduce((sum, account) => sum + account.balance, 0);
     const dailyExpenses = monthlyExpenses / 30;
     const totalDays = Math.floor(totalCash / dailyExpenses);
-    const totalMonths = (totalCash / monthlyExpenses).toFixed(1);
+    const baseMonths = parseFloat((totalCash / monthlyExpenses).toFixed(1));
+
+    // Calculate runway with income events
+    let remainingSavings = totalCash;
+    let monthsWithIncome = 0;
+    const maxProjectionMonths = 60; // Project up to 5 years
+
+    for (let month = 1; month <= maxProjectionMonths; month++) {
+      // Subtract monthly expenses
+      remainingSavings -= monthlyExpenses;
+
+      // Add income for this month
+      const currentDate = new Date();
+      currentDate.setMonth(currentDate.getMonth() + month);
+      
+      const monthlyIncome = incomeEvents.reduce((total, event) => {
+        const eventDate = new Date(event.date);
+        const eventMonth = eventDate.getFullYear() * 12 + eventDate.getMonth();
+        const currentMonth = currentDate.getFullYear() * 12 + currentDate.getMonth();
+        
+        if (event.frequency === 'one-time' && eventMonth === currentMonth) {
+          return total + event.amount;
+        } else if (event.frequency === 'monthly') {
+          const endDate = event.endDate ? new Date(event.endDate) : null;
+          if (eventMonth <= currentMonth && (!endDate || currentDate <= endDate)) {
+            return total + event.amount;
+          }
+        } else if (event.frequency === 'yearly') {
+          const eventAnnualDate = new Date(currentDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+          if (Math.abs(eventAnnualDate.getTime() - currentDate.getTime()) < 24 * 60 * 60 * 1000) {
+            return total + event.amount;
+          }
+        }
+        
+        return total;
+      }, 0);
+
+      remainingSavings += monthlyIncome;
+      monthsWithIncome = month;
+
+      // If we run out of money, break
+      if (remainingSavings <= 0) {
+        break;
+      }
+    }
+
+    // If we still have money after max projection, set to max
+    if (remainingSavings > 0) {
+      monthsWithIncome = maxProjectionMonths;
+    }
+
+    const additionalMonths = Math.max(0, monthsWithIncome - baseMonths);
 
     setRunway({
       days: totalDays,
-      months: parseFloat(totalMonths),
+      months: baseMonths,
+      withIncomeMonths: monthsWithIncome,
+      additionalMonthsFromIncome: additionalMonths,
     });
   };
 
@@ -449,21 +504,41 @@ const RunwayCalculator = () => {
             <Card className="p-6">
               <h3 className="text-lg font-medium text-gray-700 mb-4">Financial Runway & Projections</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div className="bg-blue-50 p-4 rounded-lg text-center">
                   <div className="flex justify-center mb-2">
                     <Clock className="h-6 w-6 text-blue-600" />
                   </div>
                   <div className="text-sm text-gray-500">Runway in Days</div>
-                  <div className="text-3xl font-bold text-blue-700">{runway.days}</div>
+                  <div className="text-2xl font-bold text-blue-700">{runway.days}</div>
                 </div>
                 
+                <div className="bg-orange-50 p-4 rounded-lg text-center">
+                  <div className="flex justify-center mb-2">
+                    <CalendarDays className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div className="text-sm text-gray-500">Without Income</div>
+                  <div className="text-2xl font-bold text-orange-700">{runway.months}</div>
+                </div>
+
                 <div className="bg-green-50 p-4 rounded-lg text-center">
                   <div className="flex justify-center mb-2">
-                    <CalendarDays className="h-6 w-6 text-green-600" />
+                    <TrendingUp className="h-6 w-6 text-green-600" />
                   </div>
-                  <div className="text-sm text-gray-500">Runway in Months</div>
-                  <div className="text-3xl font-bold text-green-700">{runway.months}</div>
+                  <div className="text-sm text-gray-500">With Income</div>
+                  <div className="text-2xl font-bold text-green-700">
+                    {runway.withIncomeMonths >= 60 ? '60+' : runway.withIncomeMonths}
+                  </div>
+                </div>
+
+                <div className="bg-purple-50 p-4 rounded-lg text-center">
+                  <div className="flex justify-center mb-2">
+                    <Sparkles className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div className="text-sm text-gray-500">Extra Months</div>
+                  <div className="text-2xl font-bold text-purple-700">
+                    {runway.additionalMonthsFromIncome >= 60 ? '60+' : runway.additionalMonthsFromIncome.toFixed(1)}
+                  </div>
                 </div>
               </div>
               

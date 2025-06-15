@@ -264,6 +264,24 @@ const RunwayCalculator = () => {
     return await createSnapshot(name);
   };
 
+  const handleRestoreFromSnapshot = (snapshotData: {
+    accountData: {
+      cash: AccountItem[];
+      investments: AccountItem[];
+      credit: AccountItem[];
+      loans: AccountItem[];
+      otherAssets: AccountItem[];
+    };
+    monthlyExpenses: number;
+  }) => {
+    // Replace current data with snapshot data
+    setAccountData(snapshotData.accountData);
+    setMonthlyExpenses(snapshotData.monthlyExpenses);
+    
+    // Auto-save will trigger from the useEffect to persist the restored data
+    toast.success("Financial data restored successfully!");
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="grid lg:grid-cols-5 gap-6">
@@ -485,7 +503,10 @@ const RunwayCalculator = () => {
 
       {/* Snapshot Viewer Modal */}
       {showSnapshotViewer && (
-        <SnapshotViewer onClose={() => setShowSnapshotViewer(false)} />
+        <SnapshotViewer 
+          onClose={() => setShowSnapshotViewer(false)} 
+          onRestoreSnapshot={handleRestoreFromSnapshot}
+        />
       )}
     </div>
   );

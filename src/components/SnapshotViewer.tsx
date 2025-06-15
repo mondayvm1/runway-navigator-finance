@@ -1,14 +1,14 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Calendar, TrendingUp, DollarSign, Trash2 } from 'lucide-react';
+import { X, Calendar, TrendingUp, DollarSign, Trash2, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/utils/formatters';
 import { toast } from 'sonner';
+import { AccountItem } from '@/hooks/useFinancialData';
 
 interface SnapshotData {
   id: string;
@@ -27,12 +27,23 @@ interface SnapshotData {
 
 interface SnapshotViewerProps {
   onClose: () => void;
+  onRestoreSnapshot?: (snapshotData: {
+    accountData: {
+      cash: AccountItem[];
+      investments: AccountItem[];
+      credit: AccountItem[];
+      loans: AccountItem[];
+      otherAssets: AccountItem[];
+    };
+    monthlyExpenses: number;
+  }) => void;
 }
 
-const SnapshotViewer = ({ onClose }: SnapshotViewerProps) => {
+const SnapshotViewer = ({ onClose, onRestoreSnapshot }: SnapshotViewerProps) => {
   const { user } = useAuth();
   const [snapshots, setSnapshots] = useState<SnapshotData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [restoring, setRestoring] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -139,6 +150,74 @@ const SnapshotViewer = ({ onClose }: SnapshotViewerProps) => {
     }
   };
 
+  const restoreFromSnapshot = async (snapshotId: string) => {
+    if (!user || !onRestoreSnapshot) return;
+
+    if (!window.confirm('Are you sure you want to restore from this snapshot? This will replace your current financial data.')) {
+      return;
+    }
+
+    try {
+      setRestoring(snapshotId);
+      
+      // Get accounts for this snapshot
+      const { data: accounts, error: accountsError } = await supabase
+        .from('user_accounts')
+        .select('*')
+        .eq('snapshot_id', snapshotId);
+
+      if (accountsError) throw accountsError;
+
+      // Get monthly expenses for this snapshot
+      const { data: expenses, error: expensesError } = await supabase
+        .from('monthly_expenses')
+        .select('*')
+        .eq('snapshot_id', snapshotId)
+        .single();
+
+      if (expensesError && expensesError.code !== 'PGRST116') throw expensesError;
+
+      // Group accounts by category
+      const groupedAccounts = {
+        cash: [] as AccountItem[],
+        investments: [] as AccountItem[],
+        credit: [] as AccountItem[],
+        loans: [] as AccountItem[],
+        otherAssets: [] as AccountItem[]
+      };
+
+      accounts?.forEach(account => {
+        const accountItem: AccountItem = {
+          id: account.account_id,
+          name: account.name,
+          balance: Number(account.balance),
+          interestRate: 0, // Default, can be enhanced later
+          creditLimit: account.credit_limit ? Number(account.credit_limit) : undefined,
+          dueDate: account.due_date || undefined,
+          minimumPayment: account.minimum_payment ? Number(account.minimum_payment) : undefined
+        };
+
+        if (account.category in groupedAccounts) {
+          groupedAccounts[account.category as keyof typeof groupedAccounts].push(accountItem);
+        }
+      });
+
+      // Call the restore callback
+      onRestoreSnapshot({
+        accountData: groupedAccounts,
+        monthlyExpenses: expenses ? Number(expenses.amount) : 0
+      });
+
+      toast.success('Financial data restored from snapshot!');
+      onClose(); // Close the modal after successful restore
+    } catch (error) {
+      console.error('Error restoring snapshot:', error);
+      toast.error('Failed to restore from snapshot');
+    } finally {
+      setRestoring(null);
+    }
+  };
+
   const deleteSnapshot = async (snapshotId: string) => {
     if (!window.confirm('Are you sure you want to delete this snapshot? This cannot be undone.')) {
       return;
@@ -213,6 +292,18 @@ const SnapshotViewer = ({ onClose }: SnapshotViewerProps) => {
                         <TrendingUp className="h-3 w-3 mr-1" />
                         {formatCurrency(snapshot.netWorth)}
                       </Badge>
+                      {onRestoreSnapshot && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => restoreFromSnapshot(snapshot.id)}
+                          disabled={restoring === snapshot.id}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-1" />
+                          {restoring === snapshot.id ? 'Restoring...' : 'Restore'}
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"

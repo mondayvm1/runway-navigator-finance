@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -60,7 +61,7 @@ const RunwayCalculator = () => {
           accountData.otherAssets.length > 0 || monthlyExpenses > 0)) {
         saveData();
       }
-    }, 1000); // Save after 1 second of inactivity
+    }, 1000);
 
     return () => clearTimeout(timeoutId);
   }, [accountData, monthlyExpenses, hiddenCategories, user, saveData]);
@@ -79,13 +80,11 @@ const RunwayCalculator = () => {
     // Calculate runway with income events
     let remainingSavings = totalCash;
     let monthsWithIncome = 0;
-    const maxProjectionMonths = 60; // Project up to 5 years
+    const maxProjectionMonths = 60;
 
     for (let month = 1; month <= maxProjectionMonths; month++) {
-      // Subtract monthly expenses
       remainingSavings -= monthlyExpenses;
 
-      // Add income for this month
       const currentDate = new Date();
       currentDate.setMonth(currentDate.getMonth() + month);
       
@@ -114,13 +113,11 @@ const RunwayCalculator = () => {
       remainingSavings += monthlyIncome;
       monthsWithIncome = month;
 
-      // If we run out of money, break
       if (remainingSavings <= 0) {
         break;
       }
     }
 
-    // If we still have money after max projection, set to max
     if (remainingSavings > 0) {
       monthsWithIncome = maxProjectionMonths;
     }
@@ -137,7 +134,7 @@ const RunwayCalculator = () => {
 
   const handleCalculate = () => {
     calculateRunway();
-    saveData(); // Save data when user clicks calculate
+    saveData();
     toast.success("Financial overview updated!");
   };
 
@@ -270,7 +267,6 @@ const RunwayCalculator = () => {
     };
     monthlyExpenses: number;
   }) => {
-    // Merge imported data with existing data
     setAccountData(prev => ({
       cash: [...prev.cash, ...importedData.accounts.cash],
       investments: [...prev.investments, ...importedData.accounts.investments],
@@ -283,7 +279,6 @@ const RunwayCalculator = () => {
       setMonthlyExpenses(importedData.monthlyExpenses);
     }
 
-    // Auto-save will trigger from the useEffect
     toast.success("Data imported successfully!");
   };
 
@@ -297,8 +292,8 @@ const RunwayCalculator = () => {
         otherAssets: []
       });
       setMonthlyExpenses(0);
+      setIncomeEvents([]);
       toast.success("All data cleared!");
-      // Auto-save will trigger from the useEffect
     }
   };
 
@@ -314,7 +309,6 @@ const RunwayCalculator = () => {
     setIncomeEvents(prev => prev.filter(event => event.id !== id));
   };
 
-  // Enhanced snapshot creation with description
   const handleCreateSnapshot = async (name: string, description?: string) => {
     console.log('Creating snapshot with name:', name, 'and description:', description);
     return await createSnapshot(name);
@@ -330,19 +324,15 @@ const RunwayCalculator = () => {
     };
     monthlyExpenses: number;
   }) => {
-    // Use the new restore function from the hook
     restoreFromSnapshotData(snapshotData);
-    
-    // Auto-save will trigger from the useEffect to persist the restored data
+    setIncomeEvents([]); // Clear income events when restoring from snapshot
     toast.success("Financial data restored successfully!");
   };
 
   return (
     <div className="max-w-7xl mx-auto">
       <div className="grid lg:grid-cols-5 gap-6">
-        {/* Main Content - Takes up 3 columns */}
         <div className="lg:col-span-3 space-y-6">
-          {/* Header Section with enhanced styling */}
           <Card className="p-6 shadow-lg bg-gradient-to-r from-blue-50 to-green-50">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-semibold text-blue-700 flex items-center">
@@ -358,7 +348,6 @@ const RunwayCalculator = () => {
               </div>
             </div>
             
-            {/* Action Buttons */}
             <div className="flex flex-wrap gap-3 mb-6">
               <DataRecoveryButton 
                 onRefreshData={loadData}
@@ -388,23 +377,19 @@ const RunwayCalculator = () => {
             </div>
           </Card>
 
-          {/* Enhanced Snapshot Management */}
           <EnhancedSnapshotManager onCreateSnapshot={handleCreateSnapshot} onSaveData={saveData} />
           
-          {/* Net Worth Summary */}
           <NetWorthSummary 
             assets={getTotalAssets()} 
             liabilities={getTotalLiabilities()}
           />
 
-          {/* Income Planning */}
           <IncomeManager 
             incomeEvents={incomeEvents}
             onAddIncomeEvent={addIncomeEvent}
             onRemoveIncomeEvent={removeIncomeEvent}
           />
           
-          {/* Monthly Expenses */}
           <Card className="p-6">
             <div className="space-y-4">
               <label htmlFor="monthlyExpenses" className="block text-lg font-medium text-gray-700">
@@ -431,7 +416,6 @@ const RunwayCalculator = () => {
             </div>
           </Card>
 
-          {/* Account Sections */}
           <div className="space-y-4">
             <AccountSection 
               title="Cash" 
@@ -499,7 +483,6 @@ const RunwayCalculator = () => {
             />
           </div>
 
-          {/* Enhanced Runway Results with Income Projection */}
           {(runway.days > 0 || runway.months > 0) && (
             <Card className="p-6">
               <h3 className="text-lg font-medium text-gray-700 mb-4">Financial Runway & Projections</h3>
@@ -552,12 +535,9 @@ const RunwayCalculator = () => {
           )}
         </div>
 
-        {/* Right Sidebar - Takes up 2 columns */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Financial Progress Chart */}
           <SnapshotChart />
           
-          {/* Financial Insights */}
           <FinancialInsights
             netWorth={getTotalAssets() - getTotalLiabilities()}
             totalAssets={getTotalAssets()}
@@ -567,7 +547,6 @@ const RunwayCalculator = () => {
             monthlyExpenses={monthlyExpenses}
           />
           
-          {/* Gamification Card */}
           <GamificationCard
             netWorth={getTotalAssets() - getTotalLiabilities()}
             runway={runway.months}
@@ -577,7 +556,6 @@ const RunwayCalculator = () => {
         </div>
       </div>
 
-      {/* Snapshot Viewer Modal */}
       {showSnapshotViewer && (
         <SnapshotViewer 
           onClose={() => setShowSnapshotViewer(false)} 

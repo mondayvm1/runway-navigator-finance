@@ -8,7 +8,6 @@ export interface AccountItem {
   name: string;
   balance: number;
   interestRate: number;
-  // Credit card specific fields
   creditLimit?: number;
   dueDate?: string;
   minimumPayment?: number;
@@ -63,7 +62,6 @@ export const useFinancialData = () => {
     console.log('Loading financial data for user:', user.id);
 
     try {
-      // Load accounts with detailed logging
       const { data: accounts, error: accountsError } = await supabase
         .from('user_accounts')
         .select('*')
@@ -77,7 +75,6 @@ export const useFinancialData = () => {
 
       console.log('Loaded accounts:', accounts);
 
-      // Group accounts by category
       const groupedAccounts: AccountData = {
         cash: [],
         investments: [],
@@ -92,8 +89,7 @@ export const useFinancialData = () => {
           id: account.account_id,
           name: account.name,
           balance: Number(account.balance),
-          interestRate: 0, // Default, will be enhanced later
-          // Credit card specific fields
+          interestRate: 0,
           creditLimit: account.credit_limit ? Number(account.credit_limit) : undefined,
           dueDate: account.due_date || undefined,
           minimumPayment: account.minimum_payment ? Number(account.minimum_payment) : undefined
@@ -111,7 +107,6 @@ export const useFinancialData = () => {
       setAccountData(groupedAccounts);
       setDataFound(totalAccounts > 0);
 
-      // Load monthly expenses
       const { data: expenses, error: expensesError } = await supabase
         .from('monthly_expenses')
         .select('amount')
@@ -131,11 +126,9 @@ export const useFinancialData = () => {
         console.log('Monthly expenses set to:', Number(expenses.amount));
       }
 
-      // Show recovery status
       if (totalAccounts > 0 || expenses) {
         toast.success(`Data recovered! Found ${totalAccounts} accounts and ${expenses ? 'monthly expenses' : 'no monthly expenses'}`);
       } else {
-        // Check if snapshots exist for potential recovery
         const { data: snapshots } = await supabase
           .from('financial_snapshots')
           .select('id')
@@ -173,7 +166,6 @@ export const useFinancialData = () => {
     try {
       console.log('Saving financial data...');
       
-      // Save accounts
       const accountsToSave = [];
       Object.entries(accountData).forEach(([category, accounts]) => {
         accounts.forEach(account => {
@@ -193,7 +185,6 @@ export const useFinancialData = () => {
 
       console.log('Accounts to save:', accountsToSave);
 
-      // Delete existing accounts for this user (not snapshots)
       const { error: deleteError } = await supabase
         .from('user_accounts')
         .delete()
@@ -205,7 +196,6 @@ export const useFinancialData = () => {
         throw deleteError;
       }
 
-      // Insert new accounts
       if (accountsToSave.length > 0) {
         const { error: accountsError } = await supabase
           .from('user_accounts')
@@ -217,7 +207,6 @@ export const useFinancialData = () => {
         }
       }
 
-      // Save monthly expenses
       const { error: deleteExpensesError } = await supabase
         .from('monthly_expenses')
         .delete()
@@ -253,7 +242,6 @@ export const useFinancialData = () => {
     if (!user) return;
 
     try {
-      // Create snapshot record
       const { data: snapshot, error: snapshotError } = await supabase
         .from('financial_snapshots')
         .insert({
@@ -265,7 +253,6 @@ export const useFinancialData = () => {
 
       if (snapshotError) throw snapshotError;
 
-      // Save current accounts to snapshot
       const accountsToSave = [];
       Object.entries(accountData).forEach(([category, accounts]) => {
         accounts.forEach(account => {
@@ -292,7 +279,6 @@ export const useFinancialData = () => {
         if (accountsError) throw accountsError;
       }
 
-      // Save monthly expenses to snapshot
       const { error: expensesError } = await supabase
         .from('monthly_expenses')
         .insert({
@@ -333,6 +319,6 @@ export const useFinancialData = () => {
     loading,
     dataFound,
     loadData,
-    restoreFromSnapshotData, // New function to restore from snapshot data
+    restoreFromSnapshotData,
   };
 };

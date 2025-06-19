@@ -319,6 +319,8 @@ const RunwayCalculator = () => {
       otherAssets: AccountItem[];
     };
     monthlyExpenses: number;
+    incomeEvents?: IncomeEvent[];
+    incomeEnabled?: boolean;
   }) => {
     restoreFromSnapshotData(snapshotData);
     toast.success("Financial data restored successfully!");
@@ -540,7 +542,8 @@ const RunwayCalculator = () => {
                 savings={accountData.cash.reduce((sum, account) => sum + account.balance, 0)} 
                 monthlyExpenses={monthlyExpenses} 
                 months={runway.months}
-                incomeEvents={incomeEnabled ? incomeEvents : []}
+                incomeEvents={incomeEvents}
+                incomeEnabled={incomeEnabled}
               />
             </Card>
           )}

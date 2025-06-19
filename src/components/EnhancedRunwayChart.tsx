@@ -8,62 +8,79 @@ interface EnhancedRunwayChartProps {
   monthlyExpenses: number;
   months: number;
   incomeEvents?: IncomeEvent[];
+  incomeEnabled?: boolean;
 }
 
-const EnhancedRunwayChart = ({ savings, monthlyExpenses, months, incomeEvents = [] }: EnhancedRunwayChartProps) => {
+const EnhancedRunwayChart = ({ 
+  savings, 
+  monthlyExpenses, 
+  months, 
+  incomeEvents = [],
+  incomeEnabled = true 
+}: EnhancedRunwayChartProps) => {
   
   const generateChartData = () => {
     if (monthlyExpenses <= 0) return [];
     
     const data = [];
-    let remainingSavings = savings;
+    let remainingSavingsWithIncome = savings;
+    let remainingSavingsWithoutIncome = savings;
     const endMonth = Math.max(Math.ceil(months) + 6, 12); // Show at least 12 months
     
     for (let i = 0; i <= endMonth; i++) {
       const currentDate = new Date();
       currentDate.setMonth(currentDate.getMonth() + i);
       
-      // Apply monthly expenses
+      // Apply monthly expenses to both scenarios
       if (i > 0) {
-        remainingSavings -= monthlyExpenses;
+        remainingSavingsWithIncome -= monthlyExpenses;
+        remainingSavingsWithoutIncome -= monthlyExpenses;
       }
       
-      // Apply income events for this month
-      const monthlyIncome = incomeEvents.reduce((total, event) => {
-        const eventDate = new Date(event.date);
-        const eventMonth = eventDate.getFullYear() * 12 + eventDate.getMonth();
-        const currentMonth = currentDate.getFullYear() * 12 + currentDate.getMonth();
-        
-        if (event.frequency === 'one-time' && eventMonth === currentMonth) {
-          return total + event.amount;
-        } else if (event.frequency === 'monthly') {
-          const endDate = event.endDate ? new Date(event.endDate) : null;
-          if (eventMonth <= currentMonth && (!endDate || currentDate <= endDate)) {
+      // Apply income events only if income is enabled
+      let monthlyIncome = 0;
+      if (incomeEnabled && incomeEvents.length > 0) {
+        monthlyIncome = incomeEvents.reduce((total, event) => {
+          const eventDate = new Date(event.date);
+          const eventMonth = eventDate.getFullYear() * 12 + eventDate.getMonth();
+          const currentMonth = currentDate.getFullYear() * 12 + currentDate.getMonth();
+          
+          if (event.frequency === 'one-time' && eventMonth === currentMonth) {
             return total + event.amount;
+          } else if (event.frequency === 'monthly') {
+            const endDate = event.endDate ? new Date(event.endDate) : null;
+            if (eventMonth <= currentMonth && (!endDate || currentDate <= endDate)) {
+              return total + event.amount;
+            }
+          } else if (event.frequency === 'yearly') {
+            const eventAnnualDate = new Date(currentDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+            const timeDiff = Math.abs(eventAnnualDate.getTime() - currentDate.getTime());
+            const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+            if (daysDiff <= 15) { // Within 15 days of the annual date
+              return total + event.amount;
+            }
           }
-        } else if (event.frequency === 'yearly') {
-          const eventAnnualDate = new Date(currentDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
-          if (eventAnnualDate.getTime() === currentDate.getTime()) {
-            return total + event.amount;
-          }
-        }
-        
-        return total;
-      }, 0);
+          
+          return total;
+        }, 0);
+      }
       
-      remainingSavings += monthlyIncome;
+      remainingSavingsWithIncome += monthlyIncome;
       
       data.push({
         month: i,
-        balance: Math.max(0, remainingSavings),
-        balanceWithIncome: Math.max(0, remainingSavings),
-        balanceWithoutIncome: Math.max(0, i === 0 ? savings : data[i-1].balanceWithoutIncome - monthlyExpenses),
+        balance: Math.max(0, remainingSavingsWithIncome),
+        balanceWithIncome: Math.max(0, remainingSavingsWithIncome),
+        balanceWithoutIncome: Math.max(0, remainingSavingsWithoutIncome),
         income: monthlyIncome,
-        monthLabel: currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+        monthLabel: currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        incomeEnabled: incomeEnabled
       });
       
-      // Stop if we've reached zero and no more income
-      if (remainingSavings <= 0 && monthlyIncome === 0) break;
+      // Stop if both scenarios have reached zero and no more income
+      if (remainingSavingsWithIncome <= 0 && remainingSavingsWithoutIncome <= 0 && monthlyIncome === 0) {
+        break;
+      }
     }
     
     return data;
@@ -78,17 +95,24 @@ const EnhancedRunwayChart = ({ savings, monthlyExpenses, months, incomeEvents = 
         <div className="bg-white p-4 border border-gray-200 shadow-lg rounded-lg">
           <p className="font-medium text-gray-800">{data.monthLabel}</p>
           <div className="space-y-1 mt-2">
-            <p className="text-blue-600">
-              Balance: {formatCurrency(data.balance)}
+            <p className={`${incomeEnabled ? 'text-blue-600' : 'text-gray-600'}`}>
+              {incomeEnabled ? 'Balance with Income' : 'Balance'}: {formatCurrency(data.balance)}
             </p>
-            {data.income > 0 && (
+            {incomeEnabled && data.income > 0 && (
               <p className="text-green-600">
-                Income: +{formatCurrency(data.income)}
+                Monthly Income: +{formatCurrency(data.income)}
               </p>
             )}
-            <p className="text-gray-600 text-sm">
-              Without income: {formatCurrency(data.balanceWithoutIncome)}
-            </p>
+            {incomeEnabled && (
+              <p className="text-gray-600 text-sm">
+                Without income: {formatCurrency(data.balanceWithoutIncome)}
+              </p>
+            )}
+            {!incomeEnabled && incomeEvents.length > 0 && (
+              <p className="text-gray-500 text-xs">
+                Income planning disabled
+              </p>
+            )}
           </div>
         </div>
       );
@@ -102,8 +126,8 @@ const EnhancedRunwayChart = ({ savings, monthlyExpenses, months, incomeEvents = 
         <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
           <defs>
             <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05}/>
+              <stop offset="5%" stopColor={incomeEnabled ? "#3b82f6" : "#6b7280"} stopOpacity={0.3}/>
+              <stop offset="95%" stopColor={incomeEnabled ? "#3b82f6" : "#6b7280"} stopOpacity={0.05}/>
             </linearGradient>
             <linearGradient id="noIncomeGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2}/>
@@ -121,21 +145,23 @@ const EnhancedRunwayChart = ({ savings, monthlyExpenses, months, incomeEvents = 
           />
           <Tooltip content={customTooltip} />
           
-          {/* Area showing balance without income (baseline) */}
-          <Area
-            type="monotone"
-            dataKey="balanceWithoutIncome"
-            stroke="#ef4444"
-            strokeWidth={1}
-            fill="url(#noIncomeGradient)"
-            strokeDasharray="5,5"
-          />
+          {/* Show baseline without income only if income is enabled */}
+          {incomeEnabled && (
+            <Area
+              type="monotone"
+              dataKey="balanceWithoutIncome"
+              stroke="#ef4444"
+              strokeWidth={1}
+              fill="url(#noIncomeGradient)"
+              strokeDasharray="5,5"
+            />
+          )}
           
-          {/* Area showing balance with income */}
+          {/* Main balance area */}
           <Area
             type="monotone"
             dataKey="balance"
-            stroke="#3b82f6"
+            stroke={incomeEnabled ? "#3b82f6" : "#6b7280"}
             strokeWidth={2}
             fill="url(#balanceGradient)"
           />
@@ -147,13 +173,20 @@ const EnhancedRunwayChart = ({ savings, monthlyExpenses, months, incomeEvents = 
       
       <div className="flex items-center justify-center gap-6 mt-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-blue-500 rounded"></div>
-          <span>With Planned Income</span>
+          <div className={`w-3 h-3 rounded ${incomeEnabled ? 'bg-blue-500' : 'bg-gray-400'}`}></div>
+          <span>{incomeEnabled ? 'With Planned Income' : 'Current Balance'}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 border-2 border-red-500 border-dashed rounded"></div>
-          <span>Without Income</span>
-        </div>
+        {incomeEnabled && (
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 border-2 border-red-500 border-dashed rounded"></div>
+            <span>Without Income</span>
+          </div>
+        )}
+        {!incomeEnabled && incomeEvents.length > 0 && (
+          <div className="text-xs text-gray-500">
+            Income planning disabled ({incomeEvents.length} event{incomeEvents.length > 1 ? 's' : ''} available)
+          </div>
+        )}
       </div>
     </div>
   );

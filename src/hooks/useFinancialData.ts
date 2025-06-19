@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -123,22 +122,8 @@ export const useFinancialData = () => {
         setMonthlyExpenses(Number(expenses.amount));
       }
 
-      // Load income events from localStorage for now (we can migrate to Supabase later)
-      const savedIncomeEvents = localStorage.getItem(`income_events_${user.id}`);
-      const savedIncomeEnabled = localStorage.getItem(`income_enabled_${user.id}`);
-      
-      if (savedIncomeEvents) {
-        try {
-          const parsed = JSON.parse(savedIncomeEvents);
-          setIncomeEvents(parsed);
-        } catch (e) {
-          console.error('Error parsing saved income events:', e);
-        }
-      }
-
-      if (savedIncomeEnabled !== null) {
-        setIncomeEnabled(savedIncomeEnabled === 'true');
-      }
+      // Load income events and settings from localStorage
+      loadIncomeData();
 
       setDataFound(totalAccounts > 0);
 
@@ -166,15 +151,38 @@ export const useFinancialData = () => {
     }
   };
 
+  const loadIncomeData = () => {
+    if (!user) return;
+    
+    // Load income events from localStorage
+    const savedIncomeEvents = localStorage.getItem(`income_events_${user.id}`);
+    const savedIncomeEnabled = localStorage.getItem(`income_enabled_${user.id}`);
+    
+    if (savedIncomeEvents) {
+      try {
+        const parsed = JSON.parse(savedIncomeEvents);
+        setIncomeEvents(parsed);
+      } catch (e) {
+        console.error('Error parsing saved income events:', e);
+      }
+    }
+
+    if (savedIncomeEnabled !== null) {
+      setIncomeEnabled(savedIncomeEnabled === 'true');
+    }
+  };
+
   const saveIncomeEvents = (events: IncomeEvent[]) => {
     if (user) {
       localStorage.setItem(`income_events_${user.id}`, JSON.stringify(events));
+      console.log('Saved income events:', events);
     }
   };
 
   const saveIncomeEnabled = (enabled: boolean) => {
     if (user) {
       localStorage.setItem(`income_enabled_${user.id}`, enabled.toString());
+      console.log('Saved income enabled:', enabled);
     }
   };
 
@@ -190,10 +198,18 @@ export const useFinancialData = () => {
   };
 
   const removeIncomeEvent = (id: string) => {
-    const updatedEvents = incomeEvents.filter(event => event.id !== id);
-    setIncomeEvents(updatedEvents);
-    saveIncomeEvents(updatedEvents);
-    toast.success('Income event removed successfully!');
+    if (id === 'all') {
+      // Clear all income events
+      const updatedEvents: IncomeEvent[] = [];
+      setIncomeEvents(updatedEvents);
+      saveIncomeEvents(updatedEvents);
+      toast.success('All income events cleared!');
+    } else {
+      const updatedEvents = incomeEvents.filter(event => event.id !== id);
+      setIncomeEvents(updatedEvents);
+      saveIncomeEvents(updatedEvents);
+      toast.success('Income event removed successfully!');
+    }
   };
 
   const toggleIncomeEnabled = () => {
@@ -206,14 +222,29 @@ export const useFinancialData = () => {
   const restoreFromSnapshotData = (snapshotData: {
     accountData: AccountData;
     monthlyExpenses: number;
+    incomeEvents?: IncomeEvent[];
+    incomeEnabled?: boolean;
   }) => {
     setAccountData(snapshotData.accountData);
     setMonthlyExpenses(snapshotData.monthlyExpenses);
-    setIncomeEvents([]); // Clear income events when restoring from snapshot
-    setDataFound(true);
-    if (user) {
-      saveIncomeEvents([]);
+    
+    // Restore income events if provided, otherwise keep current ones
+    if (snapshotData.incomeEvents !== undefined) {
+      setIncomeEvents(snapshotData.incomeEvents);
+      if (user) {
+        saveIncomeEvents(snapshotData.incomeEvents);
+      }
     }
+    
+    // Restore income enabled setting if provided
+    if (snapshotData.incomeEnabled !== undefined) {
+      setIncomeEnabled(snapshotData.incomeEnabled);
+      if (user) {
+        saveIncomeEnabled(snapshotData.incomeEnabled);
+      }
+    }
+    
+    setDataFound(true);
     console.log('Data restored from snapshot:', snapshotData);
   };
 
@@ -345,6 +376,13 @@ export const useFinancialData = () => {
         });
 
       if (expensesError) throw expensesError;
+
+      // Save current income state to localStorage with snapshot reference
+      const snapshotIncomeKey = `snapshot_income_${snapshot.id}`;
+      localStorage.setItem(snapshotIncomeKey, JSON.stringify({
+        events: incomeEvents,
+        enabled: incomeEnabled
+      }));
 
       toast.success(`Snapshot "${name}" created successfully!`);
       return snapshot.id;

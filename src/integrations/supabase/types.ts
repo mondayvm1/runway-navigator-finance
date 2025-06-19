@@ -371,6 +371,7 @@ export type Database = {
           credit_limit: number | null
           due_date: string | null
           id: string
+          interest_rate: number | null
           is_hidden: boolean
           minimum_payment: number | null
           name: string
@@ -386,6 +387,7 @@ export type Database = {
           credit_limit?: number | null
           due_date?: string | null
           id?: string
+          interest_rate?: number | null
           is_hidden?: boolean
           minimum_payment?: number | null
           name: string
@@ -401,6 +403,7 @@ export type Database = {
           credit_limit?: number | null
           due_date?: string | null
           id?: string
+          interest_rate?: number | null
           is_hidden?: boolean
           minimum_payment?: number | null
           name?: string

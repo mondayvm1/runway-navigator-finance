@@ -379,6 +379,8 @@ const RunwayCalculator = () => {
           <NetWorthSummary 
             assets={getTotalAssets()} 
             liabilities={getTotalLiabilities()}
+            incomeEvents={incomeEvents}
+            incomeEnabled={incomeEnabled}
           />
 
           <IncomeManager 

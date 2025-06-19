@@ -31,7 +31,7 @@ const NetWorthSummary = ({
       if (eventDate < now) return total;
       
       if (event.frequency === 'one-time') {
-        return total + event.amount;
+        return eventDate <= oneYearFromNow ? total + event.amount : total;
       } else if (event.frequency === 'monthly') {
         const monthsUntilEnd = event.endDate 
           ? Math.max(0, Math.ceil((new Date(event.endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30)))

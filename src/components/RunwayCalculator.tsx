@@ -299,7 +299,8 @@ const RunwayCalculator = () => {
         otherAssets: []
       });
       setMonthlyExpenses(0);
-      setIncomeEvents([]);
+      // Clear income events through the hook's function
+      removeIncomeEvent('all'); // This will be handled by the hook
       toast.success("All data cleared!");
     }
   };
@@ -555,6 +556,7 @@ const RunwayCalculator = () => {
             runway={runway}
             creditAccounts={accountData.credit}
             monthlyExpenses={monthlyExpenses}
+            incomeEnabled={incomeEnabled}
           />
           
           <GamificationCard

@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { IncomeEvent } from '@/components/IncomeManager';
 
 export interface AccountItem {
   id: string;
@@ -39,6 +41,8 @@ export const useFinancialData = () => {
     otherAssets: []
   });
   const [monthlyExpenses, setMonthlyExpenses] = useState<number>(0);
+  const [incomeEvents, setIncomeEvents] = useState<IncomeEvent[]>([]);
+  const [incomeEnabled, setIncomeEnabled] = useState<boolean>(true);
   const [hiddenCategories, setHiddenCategories] = useState<HiddenCategories>({
     cash: false,
     investments: false,
@@ -62,6 +66,7 @@ export const useFinancialData = () => {
     console.log('Loading financial data for user:', user.id);
 
     try {
+      // Load accounts
       const { data: accounts, error: accountsError } = await supabase
         .from('user_accounts')
         .select('*')
@@ -72,8 +77,6 @@ export const useFinancialData = () => {
         console.error('Error loading accounts:', accountsError);
         throw accountsError;
       }
-
-      console.log('Loaded accounts:', accounts);
 
       const groupedAccounts: AccountData = {
         cash: [],
@@ -101,12 +104,9 @@ export const useFinancialData = () => {
         }
       });
 
-      console.log('Grouped accounts:', groupedAccounts);
-      console.log('Total accounts found:', totalAccounts);
-
       setAccountData(groupedAccounts);
-      setDataFound(totalAccounts > 0);
 
+      // Load monthly expenses
       const { data: expenses, error: expensesError } = await supabase
         .from('monthly_expenses')
         .select('amount')
@@ -119,12 +119,28 @@ export const useFinancialData = () => {
         throw expensesError;
       }
 
-      console.log('Loaded expenses:', expenses);
-
       if (expenses) {
         setMonthlyExpenses(Number(expenses.amount));
-        console.log('Monthly expenses set to:', Number(expenses.amount));
       }
+
+      // Load income events from localStorage for now (we can migrate to Supabase later)
+      const savedIncomeEvents = localStorage.getItem(`income_events_${user.id}`);
+      const savedIncomeEnabled = localStorage.getItem(`income_enabled_${user.id}`);
+      
+      if (savedIncomeEvents) {
+        try {
+          const parsed = JSON.parse(savedIncomeEvents);
+          setIncomeEvents(parsed);
+        } catch (e) {
+          console.error('Error parsing saved income events:', e);
+        }
+      }
+
+      if (savedIncomeEnabled !== null) {
+        setIncomeEnabled(savedIncomeEnabled === 'true');
+      }
+
+      setDataFound(totalAccounts > 0);
 
       if (totalAccounts > 0 || expenses) {
         toast.success(`Data recovered! Found ${totalAccounts} accounts and ${expenses ? 'monthly expenses' : 'no monthly expenses'}`);
@@ -150,13 +166,54 @@ export const useFinancialData = () => {
     }
   };
 
+  const saveIncomeEvents = (events: IncomeEvent[]) => {
+    if (user) {
+      localStorage.setItem(`income_events_${user.id}`, JSON.stringify(events));
+    }
+  };
+
+  const saveIncomeEnabled = (enabled: boolean) => {
+    if (user) {
+      localStorage.setItem(`income_enabled_${user.id}`, enabled.toString());
+    }
+  };
+
+  const addIncomeEvent = (event: Omit<IncomeEvent, 'id'>) => {
+    const newEvent: IncomeEvent = {
+      ...event,
+      id: crypto.randomUUID()
+    };
+    const updatedEvents = [...incomeEvents, newEvent].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    setIncomeEvents(updatedEvents);
+    saveIncomeEvents(updatedEvents);
+    toast.success('Income event added successfully!');
+  };
+
+  const removeIncomeEvent = (id: string) => {
+    const updatedEvents = incomeEvents.filter(event => event.id !== id);
+    setIncomeEvents(updatedEvents);
+    saveIncomeEvents(updatedEvents);
+    toast.success('Income event removed successfully!');
+  };
+
+  const toggleIncomeEnabled = () => {
+    const newEnabled = !incomeEnabled;
+    setIncomeEnabled(newEnabled);
+    saveIncomeEnabled(newEnabled);
+    toast.success(`Income planning ${newEnabled ? 'enabled' : 'disabled'}`);
+  };
+
   const restoreFromSnapshotData = (snapshotData: {
     accountData: AccountData;
     monthlyExpenses: number;
   }) => {
     setAccountData(snapshotData.accountData);
     setMonthlyExpenses(snapshotData.monthlyExpenses);
+    setIncomeEvents([]); // Clear income events when restoring from snapshot
     setDataFound(true);
+    if (user) {
+      saveIncomeEvents([]);
+    }
     console.log('Data restored from snapshot:', snapshotData);
   };
 
@@ -311,6 +368,12 @@ export const useFinancialData = () => {
     setAccountData,
     monthlyExpenses,
     setMonthlyExpenses,
+    incomeEvents,
+    setIncomeEvents,
+    incomeEnabled,
+    toggleIncomeEnabled,
+    addIncomeEvent,
+    removeIncomeEvent,
     hiddenCategories,
     setHiddenCategories,
     saveData,

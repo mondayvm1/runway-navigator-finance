@@ -16,6 +16,7 @@ interface FinancialInsightsProps {
   };
   creditAccounts: AccountItem[];
   monthlyExpenses: number;
+  incomeEnabled?: boolean;
 }
 
 const FinancialInsights = ({ 
@@ -24,7 +25,8 @@ const FinancialInsights = ({
   totalLiabilities, 
   runway, 
   creditAccounts, 
-  monthlyExpenses 
+  monthlyExpenses,
+  incomeEnabled = true
 }: FinancialInsightsProps) => {
   const getNetWorthStatus = () => {
     if (netWorth > 100000) return { status: 'excellent', icon: CheckCircle, color: 'text-green-600' };
@@ -67,13 +69,13 @@ const FinancialInsights = ({
     },
     {
       title: 'Financial Runway',
-      value: runway.withIncomeMonths > 0 
+      value: (incomeEnabled && runway.withIncomeMonths > runway.months)
         ? `${runway.withIncomeMonths >= 60 ? '60+' : runway.withIncomeMonths} months (with income)`
         : `${runway.months} months`,
       status: runwayStatus.status,
       icon: RunwayIcon,
       color: runwayStatus.color,
-      description: runway.additionalMonthsFromIncome > 0 
+      description: (incomeEnabled && runway.additionalMonthsFromIncome > 0)
         ? `Income planning extends runway by ${runway.additionalMonthsFromIncome.toFixed(1)} months`
         : runway.months > 0 
           ? 'Time your savings will last at current expenses'
@@ -112,7 +114,7 @@ const FinancialInsights = ({
       </div>
 
       {/* Additional Income Impact Summary */}
-      {runway.additionalMonthsFromIncome > 0 && (
+      {incomeEnabled && runway.additionalMonthsFromIncome > 0 && (
         <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="h-4 w-4 text-green-600" />
@@ -124,6 +126,18 @@ const FinancialInsights = ({
               {runway.additionalMonthsFromIncome >= 60 ? '60+' : runway.additionalMonthsFromIncome.toFixed(1)} months
             </span>
             , providing significant additional financial security.
+          </p>
+        </div>
+      )}
+
+      {!incomeEnabled && (
+        <div className="mt-4 p-3 bg-gray-100 rounded-lg border border-gray-200">
+          <div className="flex items-center gap-2 mb-2">
+            <Calendar className="h-4 w-4 text-gray-600" />
+            <span className="font-medium text-gray-800 text-sm">Income Planning Disabled</span>
+          </div>
+          <p className="text-xs text-gray-600">
+            Enable income planning in the Income Manager to see how future income affects your financial runway.
           </p>
         </div>
       )}

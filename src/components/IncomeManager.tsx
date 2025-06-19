@@ -4,8 +4,9 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, TrendingUp, DollarSign, Plus, Trash2 } from 'lucide-react';
+import { Calendar, TrendingUp, DollarSign, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 
 export interface IncomeEvent {
@@ -19,11 +20,19 @@ export interface IncomeEvent {
 
 interface IncomeManagerProps {
   incomeEvents: IncomeEvent[];
+  incomeEnabled: boolean;
   onAddIncomeEvent: (event: Omit<IncomeEvent, 'id'>) => void;
   onRemoveIncomeEvent: (id: string) => void;
+  onToggleIncomeEnabled: () => void;
 }
 
-const IncomeManager = ({ incomeEvents, onAddIncomeEvent, onRemoveIncomeEvent }: IncomeManagerProps) => {
+const IncomeManager = ({ 
+  incomeEvents, 
+  incomeEnabled,
+  onAddIncomeEvent, 
+  onRemoveIncomeEvent,
+  onToggleIncomeEnabled 
+}: IncomeManagerProps) => {
   const [showForm, setShowForm] = useState(false);
   const [newEvent, setNewEvent] = useState({
     name: '',
@@ -52,6 +61,8 @@ const IncomeManager = ({ incomeEvents, onAddIncomeEvent, onRemoveIncomeEvent }: 
   };
 
   const getTotalProjectedIncome = () => {
+    if (!incomeEnabled) return 0;
+    
     const now = new Date();
     const oneYearFromNow = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
     
@@ -77,15 +88,33 @@ const IncomeManager = ({ incomeEvents, onAddIncomeEvent, onRemoveIncomeEvent }: 
     <Card className="p-6">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-green-600" />
-            <h3 className="text-lg font-semibold text-gray-800">Income Planning</h3>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-green-600" />
+              <h3 className="text-lg font-semibold text-gray-800">Income Planning</h3>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full">
+              <Switch
+                checked={incomeEnabled}
+                onCheckedChange={onToggleIncomeEnabled}
+                className="data-[state=checked]:bg-green-600"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                {incomeEnabled ? 'Enabled' : 'Disabled'}
+              </span>
+              {incomeEnabled ? (
+                <ToggleRight className="h-4 w-4 text-green-600" />
+              ) : (
+                <ToggleLeft className="h-4 w-4 text-gray-400" />
+              )}
+            </div>
           </div>
           <Button 
             onClick={() => setShowForm(!showForm)}
             variant="outline"
             size="sm"
             className="flex items-center gap-2"
+            disabled={!incomeEnabled}
           >
             <Plus size={16} />
             Add Income Event
@@ -93,15 +122,22 @@ const IncomeManager = ({ incomeEvents, onAddIncomeEvent, onRemoveIncomeEvent }: 
         </div>
 
         {/* Summary */}
-        <div className="bg-green-50 p-4 rounded-lg">
-          <div className="text-sm text-green-700 mb-1">Projected Income (Next 12 Months)</div>
-          <div className="text-2xl font-bold text-green-800">
+        <div className={`p-4 rounded-lg transition-all ${incomeEnabled ? 'bg-green-50' : 'bg-gray-50'}`}>
+          <div className={`text-sm mb-1 ${incomeEnabled ? 'text-green-700' : 'text-gray-500'}`}>
+            Projected Income (Next 12 Months)
+          </div>
+          <div className={`text-2xl font-bold ${incomeEnabled ? 'text-green-800' : 'text-gray-600'}`}>
             {formatCurrency(getTotalProjectedIncome())}
           </div>
+          {!incomeEnabled && (
+            <div className="text-xs text-gray-500 mt-1">
+              Income planning is disabled - toggle above to include in calculations
+            </div>
+          )}
         </div>
 
         {/* Add Income Form */}
-        {showForm && (
+        {showForm && incomeEnabled && (
           <div className="bg-blue-50 p-4 rounded-lg space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -153,7 +189,6 @@ const IncomeManager = ({ incomeEvents, onAddIncomeEvent, onRemoveIncomeEvent }: 
               </div>
             </div>
             
-            {/* Fixed the TypeScript error by properly typing the frequency state */}
             {(newEvent.frequency === 'monthly' || newEvent.frequency === 'yearly') && (
               <div>
                 <Label className="text-xs text-gray-600">End Date (Optional)</Label>
@@ -178,11 +213,18 @@ const IncomeManager = ({ incomeEvents, onAddIncomeEvent, onRemoveIncomeEvent }: 
           <div className="space-y-2">
             <h4 className="font-medium text-gray-700">Upcoming Income Events</h4>
             {incomeEvents.map((event) => (
-              <div key={event.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div 
+                key={event.id} 
+                className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                  incomeEnabled ? 'bg-gray-50' : 'bg-gray-100 opacity-60'
+                }`}
+              >
                 <div className="flex items-center gap-3">
-                  <Calendar className="h-4 w-4 text-blue-600" />
+                  <Calendar className={`h-4 w-4 ${incomeEnabled ? 'text-blue-600' : 'text-gray-400'}`} />
                   <div>
-                    <div className="font-medium text-sm">{event.name}</div>
+                    <div className={`font-medium text-sm ${incomeEnabled ? 'text-gray-800' : 'text-gray-500'}`}>
+                      {event.name}
+                    </div>
                     <div className="text-xs text-gray-600">
                       {new Date(event.date).toLocaleDateString()} • {event.frequency}
                       {event.endDate && ` until ${new Date(event.endDate).toLocaleDateString()}`}
@@ -190,7 +232,7 @@ const IncomeManager = ({ incomeEvents, onAddIncomeEvent, onRemoveIncomeEvent }: 
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-green-600">
+                  <span className={`font-semibold ${incomeEnabled ? 'text-green-600' : 'text-gray-500'}`}>
                     {formatCurrency(event.amount)}
                   </span>
                   <Button
@@ -204,6 +246,16 @@ const IncomeManager = ({ incomeEvents, onAddIncomeEvent, onRemoveIncomeEvent }: 
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {!incomeEnabled && incomeEvents.length > 0 && (
+          <div className="text-center p-4 bg-gray-100 rounded-lg">
+            <p className="text-sm text-gray-600">
+              You have {incomeEvents.length} income event{incomeEvents.length > 1 ? 's' : ''} configured.
+              <br />
+              Enable income planning above to include them in your runway calculations.
+            </p>
           </div>
         )}
       </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,6 +27,11 @@ const RunwayCalculator = () => {
     setAccountData,
     monthlyExpenses,
     setMonthlyExpenses,
+    incomeEvents,
+    incomeEnabled,
+    addIncomeEvent,
+    removeIncomeEvent,
+    toggleIncomeEnabled,
     hiddenCategories,
     setHiddenCategories,
     saveData,
@@ -47,11 +51,10 @@ const RunwayCalculator = () => {
   });
 
   const [showSnapshotViewer, setShowSnapshotViewer] = useState(false);
-  const [incomeEvents, setIncomeEvents] = useState<IncomeEvent[]>([]);
 
   useEffect(() => {
     calculateRunway();
-  }, [accountData, monthlyExpenses, hiddenCategories, incomeEvents]);
+  }, [accountData, monthlyExpenses, hiddenCategories, incomeEvents, incomeEnabled]);
 
   // Auto-save data whenever it changes
   useEffect(() => {
@@ -77,52 +80,56 @@ const RunwayCalculator = () => {
     const totalDays = Math.floor(totalCash / dailyExpenses);
     const baseMonths = parseFloat((totalCash / monthlyExpenses).toFixed(1));
 
-    // Calculate runway with income events
+    // Calculate runway with income events only if income is enabled
     let remainingSavings = totalCash;
     let monthsWithIncome = 0;
     const maxProjectionMonths = 60;
 
-    for (let month = 1; month <= maxProjectionMonths; month++) {
-      remainingSavings -= monthlyExpenses;
+    if (incomeEnabled && incomeEvents.length > 0) {
+      for (let month = 1; month <= maxProjectionMonths; month++) {
+        remainingSavings -= monthlyExpenses;
 
-      const currentDate = new Date();
-      currentDate.setMonth(currentDate.getMonth() + month);
-      
-      const monthlyIncome = incomeEvents.reduce((total, event) => {
-        const eventDate = new Date(event.date);
-        const eventMonth = eventDate.getFullYear() * 12 + eventDate.getMonth();
-        const currentMonth = currentDate.getFullYear() * 12 + currentDate.getMonth();
+        const currentDate = new Date();
+        currentDate.setMonth(currentDate.getMonth() + month);
         
-        if (event.frequency === 'one-time' && eventMonth === currentMonth) {
-          return total + event.amount;
-        } else if (event.frequency === 'monthly') {
-          const endDate = event.endDate ? new Date(event.endDate) : null;
-          if (eventMonth <= currentMonth && (!endDate || currentDate <= endDate)) {
+        const monthlyIncome = incomeEvents.reduce((total, event) => {
+          const eventDate = new Date(event.date);
+          const eventMonth = eventDate.getFullYear() * 12 + eventDate.getMonth();
+          const currentMonth = currentDate.getFullYear() * 12 + currentDate.getMonth();
+          
+          if (event.frequency === 'one-time' && eventMonth === currentMonth) {
             return total + event.amount;
+          } else if (event.frequency === 'monthly') {
+            const endDate = event.endDate ? new Date(event.endDate) : null;
+            if (eventMonth <= currentMonth && (!endDate || currentDate <= endDate)) {
+              return total + event.amount;
+            }
+          } else if (event.frequency === 'yearly') {
+            const eventAnnualDate = new Date(currentDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+            if (Math.abs(eventAnnualDate.getTime() - currentDate.getTime()) < 24 * 60 * 60 * 1000) {
+              return total + event.amount;
+            }
           }
-        } else if (event.frequency === 'yearly') {
-          const eventAnnualDate = new Date(currentDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
-          if (Math.abs(eventAnnualDate.getTime() - currentDate.getTime()) < 24 * 60 * 60 * 1000) {
-            return total + event.amount;
-          }
+          
+          return total;
+        }, 0);
+
+        remainingSavings += monthlyIncome;
+        monthsWithIncome = month;
+
+        if (remainingSavings <= 0) {
+          break;
         }
-        
-        return total;
-      }, 0);
-
-      remainingSavings += monthlyIncome;
-      monthsWithIncome = month;
-
-      if (remainingSavings <= 0) {
-        break;
       }
+
+      if (remainingSavings > 0) {
+        monthsWithIncome = maxProjectionMonths;
+      }
+    } else {
+      monthsWithIncome = baseMonths;
     }
 
-    if (remainingSavings > 0) {
-      monthsWithIncome = maxProjectionMonths;
-    }
-
-    const additionalMonths = Math.max(0, monthsWithIncome - baseMonths);
+    const additionalMonths = incomeEnabled ? Math.max(0, monthsWithIncome - baseMonths) : 0;
 
     setRunway({
       days: totalDays,
@@ -297,18 +304,6 @@ const RunwayCalculator = () => {
     }
   };
 
-  const addIncomeEvent = (event: Omit<IncomeEvent, 'id'>) => {
-    const newEvent: IncomeEvent = {
-      ...event,
-      id: uuidv4()
-    };
-    setIncomeEvents(prev => [...prev, newEvent].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
-  };
-
-  const removeIncomeEvent = (id: string) => {
-    setIncomeEvents(prev => prev.filter(event => event.id !== id));
-  };
-
   const handleCreateSnapshot = async (name: string, description?: string) => {
     console.log('Creating snapshot with name:', name, 'and description:', description);
     return await createSnapshot(name);
@@ -325,7 +320,6 @@ const RunwayCalculator = () => {
     monthlyExpenses: number;
   }) => {
     restoreFromSnapshotData(snapshotData);
-    setIncomeEvents([]); // Clear income events when restoring from snapshot
     toast.success("Financial data restored successfully!");
   };
 
@@ -386,8 +380,10 @@ const RunwayCalculator = () => {
 
           <IncomeManager 
             incomeEvents={incomeEvents}
+            incomeEnabled={incomeEnabled}
             onAddIncomeEvent={addIncomeEvent}
             onRemoveIncomeEvent={removeIncomeEvent}
+            onToggleIncomeEnabled={toggleIncomeEnabled}
           />
           
           <Card className="p-6">
@@ -504,24 +500,38 @@ const RunwayCalculator = () => {
                   <div className="text-2xl font-bold text-orange-700">{runway.months}</div>
                 </div>
 
-                <div className="bg-green-50 p-4 rounded-lg text-center">
+                <div className={`p-4 rounded-lg text-center transition-all ${
+                  incomeEnabled ? 'bg-green-50' : 'bg-gray-50'
+                }`}>
                   <div className="flex justify-center mb-2">
-                    <TrendingUp className="h-6 w-6 text-green-600" />
+                    <TrendingUp className={`h-6 w-6 ${incomeEnabled ? 'text-green-600' : 'text-gray-400'}`} />
                   </div>
-                  <div className="text-sm text-gray-500">With Income</div>
-                  <div className="text-2xl font-bold text-green-700">
-                    {runway.withIncomeMonths >= 60 ? '60+' : runway.withIncomeMonths}
+                  <div className={`text-sm ${incomeEnabled ? 'text-gray-500' : 'text-gray-400'}`}>
+                    With Income
                   </div>
+                  <div className={`text-2xl font-bold ${incomeEnabled ? 'text-green-700' : 'text-gray-500'}`}>
+                    {incomeEnabled ? (runway.withIncomeMonths >= 60 ? '60+' : runway.withIncomeMonths) : runway.months}
+                  </div>
+                  {!incomeEnabled && (
+                    <div className="text-xs text-gray-400 mt-1">Disabled</div>
+                  )}
                 </div>
 
-                <div className="bg-purple-50 p-4 rounded-lg text-center">
+                <div className={`p-4 rounded-lg text-center transition-all ${
+                  incomeEnabled ? 'bg-purple-50' : 'bg-gray-50'
+                }`}>
                   <div className="flex justify-center mb-2">
-                    <Sparkles className="h-6 w-6 text-purple-600" />
+                    <Sparkles className={`h-6 w-6 ${incomeEnabled ? 'text-purple-600' : 'text-gray-400'}`} />
                   </div>
-                  <div className="text-sm text-gray-500">Extra Months</div>
-                  <div className="text-2xl font-bold text-purple-700">
-                    {runway.additionalMonthsFromIncome >= 60 ? '60+' : runway.additionalMonthsFromIncome.toFixed(1)}
+                  <div className={`text-sm ${incomeEnabled ? 'text-gray-500' : 'text-gray-400'}`}>
+                    Extra Months
                   </div>
+                  <div className={`text-2xl font-bold ${incomeEnabled ? 'text-purple-700' : 'text-gray-500'}`}>
+                    {incomeEnabled ? (runway.additionalMonthsFromIncome >= 60 ? '60+' : runway.additionalMonthsFromIncome.toFixed(1)) : '0'}
+                  </div>
+                  {!incomeEnabled && (
+                    <div className="text-xs text-gray-400 mt-1">Disabled</div>
+                  )}
                 </div>
               </div>
               
@@ -529,7 +539,7 @@ const RunwayCalculator = () => {
                 savings={accountData.cash.reduce((sum, account) => sum + account.balance, 0)} 
                 monthlyExpenses={monthlyExpenses} 
                 months={runway.months}
-                incomeEvents={incomeEvents}
+                incomeEvents={incomeEnabled ? incomeEvents : []}
               />
             </Card>
           )}

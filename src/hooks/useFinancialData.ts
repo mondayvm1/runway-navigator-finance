@@ -403,6 +403,16 @@ export const useFinancialData = () => {
     }));
   };
 
+  const updateAccountInterestRate = (category: keyof AccountData, id: string, rate: number) => {
+    setAccountData(prev => ({
+      ...prev,
+      [category]: prev[category].map(account => 
+        account.id === id ? { ...account, interestRate: rate } : account
+      )
+    }));
+    console.log(`Updated interest rate for ${id} to ${rate}%`);
+  };
+
   return {
     accountData,
     setAccountData,
@@ -419,6 +429,7 @@ export const useFinancialData = () => {
     saveData,
     createSnapshot,
     updateAccountName,
+    updateAccountInterestRate,
     loading,
     dataFound,
     loadData,

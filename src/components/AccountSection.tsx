@@ -131,9 +131,9 @@ const AccountSection = ({
                   <div>
                     <Label className="text-xs text-gray-600">Interest Rate (%)</Label>
                     <InterestRateInput
-                      value={account.interestRate}
-                      onChange={(rate) => onUpdateInterestRate(account.id, rate)}
-                      className="h-8 text-sm"
+                      value={account.interestRate || 0}
+                      onUpdate={(rate) => onUpdateInterestRate(account.id, rate)}
+                      accountType={title.toLowerCase()}
                     />
                   </div>
                 )}

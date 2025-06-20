@@ -13,6 +13,70 @@ interface CreditCardManagerProps {
   onUpdateAccount: (id: string, updates: Partial<AccountItem>) => void;
 }
 
+interface CreditSummaryProps {
+  accounts: AccountItem[];
+}
+
+const CreditSummary = ({ accounts }: CreditSummaryProps) => {
+  const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
+  const totalCreditLimit = accounts.reduce((sum, account) => sum + (account.creditLimit || 0), 0);
+  const totalAvailableCredit = totalCreditLimit - totalBalance;
+  const overallUtilization = totalCreditLimit > 0 ? (totalBalance / totalCreditLimit) * 100 : 0;
+
+  return (
+    <Card className="p-4 mb-4 bg-blue-50 border-blue-200">
+      <h4 className="text-lg font-medium text-blue-800 mb-3 flex items-center">
+        <CreditCard className="mr-2" size={18} />
+        Credit Summary
+      </h4>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Total Credit Used</div>
+          <div className="text-lg font-bold text-red-600">
+            {formatCurrency(totalBalance)}
+          </div>
+        </div>
+        
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Total Credit Limit</div>
+          <div className="text-lg font-bold text-blue-600">
+            {formatCurrency(totalCreditLimit)}
+          </div>
+        </div>
+        
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Available Credit</div>
+          <div className="text-lg font-bold text-green-600">
+            {formatCurrency(totalAvailableCredit)}
+          </div>
+        </div>
+        
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Overall Utilization</div>
+          <div className={`text-lg font-bold ${overallUtilization > 30 ? 'text-red-600' : 'text-green-600'}`}>
+            {overallUtilization.toFixed(1)}%
+          </div>
+        </div>
+      </div>
+      
+      {/* Overall Utilization Bar */}
+      <div className="mt-3">
+        <div className="flex justify-between text-xs text-gray-600 mb-1">
+          <span>Overall Credit Utilization</span>
+          <span>{formatCurrency(totalBalance)} / {formatCurrency(totalCreditLimit)}</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-3">
+          <div 
+            className={`h-3 rounded-full transition-all ${overallUtilization > 30 ? 'bg-red-500' : 'bg-green-500'}`}
+            style={{ width: `${Math.min(overallUtilization, 100)}%` }}
+          />
+        </div>
+      </div>
+    </Card>
+  );
+};
+
 const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps) => {
   const [customPayment, setCustomPayment] = useState(account.minimumPayment || 0);
 
@@ -213,4 +277,5 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
   );
 };
 
+export { CreditSummary };
 export default CreditCardManager;

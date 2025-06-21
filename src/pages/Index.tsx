@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import RunwayCalculator from "../components/RunwayCalculator";
 import AuthForm from "../components/AuthForm";
 import InfoCard from "../components/InfoCard";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
@@ -22,10 +24,19 @@ const Index = () => {
         <div className="container mx-auto px-4 py-8">
           <header className="text-center mb-10">
             <h1 className="text-4xl md:text-5xl font-bold text-blue-800 mb-2">Personal Finance Dashboard</h1>
-            <p className="text-xl text-gray-600">Track your complete financial picture</p>
+            <p className="text-xl text-gray-600 mb-6">Track your complete financial picture</p>
+            
+            <div className="flex justify-center gap-4 mb-8">
+              <Button asChild variant="outline" size="lg">
+                <Link to="/demo">See Demo</Link>
+              </Button>
+              <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
+                <Link to="#auth">Get Started</Link>
+              </Button>
+            </div>
           </header>
 
-          <div className="max-w-md mx-auto">
+          <div id="auth" className="max-w-md mx-auto">
             <AuthForm />
           </div>
 

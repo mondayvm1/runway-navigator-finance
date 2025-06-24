@@ -70,7 +70,7 @@ const Demo = () => {
             </div>
             <div className="flex items-center gap-2">
               <Shield size={16} />
-              <span>Bank-Level Security</span>
+              <span>Secure & Private</span>
             </div>
           </div>
         </header>
@@ -95,7 +95,7 @@ const Demo = () => {
               <h3 className="text-2xl font-semibold mb-4 text-blue-800">Add Your Accounts</h3>
               <p className="text-gray-700 leading-relaxed">
                 Simply enter your cash, investments, credit cards, and loans. 
-                Our secure system calculates everything instantly - no bank connections required.
+                Our secure system calculates everything instantly - no external connections required.
               </p>
               <div className="mt-4 text-sm text-blue-600 font-medium">⚡ Takes just 5 minutes</div>
             </Card>
@@ -348,9 +348,9 @@ const Demo = () => {
                 <Shield className="text-blue-600" size={24} />
               </div>
               <div>
-                <h3 className="font-bold text-lg mb-2 text-gray-800">Bank-Level Security</h3>
+                <h3 className="font-bold text-lg mb-2 text-gray-800">Enterprise-Grade Security</h3>
                 <p className="text-gray-600">
-                  Your financial data is encrypted and stored securely. We never connect to your banks or share your information.
+                  Your financial data is encrypted and stored securely. We never connect to your accounts or share your information.
                 </p>
               </div>
             </div>

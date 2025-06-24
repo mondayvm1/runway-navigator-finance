@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -154,7 +155,7 @@ export const useFinancialData = () => {
   const loadIncomeData = () => {
     if (!user) return;
     
-    // Load income events from localStorage
+    // Load income events from localStorage with better persistence
     const savedIncomeEvents = localStorage.getItem(`income_events_${user.id}`);
     const savedIncomeEnabled = localStorage.getItem(`income_enabled_${user.id}`);
     
@@ -162,27 +163,45 @@ export const useFinancialData = () => {
       try {
         const parsed = JSON.parse(savedIncomeEvents);
         setIncomeEvents(parsed);
+        console.log('Loaded income events from localStorage:', parsed);
       } catch (e) {
         console.error('Error parsing saved income events:', e);
+        setIncomeEvents([]);
       }
     }
 
     if (savedIncomeEnabled !== null) {
       setIncomeEnabled(savedIncomeEnabled === 'true');
+      console.log('Loaded income enabled state:', savedIncomeEnabled === 'true');
     }
   };
 
   const saveIncomeEvents = (events: IncomeEvent[]) => {
     if (user) {
-      localStorage.setItem(`income_events_${user.id}`, JSON.stringify(events));
-      console.log('Saved income events:', events);
+      try {
+        localStorage.setItem(`income_events_${user.id}`, JSON.stringify(events));
+        console.log('Saved income events to localStorage:', events);
+        
+        // Also save a backup with timestamp
+        localStorage.setItem(`income_events_backup_${user.id}`, JSON.stringify({
+          events,
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        console.error('Error saving income events:', e);
+        toast.error('Failed to save income events');
+      }
     }
   };
 
   const saveIncomeEnabled = (enabled: boolean) => {
     if (user) {
-      localStorage.setItem(`income_enabled_${user.id}`, enabled.toString());
-      console.log('Saved income enabled:', enabled);
+      try {
+        localStorage.setItem(`income_enabled_${user.id}`, enabled.toString());
+        console.log('Saved income enabled state:', enabled);
+      } catch (e) {
+        console.error('Error saving income enabled state:', e);
+      }
     }
   };
 

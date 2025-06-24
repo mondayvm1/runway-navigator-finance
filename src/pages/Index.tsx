@@ -12,25 +12,25 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
-        <div className="text-xl text-gray-800">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
         <div className="container mx-auto px-4 py-8">
           <header className="text-center mb-10">
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-800 via-purple-600 to-blue-800 bg-clip-text text-transparent mb-2">Personal Finance Dashboard</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-blue-800 mb-2">Personal Finance Dashboard</h1>
             <p className="text-xl text-gray-600 mb-6">Track your complete financial picture</p>
             
             <div className="flex justify-center gap-4 mb-8">
-              <Button asChild variant="outline" size="lg" className="border-2">
+              <Button asChild variant="outline" size="lg">
                 <Link to="/demo">See Demo</Link>
               </Button>
-              <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
                 <Link to="#auth">Get Started</Link>
               </Button>
             </div>
@@ -63,10 +63,10 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <div className="container mx-auto px-4 py-8">
         <header className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-800 via-purple-600 to-blue-800 bg-clip-text text-transparent mb-2">Personal Finance Dashboard</h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-blue-800 mb-2">Personal Finance Dashboard</h1>
           <p className="text-xl text-gray-600">Track your complete financial picture</p>
         </header>
 

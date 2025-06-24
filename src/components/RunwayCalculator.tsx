@@ -70,6 +70,12 @@ const RunwayCalculator = () => {
   }, [accountData, monthlyExpenses, hiddenCategories, user, saveData]);
 
   const calculateRunway = () => {
+    console.log('Calculating runway with:', { 
+      monthlyExpenses, 
+      incomeEnabled, 
+      incomeEventsCount: incomeEvents.length 
+    });
+
     if (monthlyExpenses <= 0) {
       setRunway({ days: 0, months: 0, withIncomeMonths: 0, additionalMonthsFromIncome: 0 });
       return;
@@ -80,33 +86,47 @@ const RunwayCalculator = () => {
     const totalDays = Math.floor(totalCash / dailyExpenses);
     const baseMonths = parseFloat((totalCash / monthlyExpenses).toFixed(1));
 
+    console.log('Base calculations:', { totalCash, baseMonths, incomeEnabled });
+
     // Calculate runway with income events only if income is enabled
-    let remainingSavings = totalCash;
-    let monthsWithIncome = 0;
-    const maxProjectionMonths = 60;
-
+    let withIncomeMonths = baseMonths;
+    
     if (incomeEnabled && incomeEvents.length > 0) {
-      for (let month = 1; month <= maxProjectionMonths; month++) {
-        remainingSavings -= monthlyExpenses;
+      let remainingSavings = totalCash;
+      const maxProjectionMonths = 60;
+      let monthsCalculated = 0;
 
+      console.log('Starting income calculation with savings:', remainingSavings);
+
+      for (let month = 1; month <= maxProjectionMonths; month++) {
+        // Subtract monthly expenses first
+        remainingSavings -= monthlyExpenses;
+        
+        // Calculate current date for this projection month
         const currentDate = new Date();
         currentDate.setMonth(currentDate.getMonth() + month);
         
+        // Calculate income for this month
         const monthlyIncome = incomeEvents.reduce((total, event) => {
           const eventDate = new Date(event.date);
           const eventMonth = eventDate.getFullYear() * 12 + eventDate.getMonth();
           const currentMonth = currentDate.getFullYear() * 12 + currentDate.getMonth();
           
           if (event.frequency === 'one-time' && eventMonth === currentMonth) {
+            console.log(`One-time income in month ${month}:`, event.amount);
             return total + event.amount;
           } else if (event.frequency === 'monthly') {
             const endDate = event.endDate ? new Date(event.endDate) : null;
             if (eventMonth <= currentMonth && (!endDate || currentDate <= endDate)) {
+              console.log(`Monthly income in month ${month}:`, event.amount);
               return total + event.amount;
             }
           } else if (event.frequency === 'yearly') {
             const eventAnnualDate = new Date(currentDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
-            if (Math.abs(eventAnnualDate.getTime() - currentDate.getTime()) < 24 * 60 * 60 * 1000) {
+            const timeDiff = Math.abs(eventAnnualDate.getTime() - currentDate.getTime());
+            const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+            if (daysDiff <= 15) { // Within 15 days of the annual date
+              console.log(`Yearly income in month ${month}:`, event.amount);
               return total + event.amount;
             }
           }
@@ -114,27 +134,44 @@ const RunwayCalculator = () => {
           return total;
         }, 0);
 
+        // Add income to remaining savings
         remainingSavings += monthlyIncome;
-        monthsWithIncome = month;
+        monthsCalculated = month;
 
+        console.log(`Month ${month}: expenses=${monthlyExpenses}, income=${monthlyIncome}, remaining=${remainingSavings}`);
+
+        // If we run out of money, stop
         if (remainingSavings <= 0) {
+          // Calculate fractional month based on how much we had left
+          const previousBalance = remainingSavings - monthlyIncome + monthlyExpenses;
+          const fractionOfMonth = previousBalance / monthlyExpenses;
+          monthsCalculated = month - 1 + Math.max(0, fractionOfMonth);
           break;
         }
       }
 
+      // If we still have money after max projection, set to max
       if (remainingSavings > 0) {
-        monthsWithIncome = maxProjectionMonths;
+        monthsCalculated = maxProjectionMonths;
       }
-    } else {
-      monthsWithIncome = baseMonths;
+
+      withIncomeMonths = parseFloat(monthsCalculated.toFixed(1));
+      console.log('Final withIncomeMonths:', withIncomeMonths);
     }
 
-    const additionalMonths = incomeEnabled ? Math.max(0, monthsWithIncome - baseMonths) : 0;
+    const additionalMonths = Math.max(0, withIncomeMonths - baseMonths);
+
+    console.log('Final runway calculation:', {
+      days: totalDays,
+      months: baseMonths,
+      withIncomeMonths,
+      additionalMonthsFromIncome: additionalMonths
+    });
 
     setRunway({
       days: totalDays,
       months: baseMonths,
-      withIncomeMonths: monthsWithIncome,
+      withIncomeMonths,
       additionalMonthsFromIncome: additionalMonths,
     });
   };

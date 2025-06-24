@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import RunwayCalculator from "../components/RunwayCalculator";
 import AuthForm from "../components/AuthForm";
 import InfoCard from "../components/InfoCard";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,7 +13,7 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-xl">Loading...</div>
       </div>
     );
@@ -20,17 +21,21 @@ const Index = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
+          <div className="absolute top-4 right-4">
+            <ThemeToggle />
+          </div>
+          
           <header className="text-center mb-10">
-            <h1 className="text-4xl md:text-5xl font-bold text-blue-800 mb-2">Personal Finance Dashboard</h1>
-            <p className="text-xl text-gray-600 mb-6">Track your complete financial picture</p>
+            <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2">Personal Finance Dashboard</h1>
+            <p className="text-xl text-muted-foreground mb-6">Track your complete financial picture</p>
             
             <div className="flex justify-center gap-4 mb-8">
               <Button asChild variant="outline" size="lg">
                 <Link to="/demo">See Demo</Link>
               </Button>
-              <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
+              <Button asChild size="lg">
                 <Link to="#auth">Get Started</Link>
               </Button>
             </div>
@@ -63,11 +68,15 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
+        
         <header className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-blue-800 mb-2">Personal Finance Dashboard</h1>
-          <p className="text-xl text-gray-600">Track your complete financial picture</p>
+          <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2">Personal Finance Dashboard</h1>
+          <p className="text-xl text-muted-foreground">Track your complete financial picture</p>
         </header>
 
         <RunwayCalculator />

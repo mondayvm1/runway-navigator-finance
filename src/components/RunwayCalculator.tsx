@@ -52,9 +52,20 @@ const RunwayCalculator = () => {
 
   const [showSnapshotViewer, setShowSnapshotViewer] = useState(false);
 
+  // Calculate runway whenever relevant data changes
   useEffect(() => {
+    console.log('Runway calculation triggered by data change');
     calculateRunway();
   }, [accountData, monthlyExpenses, hiddenCategories, incomeEvents, incomeEnabled]);
+
+  // Additional effect to ensure calculation runs after initial data load
+  useEffect(() => {
+    if (user && !loading) {
+      console.log('Triggering runway calculation after data load');
+      // Small delay to ensure all data is properly set
+      setTimeout(() => calculateRunway(), 100);
+    }
+  }, [user, loading, dataFound]);
 
   // Auto-save data whenever it changes
   useEffect(() => {
@@ -70,28 +81,39 @@ const RunwayCalculator = () => {
   }, [accountData, monthlyExpenses, hiddenCategories, user, saveData]);
 
   const calculateRunway = () => {
+    console.log('=== RUNWAY CALCULATION START ===');
     console.log('Calculating runway with:', { 
       monthlyExpenses, 
       incomeEnabled, 
-      incomeEventsCount: incomeEvents.length 
+      incomeEventsCount: incomeEvents.length,
+      totalCash: accountData.cash.reduce((sum, account) => sum + account.balance, 0)
     });
 
     if (monthlyExpenses <= 0) {
+      console.log('No monthly expenses set, setting runway to 0');
       setRunway({ days: 0, months: 0, withIncomeMonths: 0, additionalMonthsFromIncome: 0 });
       return;
     }
 
     const totalCash = accountData.cash.reduce((sum, account) => sum + account.balance, 0);
+    
+    if (totalCash <= 0) {
+      console.log('No cash available, setting runway to 0');
+      setRunway({ days: 0, months: 0, withIncomeMonths: 0, additionalMonthsFromIncome: 0 });
+      return;
+    }
+
     const dailyExpenses = monthlyExpenses / 30;
     const totalDays = Math.floor(totalCash / dailyExpenses);
     const baseMonths = parseFloat((totalCash / monthlyExpenses).toFixed(1));
 
-    console.log('Base calculations:', { totalCash, baseMonths, incomeEnabled });
+    console.log('Base calculations:', { totalCash, baseMonths, incomeEnabled, totalDays });
 
     // Calculate runway with income events only if income is enabled
     let withIncomeMonths = baseMonths;
     
     if (incomeEnabled && incomeEvents.length > 0) {
+      console.log('Calculating with income events:', incomeEvents);
       let remainingSavings = totalCash;
       const maxProjectionMonths = 60;
       let monthsCalculated = 0;
@@ -146,6 +168,7 @@ const RunwayCalculator = () => {
           const previousBalance = remainingSavings - monthlyIncome + monthlyExpenses;
           const fractionOfMonth = previousBalance / monthlyExpenses;
           monthsCalculated = month - 1 + Math.max(0, fractionOfMonth);
+          console.log(`Ran out of money. Final calculation: ${monthsCalculated}`);
           break;
         }
       }
@@ -153,6 +176,7 @@ const RunwayCalculator = () => {
       // If we still have money after max projection, set to max
       if (remainingSavings > 0) {
         monthsCalculated = maxProjectionMonths;
+        console.log('Still have money after max projection, setting to 60 months');
       }
 
       withIncomeMonths = parseFloat(monthsCalculated.toFixed(1));
@@ -161,19 +185,16 @@ const RunwayCalculator = () => {
 
     const additionalMonths = Math.max(0, withIncomeMonths - baseMonths);
 
-    console.log('Final runway calculation:', {
-      days: totalDays,
-      months: baseMonths,
-      withIncomeMonths,
-      additionalMonthsFromIncome: additionalMonths
-    });
-
-    setRunway({
+    const finalRunway = {
       days: totalDays,
       months: baseMonths,
       withIncomeMonths,
       additionalMonthsFromIncome: additionalMonths,
-    });
+    };
+
+    console.log('=== FINAL RUNWAY CALCULATION ===', finalRunway);
+
+    setRunway(finalRunway);
   };
 
   const handleCalculate = () => {

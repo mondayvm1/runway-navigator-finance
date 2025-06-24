@@ -47,17 +47,14 @@ const RunwayCalculator = () => {
   });
 
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
-
   const [runway, setRunway] = useState<number | null>(null);
-  const [isSnapshotInputVisible, setIsSnapshotInputVisible] = useState(false);
-  const [newSnapshotName, setNewSnapshotName] = useState('');
 
   // Fetch data on component mount
   useEffect(() => {
     const fetchData = async () => {
       if (user) {
         try {
-          const response = await fetch(`/api/user-data?userId=${user.uid}`);
+          const response = await fetch(`/api/user-data?userId=${user.id}`);
           if (response.ok) {
             const data = await response.json();
             setAccountData(data);
@@ -76,16 +73,16 @@ const RunwayCalculator = () => {
   useEffect(() => {
     if (user && accountData) {
       queryClient.prefetchQuery({
-        queryKey: ['snapshots', user.uid],
-        queryFn: () => fetchSnapshotsAction(user.uid as string),
+        queryKey: ['snapshots', user.id],
+        queryFn: () => fetchSnapshotsAction(user.id as string),
       });
     }
   }, [user, accountData, queryClient]);
 
   const { data: snapshots, isLoading: isSnapshotsLoading, refetch: refetchSnapshots } = useQuery({
-    queryKey: ['snapshots', user?.uid],
-    queryFn: () => fetchSnapshotsAction(user?.uid as string),
-    enabled: !!user?.uid,
+    queryKey: ['snapshots', user?.id],
+    queryFn: () => fetchSnapshotsAction(user?.id as string),
+    enabled: !!user?.id,
   });
 
   const saveDataMutation = useMutation({
@@ -266,17 +263,17 @@ const RunwayCalculator = () => {
     setAccountData(prev => ({ ...prev, creditCardDebt: value }));
   };
 
-  const handleCreateSnapshot = async (name: string) => {
+  const handleCreateSnapshot = async (name: string): Promise<string> => {
     if (!user) {
       toast({
         title: "Not authenticated",
         description: "You must be logged in to save data.",
       })
-      return;
+      throw new Error("Not authenticated");
     }
 
     return await createSnapshotMutation.mutateAsync({
-      userId: user.uid,
+      userId: user.id,
       snapshotName: name,
       accountData: accountData,
     });
@@ -291,7 +288,7 @@ const RunwayCalculator = () => {
       return;
     }
 
-    await saveDataMutation.mutateAsync({ userId: user.uid, accountData });
+    await saveDataMutation.mutateAsync({ userId: user.id, accountData });
   };
 
   const handleLoadSnapshot = async (snapshot: Snapshot) => {
@@ -303,7 +300,7 @@ const RunwayCalculator = () => {
       return;
     }
 
-    await loadSnapshotMutation.mutateAsync({ userId: user.uid, snapshotId: snapshot.id });
+    await loadSnapshotMutation.mutateAsync({ userId: user.id, snapshotId: snapshot.id });
   };
 
   const handleDeleteSnapshot = async (snapshot: Snapshot) => {
@@ -315,7 +312,7 @@ const RunwayCalculator = () => {
       return;
     }
 
-    await deleteSnapshotMutation.mutateAsync({ userId: user.uid, snapshotId: snapshot.id });
+    await deleteSnapshotMutation.mutateAsync({ userId: user.id, snapshotId: snapshot.id });
   };
 
   return (

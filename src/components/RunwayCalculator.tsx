@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -322,21 +323,23 @@ const RunwayCalculator = () => {
         onSaveData={handleSaveData}
       />
 
-      <Card>
+      <Card className="shadow-xl bg-white border-0">
         <CardHeader>
-          <CardTitle>Financial Runway</CardTitle>
+          <CardTitle className="text-2xl text-gray-800">Financial Runway</CardTitle>
         </CardHeader>
         <CardContent>
           {runway !== null ? (
-            <p className="text-2xl font-semibold">
-              {runway === Infinity
-                ? 'Unlimited'
-                : runway < 0
-                  ? 'Less than a month'
-                  : `${runway.toFixed(1)} Months`}
-            </p>
+            <div className="text-center p-6 bg-gradient-to-r from-green-50 via-blue-50 to-purple-50 rounded-xl">
+              <p className="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                {runway === Infinity
+                  ? 'Unlimited'
+                  : runway < 0
+                    ? 'Less than a month'
+                    : `${runway.toFixed(1)} Months`}
+              </p>
+            </div>
           ) : (
-            <p>Enter your data to calculate your financial runway.</p>
+            <p className="text-gray-600 text-center py-8">Enter your data to calculate your financial runway.</p>
           )}
         </CardContent>
       </Card>
@@ -350,32 +353,32 @@ const RunwayCalculator = () => {
             onRemoveAccount={handleRemoveCashAccount}
           />
 
-          <Card>
+          <Card className="shadow-lg bg-white border-0">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Investments</CardTitle>
+                <CardTitle className="text-lg text-gray-800">Investments</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               {accountData.investments.map((investment, index) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                <div key={index} className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border mb-2">
                   <Input
                     value={investment.name}
                     onChange={(e) => handleUpdateInvestment(index, e.target.value, investment.balance)}
-                    className="flex-1 mr-2 bg-transparent border-0"
+                    className="flex-1 mr-2 bg-transparent border-0 font-medium text-gray-800"
                   />
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
                       value={investment.balance}
                       onChange={(e) => handleUpdateInvestment(index, investment.name, parseFloat(e.target.value) || 0)}
-                      className="w-24 bg-transparent border-0 text-right"
+                      className="w-28 bg-transparent border-0 text-right font-semibold text-gray-800"
                     />
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemoveInvestment(index)}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
                     >
                       ×
                     </Button>
@@ -386,39 +389,39 @@ const RunwayCalculator = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => handleAddInvestment('New Investment', 0)}
-                className="w-full mt-4"
+                className="w-full mt-4 border-2 border-dashed border-blue-300 text-blue-600 hover:bg-blue-50"
               >
                 Add Investment
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-lg bg-white border-0">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Monthly Expenses</CardTitle>
+                <CardTitle className="text-lg text-gray-800">Monthly Expenses</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               {accountData.monthlyExpenses.map((expense, index) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                <div key={index} className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border mb-2">
                   <Input
                     value={expense.name}
                     onChange={(e) => handleUpdateExpense(index, e.target.value, expense.amount)}
-                    className="flex-1 mr-2 bg-transparent border-0"
+                    className="flex-1 mr-2 bg-transparent border-0 font-medium text-gray-800"
                   />
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
                       value={expense.amount}
                       onChange={(e) => handleUpdateExpense(index, expense.name, parseFloat(e.target.value) || 0)}
-                      className="w-24 bg-transparent border-0 text-right"
+                      className="w-28 bg-transparent border-0 text-right font-semibold text-gray-800"
                     />
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemoveExpense(index)}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
                     >
                       ×
                     </Button>
@@ -429,7 +432,7 @@ const RunwayCalculator = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => handleAddExpense('New Expense', 0)}
-                className="w-full mt-4"
+                className="w-full mt-4 border-2 border-dashed border-red-300 text-red-600 hover:bg-red-50"
               >
                 Add Expense
               </Button>
@@ -438,35 +441,37 @@ const RunwayCalculator = () => {
         </div>
 
         <div className="space-y-6">
-          <Card>
+          <Card className="shadow-lg bg-white border-0">
             <CardHeader>
-              <CardTitle>Income Manager</CardTitle>
+              <CardTitle className="text-lg text-gray-800">Income Manager</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="monthlyIncome">Monthly Income</Label>
+                <Label htmlFor="monthlyIncome" className="text-gray-700">Monthly Income</Label>
                 <Input
                   type="number"
                   id="monthlyIncome"
                   value={accountData.monthlyIncome}
                   onChange={(e) => handleMonthlyIncomeChange(parseFloat(e.target.value) || 0)}
+                  className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200"
                 />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-lg bg-white border-0">
             <CardHeader>
-              <CardTitle>Credit Card Debt</CardTitle>
+              <CardTitle className="text-lg text-gray-800">Credit Card Debt</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="creditCardDebt">Credit Card Debt</Label>
+                <Label htmlFor="creditCardDebt" className="text-gray-700">Credit Card Debt</Label>
                 <Input
                   type="number"
                   id="creditCardDebt"
                   value={accountData.creditCardDebt}
                   onChange={(e) => handleCreditCardDebtChange(parseFloat(e.target.value) || 0)}
+                  className="bg-gradient-to-r from-red-50 to-orange-50 border-red-200"
                 />
               </div>
             </CardContent>

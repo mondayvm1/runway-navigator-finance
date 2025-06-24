@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import RunwayCalculator from "../components/RunwayCalculator";
 import AuthForm from "../components/AuthForm";
 import InfoCard from "../components/InfoCard";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,29 +12,25 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-xl text-gray-800">Loading...</div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
         <div className="container mx-auto px-4 py-8">
-          <div className="absolute top-4 right-4">
-            <ThemeToggle />
-          </div>
-          
           <header className="text-center mb-10">
-            <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2">Personal Finance Dashboard</h1>
-            <p className="text-xl text-muted-foreground mb-6">Track your complete financial picture</p>
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-800 via-purple-600 to-blue-800 bg-clip-text text-transparent mb-2">Personal Finance Dashboard</h1>
+            <p className="text-xl text-gray-600 mb-6">Track your complete financial picture</p>
             
             <div className="flex justify-center gap-4 mb-8">
-              <Button asChild variant="outline" size="lg">
+              <Button asChild variant="outline" size="lg" className="border-2">
                 <Link to="/demo">See Demo</Link>
               </Button>
-              <Button asChild size="lg">
+              <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
                 <Link to="#auth">Get Started</Link>
               </Button>
             </div>
@@ -68,15 +63,11 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="absolute top-4 right-4">
-          <ThemeToggle />
-        </div>
-        
         <header className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2">Personal Finance Dashboard</h1>
-          <p className="text-xl text-muted-foreground">Track your complete financial picture</p>
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-800 via-purple-600 to-blue-800 bg-clip-text text-transparent mb-2">Personal Finance Dashboard</h1>
+          <p className="text-xl text-gray-600">Track your complete financial picture</p>
         </header>
 
         <RunwayCalculator />

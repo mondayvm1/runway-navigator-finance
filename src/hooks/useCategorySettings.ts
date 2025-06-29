@@ -36,8 +36,10 @@ export const useCategorySettings = () => {
         return;
       }
 
-      if (data) {
-        setSettings({ hiddenCategories: data.hidden_categories || {} });
+      if (data && data.hidden_categories) {
+        // Ensure the data is properly typed as Record<string, boolean>
+        const hiddenCategories = data.hidden_categories as Record<string, boolean>;
+        setSettings({ hiddenCategories });
       }
     } catch (error) {
       console.error('Error loading category settings:', error);

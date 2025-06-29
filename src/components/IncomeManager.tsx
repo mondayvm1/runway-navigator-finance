@@ -8,8 +8,6 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, TrendingUp, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
-import { useIncomeSettings } from '@/hooks/useIncomeSettings';
-import { useIncomeEvents } from '@/hooks/useIncomeEvents';
 
 export interface IncomeEvent {
   id: string;
@@ -20,9 +18,21 @@ export interface IncomeEvent {
   endDate?: string;
 }
 
-const IncomeManager = () => {
-  const { incomeEnabled, updateIncomeEnabled } = useIncomeSettings();
-  const { incomeEvents, addIncomeEvent, removeIncomeEvent } = useIncomeEvents();
+interface IncomeManagerProps {
+  incomeEvents: IncomeEvent[];
+  incomeEnabled: boolean;
+  onAddIncomeEvent: (event: Omit<IncomeEvent, 'id'>) => void;
+  onRemoveIncomeEvent: (id: string) => void;
+  onToggleIncomeEnabled: () => void;
+}
+
+const IncomeManager = ({
+  incomeEvents,
+  incomeEnabled,
+  onAddIncomeEvent,
+  onRemoveIncomeEvent,
+  onToggleIncomeEnabled
+}: IncomeManagerProps) => {
   const [showForm, setShowForm] = useState(false);
   const [newEvent, setNewEvent] = useState({
     name: '',
@@ -35,7 +45,7 @@ const IncomeManager = () => {
   const handleSubmit = () => {
     if (!newEvent.name || !newEvent.amount || !newEvent.date) return;
     
-    addIncomeEvent({
+    onAddIncomeEvent({
       ...newEvent,
       endDate: newEvent.endDate || undefined
     });
@@ -85,7 +95,7 @@ const IncomeManager = () => {
           <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full">
             <Switch
               checked={incomeEnabled}
-              onCheckedChange={updateIncomeEnabled}
+              onCheckedChange={onToggleIncomeEnabled}
               className="data-[state=checked]:bg-green-600"
             />
             <span className="text-sm font-medium text-gray-700">
@@ -225,7 +235,7 @@ const IncomeManager = () => {
                   {formatCurrency(event.amount)}
                 </span>
                 <Button
-                  onClick={() => removeIncomeEvent(event.id)}
+                  onClick={() => onRemoveIncomeEvent(event.id)}
                   variant="ghost"
                   size="sm"
                   className="h-6 w-6 p-0 text-red-500 hover:text-red-700"

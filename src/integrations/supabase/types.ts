@@ -110,6 +110,30 @@ export type Database = {
           },
         ]
       }
+      category_settings: {
+        Row: {
+          created_at: string
+          hidden_categories: Json
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hidden_categories?: Json
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hidden_categories?: Json
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       commissions: {
         Row: {
           affiliate_id: string
@@ -174,6 +198,77 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      income_events: {
+        Row: {
+          amount: number
+          created_at: string
+          date: string
+          end_date: string | null
+          frequency: string
+          id: string
+          name: string
+          snapshot_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          date: string
+          end_date?: string | null
+          frequency: string
+          id?: string
+          name: string
+          snapshot_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          date?: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          name?: string
+          snapshot_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "income_events_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "financial_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      income_settings: {
+        Row: {
+          created_at: string
+          id: string
+          income_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          income_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          income_enabled?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -365,6 +460,7 @@ export type Database = {
       user_accounts: {
         Row: {
           account_id: string
+          account_type: string | null
           balance: number
           category: string
           created_at: string
@@ -381,6 +477,7 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          account_type?: string | null
           balance?: number
           category: string
           created_at?: string
@@ -397,6 +494,7 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          account_type?: string | null
           balance?: number
           category?: string
           created_at?: string

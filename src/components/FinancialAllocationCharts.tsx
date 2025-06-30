@@ -1,4 +1,3 @@
-
 import { Card } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Legend } from 'recharts';
@@ -21,7 +20,7 @@ interface FinancialAllocationChartsProps {
   incomeEnabled: boolean;
 }
 
-// New color palette
+// Updated color palette to match CollapsibleSection
 const palette = {
   primary: '#E0F252',    // Potential-1 - bright green-yellow
   secondary: '#EDF25C',  // Potential-2 - lighter green-yellow  

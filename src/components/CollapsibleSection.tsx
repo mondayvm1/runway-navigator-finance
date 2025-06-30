@@ -34,8 +34,13 @@ const CollapsibleSection = ({
   const isHidden = isCategoryHidden(category);
 
   const toggleVisibility = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     updateCategoryVisibility(category, !isHidden);
+  };
+
+  const handleCollapsibleToggle = () => {
+    setIsOpen(!isOpen);
   };
 
   if (isHidden) {
@@ -66,11 +71,12 @@ const CollapsibleSection = ({
         <div
           className="p-4 border-b flex items-center justify-between cursor-pointer select-none transition-colors hover:opacity-90"
           style={{ backgroundColor: palette.headerBg, borderColor: palette.border }}
+          onClick={handleCollapsibleToggle}
         >
-          <CollapsibleTrigger className="flex items-center gap-2 flex-1 text-left">
+          <div className="flex items-center gap-2 flex-1">
             {icon}
             <h3 className="font-semibold" style={{ color: palette.text }}>{title}</h3>
-          </CollapsibleTrigger>
+          </div>
           <div className="flex items-center gap-2">
             <Button
               onClick={toggleVisibility}
@@ -81,13 +87,11 @@ const CollapsibleSection = ({
             >
               <EyeOff className="h-4 w-4" />
             </Button>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                <span className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
-                  <ChevronDown className="h-4 w-4" style={{ color: palette.text }} />
-                </span>
-              </Button>
-            </CollapsibleTrigger>
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+              <span className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
+                <ChevronDown className="h-4 w-4" style={{ color: palette.text }} />
+              </span>
+            </Button>
           </div>
         </div>
         <CollapsibleContent>

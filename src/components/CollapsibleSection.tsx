@@ -25,8 +25,13 @@ const CollapsibleSection = ({
   const [isOpen, setIsOpen] = React.useState(defaultOpen);
   const isHidden = isCategoryHidden(category);
 
-  const toggleVisibility = () => {
+  const toggleVisibility = (e: React.MouseEvent) => {
+    e.stopPropagation();
     updateCategoryVisibility(category, !isHidden);
+  };
+
+  const toggleOpen = () => {
+    setIsOpen(!isOpen);
   };
 
   if (isHidden) {
@@ -54,34 +59,38 @@ const CollapsibleSection = ({
   return (
     <Card className="overflow-hidden">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <div className="p-4 border-b bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {icon}
-                <h3 className="font-semibold text-gray-800">{title}</h3>
-              </div>
-              <div className="flex items-center gap-2">
+        <div className="p-4 border-b bg-gray-50 hover:bg-gray-100 transition-colors">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {icon}
+              <h3 className="font-semibold text-gray-800">{title}</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={toggleVisibility}
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+              >
+                <EyeOff className="h-4 w-4" />
+              </Button>
+              <CollapsibleTrigger asChild>
                 <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleVisibility();
-                  }}
                   variant="ghost"
                   size="sm"
                   className="h-6 w-6 p-0"
+                  onClick={toggleOpen}
                 >
-                  <EyeOff className="h-4 w-4" />
+                  {isOpen ? (
+                    <ChevronUp className="h-4 w-4 text-gray-600" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-gray-600" />
+                  )}
                 </Button>
-                {isOpen ? (
-                  <ChevronUp className="h-4 w-4 text-gray-600" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-gray-600" />
-                )}
-              </div>
+              </CollapsibleTrigger>
             </div>
           </div>
-        </CollapsibleTrigger>
+        </div>
         <CollapsibleContent>
           <div className="p-6">
             {children}

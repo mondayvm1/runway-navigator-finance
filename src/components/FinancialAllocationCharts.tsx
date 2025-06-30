@@ -269,7 +269,11 @@ const FinancialAllocationCharts = ({
                       return null;
                     }}
                   />
-                  <Bar dataKey="amount" fill={(entry) => entry.color} />
+                  <Bar dataKey="amount">
+                    {cashFlowData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>

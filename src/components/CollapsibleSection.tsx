@@ -68,12 +68,11 @@ const CollapsibleSection = ({
           className="p-4 border-b flex items-center justify-between transition-colors hover:opacity-90"
           style={{ backgroundColor: palette.headerBg, borderColor: palette.border }}
         >
-          <CollapsibleTrigger asChild>
-            <div className="flex items-center gap-2 flex-1 cursor-pointer">
-              {icon}
-              <h3 className="font-semibold" style={{ color: palette.text }}>{title}</h3>
-            </div>
+          <CollapsibleTrigger className="flex items-center gap-2 flex-1 cursor-pointer text-left border-none bg-transparent p-0 hover:bg-transparent">
+            {icon}
+            <h3 className="font-semibold" style={{ color: palette.text }}>{title}</h3>
           </CollapsibleTrigger>
+          
           <div className="flex items-center gap-2">
             <Button
               onClick={toggleVisibility}
@@ -86,9 +85,10 @@ const CollapsibleSection = ({
             </Button>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                <span className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
-                  <ChevronDown className="h-4 w-4" style={{ color: palette.text }} />
-                </span>
+                <ChevronDown 
+                  className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                  style={{ color: palette.text }} 
+                />
               </Button>
             </CollapsibleTrigger>
           </div>

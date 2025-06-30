@@ -1,4 +1,3 @@
-
 import { Card } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Legend } from 'recharts';
@@ -73,7 +72,7 @@ const FinancialAllocationCharts = ({
 
   // Asset allocation data for pie chart with new colors
   const assetAllocationData = [
-    { name: 'Cash & Savings', value: totalCash, color: '#DFF252', icon: '💰' },
+    { name: 'Cash & Savings', value: totalCash, color: '#E0F252', icon: '💰' },
     { name: 'Investments', value: totalInvestments, color: '#EDF25C', icon: '📈' },
     { name: 'Other Assets', value: totalOtherAssets, color: '#F0F2AC', icon: '🏠' },
   ].filter(item => item.value > 0);
@@ -84,25 +83,25 @@ const FinancialAllocationCharts = ({
       name: 'Emergency Fund', 
       current: totalCash, 
       target: emergencyFundTarget,
-      color: totalCash >= emergencyFundTarget ? '#DFF252' : '#EDF25C'
+      color: totalCash >= emergencyFundTarget ? '#E0F252' : '#EDF25C'
     },
     { 
       name: 'Annual Income', 
       current: projectedIncome, 
       target: annualExpenses,
-      color: projectedIncome >= annualExpenses ? '#DFF252' : '#0D0D0D'
+      color: projectedIncome >= annualExpenses ? '#E0F252' : '#0D0D0D'
     }
   ];
 
   // Cash flow breakdown with new colors
   const cashFlowData = [
-    { category: 'Projected Income', amount: projectedIncome, color: '#DFF252' },
+    { category: 'Projected Income', amount: projectedIncome, color: '#E0F252' },
     { category: 'Annual Expenses', amount: -annualExpenses, color: '#0D0D0D' },
-    { category: 'Net Cash Flow', amount: projectedIncome - annualExpenses, color: projectedIncome >= annualExpenses ? '#DFF252' : '#0D0D0D' }
+    { category: 'Net Cash Flow', amount: projectedIncome - annualExpenses, color: projectedIncome >= annualExpenses ? '#E0F252' : '#0D0D0D' }
   ];
 
   const chartConfig = {
-    cash: { label: 'Cash & Savings', color: '#DFF252' },
+    cash: { label: 'Cash & Savings', color: '#E0F252' },
     investments: { label: 'Investments', color: '#EDF25C' },
     otherAssets: { label: 'Other Assets', color: '#F0F2AC' }
   };
@@ -111,13 +110,13 @@ const FinancialAllocationCharts = ({
     <CollapsibleSection
       title="Financial Allocation & Analysis"
       category="financial-allocation"
-      icon={<PieChartIcon className="h-5 w-5" style={{ color: '#DFF252' }} />}
-      defaultOpen={true}
+      icon={<PieChartIcon className="h-5 w-5" style={{ color: '#E0F252' }} />}
+      defaultOpen={false}
     >
       <div className="space-y-6">
         {/* Financial Health Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-4 border-2" style={{ backgroundColor: '#DFF252', borderColor: '#EDF25C' }}>
+          <Card className="p-4 border-2" style={{ backgroundColor: '#E0F252', borderColor: '#EDF25C' }}>
             <div className="flex items-center gap-3 mb-2">
               <Shield className="h-5 w-5" style={{ color: '#0D0D0D' }} />
               <span className="font-medium" style={{ color: '#0D0D0D' }}>Emergency Buffer</span>
@@ -131,7 +130,7 @@ const FinancialAllocationCharts = ({
                 bufferStatus === 'Excellent' ? 'text-green-700' :
                 bufferStatus === 'Good' ? 'text-yellow-700' :
                 'text-red-700'
-              }`} style={{ backgroundColor: bufferStatus === 'Excellent' ? '#DFF252' : bufferStatus === 'Good' ? '#EDF25C' : '#D9D9D9' }}>
+              }`} style={{ backgroundColor: bufferStatus === 'Excellent' ? '#E0F252' : bufferStatus === 'Good' ? '#EDF25C' : '#D9D9D9' }}>
                 {bufferStatus}
               </span>
             </div>

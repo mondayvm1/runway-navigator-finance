@@ -1,3 +1,4 @@
+
 import { Card } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Legend } from 'recharts';
@@ -126,7 +127,7 @@ const FinancialAllocationCharts = ({
       <div className="space-y-6">
         {/* Financial Health Overview Cards - Updated with new colors */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-4 border-2" style={{ backgroundColor: palette.primary, borderColor: palette.border }}>
+          <Card className="p-4 border-2 !important" style={{ backgroundColor: palette.primary + ' !important', borderColor: palette.border + ' !important' }}>
             <div className="flex items-center gap-3 mb-2">
               <Shield className="h-5 w-5" style={{ color: palette.text }} />
               <span className="font-medium" style={{ color: palette.text }}>Emergency Buffer</span>

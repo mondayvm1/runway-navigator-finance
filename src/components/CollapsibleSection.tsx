@@ -39,10 +39,6 @@ const CollapsibleSection = ({
     updateCategoryVisibility(category, !isHidden);
   };
 
-  const handleCollapsibleToggle = () => {
-    setIsOpen(!isOpen);
-  };
-
   if (isHidden) {
     return (
       <Card className="p-4" style={{ backgroundColor: palette.headerBg, borderColor: palette.border }}>
@@ -69,14 +65,15 @@ const CollapsibleSection = ({
     <Card className="overflow-hidden border-2" style={{ borderColor: palette.border }}>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <div
-          className="p-4 border-b flex items-center justify-between cursor-pointer select-none transition-colors hover:opacity-90"
+          className="p-4 border-b flex items-center justify-between transition-colors hover:opacity-90"
           style={{ backgroundColor: palette.headerBg, borderColor: palette.border }}
-          onClick={handleCollapsibleToggle}
         >
-          <div className="flex items-center gap-2 flex-1">
-            {icon}
-            <h3 className="font-semibold" style={{ color: palette.text }}>{title}</h3>
-          </div>
+          <CollapsibleTrigger asChild>
+            <div className="flex items-center gap-2 flex-1 cursor-pointer">
+              {icon}
+              <h3 className="font-semibold" style={{ color: palette.text }}>{title}</h3>
+            </div>
+          </CollapsibleTrigger>
           <div className="flex items-center gap-2">
             <Button
               onClick={toggleVisibility}
@@ -87,11 +84,13 @@ const CollapsibleSection = ({
             >
               <EyeOff className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-              <span className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
-                <ChevronDown className="h-4 w-4" style={{ color: palette.text }} />
-              </span>
-            </Button>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                <span className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
+                  <ChevronDown className="h-4 w-4" style={{ color: palette.text }} />
+                </span>
+              </Button>
+            </CollapsibleTrigger>
           </div>
         </div>
         <CollapsibleContent>

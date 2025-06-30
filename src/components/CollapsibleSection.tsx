@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,10 +38,6 @@ const CollapsibleSection = ({
     updateCategoryVisibility(category, !isHidden);
   };
 
-  const toggleOpen = () => {
-    setIsOpen((prev) => !prev);
-  };
-
   if (isHidden) {
     return (
       <Card className="p-4" style={{ backgroundColor: palette.headerBg, borderColor: palette.border }}>
@@ -66,14 +63,10 @@ const CollapsibleSection = ({
   return (
     <Card className="overflow-hidden border-2" style={{ borderColor: palette.border }}>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
+        <CollapsibleTrigger className="w-full">
           <div
-            className="p-4 border-b flex items-center justify-between cursor-pointer select-none transition-colors"
+            className="p-4 border-b flex items-center justify-between cursor-pointer select-none transition-colors hover:opacity-90"
             style={{ backgroundColor: palette.headerBg, borderColor: palette.border }}
-            onClick={toggleOpen}
-            tabIndex={0}
-            role="button"
-            aria-expanded={isOpen}
           >
             <div className="flex items-center gap-2" style={{ color: palette.text }}>
               {icon}
@@ -81,11 +74,11 @@ const CollapsibleSection = ({
             </div>
             <div className="flex items-center gap-2">
               <Button
-                onClick={e => { e.stopPropagation(); toggleVisibility(e); }}
+                onClick={toggleVisibility}
                 variant="ghost"
                 size="sm"
                 className="h-6 w-6 p-0"
-                tabIndex={-1}
+                type="button"
               >
                 <EyeOff className="h-4 w-4" />
               </Button>

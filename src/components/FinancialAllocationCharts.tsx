@@ -20,6 +20,15 @@ interface FinancialAllocationChartsProps {
   incomeEnabled: boolean;
 }
 
+// Updated color palette
+const palette = {
+  primary: '#E0F252',    // Potential-1
+  secondary: '#EDF25C',  // Potential-2
+  tertiary: '#F0F2AC',   // Potential-3
+  border: '#D9D9D9',     // Potential-4
+  text: '#0D0D0D',       // Potential-5
+};
+
 const FinancialAllocationCharts = ({
   accountData,
   monthlyExpenses,
@@ -70,11 +79,11 @@ const FinancialAllocationCharts = ({
   const bufferStatus = totalCash >= emergencyFundTarget ? 'Excellent' : 
                       totalCash >= monthlyExpenses * 3 ? 'Good' : 'Needs Attention';
 
-  // Asset allocation data for pie chart with new colors
+  // Asset allocation data for pie chart with updated colors
   const assetAllocationData = [
-    { name: 'Cash & Savings', value: totalCash, color: '#E0F252', icon: '💰' },
-    { name: 'Investments', value: totalInvestments, color: '#EDF25C', icon: '📈' },
-    { name: 'Other Assets', value: totalOtherAssets, color: '#F0F2AC', icon: '🏠' },
+    { name: 'Cash & Savings', value: totalCash, color: palette.primary, icon: '💰' },
+    { name: 'Investments', value: totalInvestments, color: palette.secondary, icon: '📈' },
+    { name: 'Other Assets', value: totalOtherAssets, color: palette.tertiary, icon: '🏠' },
   ].filter(item => item.value > 0);
 
   // Financial health overview
@@ -83,81 +92,80 @@ const FinancialAllocationCharts = ({
       name: 'Emergency Fund', 
       current: totalCash, 
       target: emergencyFundTarget,
-      color: totalCash >= emergencyFundTarget ? '#E0F252' : '#EDF25C'
+      color: totalCash >= emergencyFundTarget ? palette.primary : palette.secondary
     },
     { 
       name: 'Annual Income', 
       current: projectedIncome, 
       target: annualExpenses,
-      color: projectedIncome >= annualExpenses ? '#E0F252' : '#0D0D0D'
+      color: projectedIncome >= annualExpenses ? palette.primary : palette.text
     }
   ];
 
-  // Cash flow breakdown with new colors
+  // Cash flow breakdown with updated colors
   const cashFlowData = [
-    { category: 'Projected Income', amount: projectedIncome, color: '#E0F252' },
-    { category: 'Annual Expenses', amount: -annualExpenses, color: '#0D0D0D' },
-    { category: 'Net Cash Flow', amount: projectedIncome - annualExpenses, color: projectedIncome >= annualExpenses ? '#E0F252' : '#0D0D0D' }
+    { category: 'Projected Income', amount: projectedIncome, color: palette.primary },
+    { category: 'Annual Expenses', amount: -annualExpenses, color: palette.text },
+    { category: 'Net Cash Flow', amount: projectedIncome - annualExpenses, color: projectedIncome >= annualExpenses ? palette.primary : palette.text }
   ];
 
   const chartConfig = {
-    cash: { label: 'Cash & Savings', color: '#E0F252' },
-    investments: { label: 'Investments', color: '#EDF25C' },
-    otherAssets: { label: 'Other Assets', color: '#F0F2AC' }
+    cash: { label: 'Cash & Savings', color: palette.primary },
+    investments: { label: 'Investments', color: palette.secondary },
+    otherAssets: { label: 'Other Assets', color: palette.tertiary }
   };
 
   return (
     <CollapsibleSection
       title="Financial Allocation & Analysis"
       category="financial-allocation"
-      icon={<PieChartIcon className="h-5 w-5" style={{ color: '#E0F252' }} />}
+      icon={<PieChartIcon className="h-5 w-5" style={{ color: palette.primary }} />}
       defaultOpen={false}
     >
       <div className="space-y-6">
         {/* Financial Health Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-4 border-2" style={{ backgroundColor: '#E0F252', borderColor: '#EDF25C' }}>
+          <Card className="p-4 border-2" style={{ backgroundColor: palette.primary, borderColor: palette.secondary }}>
             <div className="flex items-center gap-3 mb-2">
-              <Shield className="h-5 w-5" style={{ color: '#0D0D0D' }} />
-              <span className="font-medium" style={{ color: '#0D0D0D' }}>Emergency Buffer</span>
+              <Shield className="h-5 w-5" style={{ color: palette.text }} />
+              <span className="font-medium" style={{ color: palette.text }}>Emergency Buffer</span>
             </div>
-            <div className="text-2xl font-bold mb-1" style={{ color: '#0D0D0D' }}>
+            <div className="text-2xl font-bold mb-1" style={{ color: palette.text }}>
               {formatCurrency(totalCash)}
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span style={{ color: '#0D0D0D' }}>Target: {formatCurrency(emergencyFundTarget)}</span>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                bufferStatus === 'Excellent' ? 'text-green-700' :
-                bufferStatus === 'Good' ? 'text-yellow-700' :
-                'text-red-700'
-              }`} style={{ backgroundColor: bufferStatus === 'Excellent' ? '#E0F252' : bufferStatus === 'Good' ? '#EDF25C' : '#D9D9D9' }}>
+              <span style={{ color: palette.text }}>Target: {formatCurrency(emergencyFundTarget)}</span>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium`} style={{ 
+                color: palette.text,
+                backgroundColor: bufferStatus === 'Excellent' ? palette.primary : bufferStatus === 'Good' ? palette.secondary : palette.border 
+              }}>
                 {bufferStatus}
               </span>
             </div>
           </Card>
 
-          <Card className="p-4 border-2" style={{ backgroundColor: '#EDF25C', borderColor: '#F0F2AC' }}>
+          <Card className="p-4 border-2" style={{ backgroundColor: palette.secondary, borderColor: palette.tertiary }}>
             <div className="flex items-center gap-3 mb-2">
-              <TrendingUp className="h-5 w-5" style={{ color: '#0D0D0D' }} />
-              <span className="font-medium" style={{ color: '#0D0D0D' }}>Runway</span>
+              <TrendingUp className="h-5 w-5" style={{ color: palette.text }} />
+              <span className="font-medium" style={{ color: palette.text }}>Runway</span>
             </div>
-            <div className="text-2xl font-bold mb-1" style={{ color: '#0D0D0D' }}>
+            <div className="text-2xl font-bold mb-1" style={{ color: palette.text }}>
               {runwayMonths.toFixed(1)} months
             </div>
-            <div className="text-sm" style={{ color: '#0D0D0D' }}>
+            <div className="text-sm" style={{ color: palette.text }}>
               Based on current cash & expenses
             </div>
           </Card>
 
-          <Card className="p-4 border-2" style={{ backgroundColor: '#F0F2AC', borderColor: '#D9D9D9' }}>
+          <Card className="p-4 border-2" style={{ backgroundColor: palette.tertiary, borderColor: palette.border }}>
             <div className="flex items-center gap-3 mb-2">
-              <Wallet className="h-5 w-5" style={{ color: '#0D0D0D' }} />
-              <span className="font-medium" style={{ color: '#0D0D0D' }}>Net Worth</span>
+              <Wallet className="h-5 w-5" style={{ color: palette.text }} />
+              <span className="font-medium" style={{ color: palette.text }}>Net Worth</span>
             </div>
-            <div className={`text-2xl font-bold mb-1`} style={{ color: netWorth >= 0 ? '#0D0D0D' : '#0D0D0D' }}>
+            <div className={`text-2xl font-bold mb-1`} style={{ color: palette.text }}>
               {formatCurrency(netWorth)}
             </div>
-            <div className="text-sm" style={{ color: '#0D0D0D' }}>
+            <div className="text-sm" style={{ color: palette.text }}>
               Assets - Liabilities
             </div>
           </Card>
@@ -165,10 +173,10 @@ const FinancialAllocationCharts = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Asset Allocation Pie Chart */}
-          <Card className="p-6 border-2" style={{ borderColor: '#D9D9D9' }}>
+          <Card className="p-6 border-2" style={{ borderColor: palette.border }}>
             <div className="flex items-center gap-2 mb-4">
-              <PieChartIcon className="h-5 w-5" style={{ color: '#0D0D0D' }} />
-              <h3 className="text-lg font-semibold" style={{ color: '#0D0D0D' }}>Asset Allocation</h3>
+              <PieChartIcon className="h-5 w-5" style={{ color: palette.text }} />
+              <h3 className="text-lg font-semibold" style={{ color: palette.text }}>Asset Allocation</h3>
             </div>
             
             {assetAllocationData.length > 0 ? (
@@ -235,9 +243,9 @@ const FinancialAllocationCharts = ({
                         className="w-3 h-3 rounded-full" 
                         style={{ backgroundColor: item.color }}
                       />
-                      <span className="text-sm font-medium" style={{ color: '#0D0D0D' }}>{item.name}</span>
+                      <span className="text-sm font-medium" style={{ color: palette.text }}>{item.name}</span>
                     </div>
-                    <span className="text-sm font-semibold" style={{ color: '#0D0D0D' }}>
+                    <span className="text-sm font-semibold" style={{ color: palette.text }}>
                       {formatCurrency(item.value)}
                     </span>
                   </div>
@@ -247,10 +255,10 @@ const FinancialAllocationCharts = ({
           </Card>
 
           {/* Cash Flow Analysis */}
-          <Card className="p-6 border-2" style={{ borderColor: '#D9D9D9' }}>
+          <Card className="p-6 border-2" style={{ borderColor: palette.border }}>
             <div className="flex items-center gap-2 mb-4">
-              <BarChart3 className="h-5 w-5" style={{ color: '#0D0D0D' }} />
-              <h3 className="text-lg font-semibold" style={{ color: '#0D0D0D' }}>Annual Cash Flow</h3>
+              <BarChart3 className="h-5 w-5" style={{ color: palette.text }} />
+              <h3 className="text-lg font-semibold" style={{ color: palette.text }}>Annual Cash Flow</h3>
             </div>
             
             <div className="h-80">
@@ -286,17 +294,17 @@ const FinancialAllocationCharts = ({
             </div>
 
             {/* Cash Flow Summary */}
-            <div className="mt-4 p-4 rounded-lg border-2" style={{ backgroundColor: '#F0F2AC', borderColor: '#D9D9D9' }}>
+            <div className="mt-4 p-4 rounded-lg border-2" style={{ backgroundColor: palette.tertiary, borderColor: palette.border }}>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span style={{ color: '#0D0D0D' }}>Monthly Surplus/Deficit:</span>
-                  <div className={`font-bold`} style={{ color: (projectedIncome - annualExpenses) >= 0 ? '#0D0D0D' : '#0D0D0D' }}>
+                  <span style={{ color: palette.text }}>Monthly Surplus/Deficit:</span>
+                  <div className={`font-bold`} style={{ color: palette.text }}>
                     {formatCurrency((projectedIncome - annualExpenses) / 12)}
                   </div>
                 </div>
                 <div>
-                  <span style={{ color: '#0D0D0D' }}>Income Coverage:</span>
-                  <div className={`font-bold`} style={{ color: projectedIncome >= annualExpenses ? '#0D0D0D' : '#0D0D0D' }}>
+                  <span style={{ color: palette.text }}>Income Coverage:</span>
+                  <div className={`font-bold`} style={{ color: palette.text }}>
                     {annualExpenses > 0 ? `${((projectedIncome / annualExpenses) * 100).toFixed(1)}%` : 'N/A'}
                   </div>
                 </div>
@@ -306,23 +314,20 @@ const FinancialAllocationCharts = ({
         </div>
 
         {/* Financial Insights */}
-        <Card className="p-6 border-2" style={{ backgroundColor: '#F0F2AC', borderColor: '#D9D9D9' }}>
-          <h3 className="text-lg font-semibold mb-4" style={{ color: '#0D0D0D' }}>💡 Financial Insights</h3>
+        <Card className="p-6 border-2" style={{ backgroundColor: palette.tertiary, borderColor: palette.border }}>
+          <h3 className="text-lg font-semibold mb-4" style={{ color: palette.text }}>💡 Financial Insights</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="space-y-2">
-              <div className="font-medium" style={{ color: '#0D0D0D' }}>Buffer Analysis:</div>
-              <ul className="space-y-1" style={{ color: '#0D0D0D' }}>
+              <div className="font-medium" style={{ color: palette.text }}>Buffer Analysis:</div>
+              <ul className="space-y-1" style={{ color: palette.text }}>
                 <li>• Emergency fund covers {(totalCash / monthlyExpenses).toFixed(1)} months</li>
                 <li>• Recommended: 6 months ({formatCurrency(emergencyFundTarget)})</li>
-                <li>• Status: <span className={`font-medium`} style={{ 
-                  color: bufferStatus === 'Excellent' ? '#0D0D0D' :
-                         bufferStatus === 'Good' ? '#0D0D0D' : '#0D0D0D'
-                }}>{bufferStatus}</span></li>
+                <li>• Status: <span className={`font-medium`} style={{ color: palette.text }}>{bufferStatus}</span></li>
               </ul>
             </div>
             <div className="space-y-2">
-              <div className="font-medium" style={{ color: '#0D0D0D' }}>Allocation Insights:</div>
-              <ul className="space-y-1" style={{ color: '#0D0D0D' }}>
+              <div className="font-medium" style={{ color: palette.text }}>Allocation Insights:</div>
+              <ul className="space-y-1" style={{ color: palette.text }}>
                 <li>• Cash: {totalAssets > 0 ? ((totalCash / totalAssets) * 100).toFixed(1) : 0}% of assets</li>
                 <li>• Investments: {totalAssets > 0 ? ((totalInvestments / totalAssets) * 100).toFixed(1) : 0}% of assets</li>
                 <li>• Debt-to-Asset: {totalAssets > 0 ? ((totalLiabilities / totalAssets) * 100).toFixed(1) : 0}%</li>

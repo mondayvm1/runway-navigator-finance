@@ -41,18 +41,25 @@ const CollapsibleSection = ({
 
   if (isHidden) {
     return (
-      <Card className="p-4" style={{ backgroundColor: palette.headerBg, borderColor: palette.border }}>
+      <Card 
+        className="p-4 border-2" 
+        style={{ 
+          backgroundColor: palette.headerBg, 
+          borderColor: palette.border 
+        }}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2" style={{ color: palette.text }}>
             {icon}
             <span className="font-medium">{title}</span>
-            <span className="text-xs">(Hidden)</span>
+            <span className="text-xs opacity-70">(Hidden)</span>
           </div>
           <Button
             onClick={toggleVisibility}
             variant="ghost"
             size="sm"
-            className="h-6 w-6 p-0"
+            className="h-8 w-8 p-0 hover:bg-white/20"
+            style={{ color: palette.text }}
           >
             <Eye className="h-4 w-4" />
           </Button>
@@ -62,39 +69,44 @@ const CollapsibleSection = ({
   }
 
   return (
-    <Card className="overflow-hidden border-2" style={{ borderColor: palette.border }}>
+    <Card 
+      className="overflow-hidden border-2" 
+      style={{ borderColor: palette.border }}
+    >
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <div
-          className="p-4 border-b flex items-center justify-between transition-colors hover:opacity-90"
-          style={{ backgroundColor: palette.headerBg, borderColor: palette.border }}
+          className="p-4 border-b-2 flex items-center justify-between transition-all duration-200 hover:brightness-95"
+          style={{ 
+            backgroundColor: palette.headerBg, 
+            borderBottomColor: palette.border 
+          }}
         >
-          <CollapsibleTrigger className="flex items-center gap-2 flex-1 cursor-pointer text-left border-none bg-transparent p-0 hover:bg-transparent">
-            {icon}
-            <h3 className="font-semibold" style={{ color: palette.text }}>{title}</h3>
+          <CollapsibleTrigger asChild>
+            <button className="flex items-center gap-2 flex-1 text-left bg-transparent border-none p-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded">
+              {icon}
+              <h3 className="font-semibold text-lg" style={{ color: palette.text }}>
+                {title}
+              </h3>
+              <ChevronDown 
+                className={`h-5 w-5 transition-transform duration-200 ml-auto ${isOpen ? 'rotate-180' : ''}`}
+                style={{ color: palette.text }} 
+              />
+            </button>
           </CollapsibleTrigger>
           
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={toggleVisibility}
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-              type="button"
-            >
-              <EyeOff className="h-4 w-4" />
-            </Button>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                <ChevronDown 
-                  className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                  style={{ color: palette.text }} 
-                />
-              </Button>
-            </CollapsibleTrigger>
-          </div>
+          <Button
+            onClick={toggleVisibility}
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 ml-2 hover:bg-white/20 flex-shrink-0"
+            style={{ color: palette.text }}
+          >
+            <EyeOff className="h-4 w-4" />
+          </Button>
         </div>
-        <CollapsibleContent>
-          <div className="p-6" style={{ backgroundColor: '#fff' }}>
+        
+        <CollapsibleContent className="data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
+          <div className="p-6 bg-white">
             {children}
           </div>
         </CollapsibleContent>

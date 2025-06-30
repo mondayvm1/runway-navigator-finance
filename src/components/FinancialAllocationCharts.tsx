@@ -20,7 +20,7 @@ interface FinancialAllocationChartsProps {
   incomeEnabled: boolean;
 }
 
-// Updated color palette to match CollapsibleSection
+// Color palette matching CollapsibleSection
 const palette = {
   primary: '#E0F252',    // Potential-1 - bright green-yellow
   secondary: '#EDF25C',  // Potential-2 - lighter green-yellow  
@@ -124,14 +124,13 @@ const FinancialAllocationCharts = ({
       defaultOpen={false}
     >
       <div className="space-y-6">
-        {/* Financial Health Overview Cards - Fixed color application */}
+        {/* Financial Health Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card 
             className="p-4 border-2" 
             style={{ 
               backgroundColor: palette.primary, 
               borderColor: palette.border,
-              color: palette.text
             }}
           >
             <div className="flex items-center gap-3 mb-2">
@@ -147,7 +146,8 @@ const FinancialAllocationCharts = ({
                 className="px-2 py-1 rounded-full text-xs font-medium"
                 style={{ 
                   color: palette.text,
-                  backgroundColor: bufferStatus === 'Excellent' ? palette.secondary : bufferStatus === 'Good' ? palette.tertiary : palette.border 
+                  backgroundColor: bufferStatus === 'Excellent' ? palette.secondary : 
+                                 bufferStatus === 'Good' ? palette.tertiary : palette.border 
                 }}
               >
                 {bufferStatus}
@@ -160,7 +160,6 @@ const FinancialAllocationCharts = ({
             style={{ 
               backgroundColor: palette.secondary, 
               borderColor: palette.border,
-              color: palette.text
             }}
           >
             <div className="flex items-center gap-3 mb-2">
@@ -180,7 +179,6 @@ const FinancialAllocationCharts = ({
             style={{ 
               backgroundColor: palette.tertiary, 
               borderColor: palette.border,
-              color: palette.text
             }}
           >
             <div className="flex items-center gap-3 mb-2">
@@ -197,7 +195,7 @@ const FinancialAllocationCharts = ({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Asset Allocation Pie Chart - Updated styling */}
+          {/* Asset Allocation Pie Chart */}
           <Card className="p-6 border-2" style={{ borderColor: palette.border, backgroundColor: palette.background }}>
             <div className="flex items-center gap-2 mb-4">
               <PieChartIcon className="h-5 w-5" style={{ color: palette.text }} />
@@ -227,10 +225,18 @@ const FinancialAllocationCharts = ({
                           if (active && payload && payload.length) {
                             const data = payload[0].payload;
                             return (
-                              <div className="p-3 border rounded-lg shadow-lg" style={{ backgroundColor: palette.background, borderColor: palette.border }}>
+                              <div 
+                                className="p-3 border rounded-lg shadow-lg" 
+                                style={{ 
+                                  backgroundColor: palette.background, 
+                                  borderColor: palette.border 
+                                }}
+                              >
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="text-lg">{data.icon}</span>
-                                  <span className="font-medium" style={{ color: palette.text }}>{data.name}</span>
+                                  <span className="font-medium" style={{ color: palette.text }}>
+                                    {data.name}
+                                  </span>
                                 </div>
                                 <div className="text-lg font-bold" style={{ color: data.color }}>
                                   {formatCurrency(data.value)}
@@ -258,7 +264,7 @@ const FinancialAllocationCharts = ({
               </div>
             )}
             
-            {/* Asset Legend - Updated colors */}
+            {/* Asset Legend */}
             {assetAllocationData.length > 0 && (
               <div className="mt-4 space-y-2">
                 {assetAllocationData.map((item, index) => (
@@ -268,7 +274,9 @@ const FinancialAllocationCharts = ({
                         className="w-3 h-3 rounded-full" 
                         style={{ backgroundColor: item.color }}
                       />
-                      <span className="text-sm font-medium" style={{ color: palette.text }}>{item.name}</span>
+                      <span className="text-sm font-medium" style={{ color: palette.text }}>
+                        {item.name}
+                      </span>
                     </div>
                     <span className="text-sm font-semibold" style={{ color: palette.text }}>
                       {formatCurrency(item.value)}
@@ -279,7 +287,7 @@ const FinancialAllocationCharts = ({
             )}
           </Card>
 
-          {/* Cash Flow Analysis - Updated styling */}
+          {/* Cash Flow Analysis */}
           <Card className="p-6 border-2" style={{ borderColor: palette.border, backgroundColor: palette.background }}>
             <div className="flex items-center gap-2 mb-4">
               <BarChart3 className="h-5 w-5" style={{ color: palette.text }} />
@@ -297,8 +305,16 @@ const FinancialAllocationCharts = ({
                         if (active && payload && payload.length) {
                           const data = payload[0].payload;
                           return (
-                            <div className="p-3 border rounded-lg shadow-lg" style={{ backgroundColor: palette.background, borderColor: palette.border }}>
-                              <div className="font-medium mb-1" style={{ color: palette.text }}>{data.category}</div>
+                            <div 
+                              className="p-3 border rounded-lg shadow-lg" 
+                              style={{ 
+                                backgroundColor: palette.background, 
+                                borderColor: palette.border 
+                              }}
+                            >
+                              <div className="font-medium mb-1" style={{ color: palette.text }}>
+                                {data.category}
+                              </div>
                               <div className="text-lg font-bold" style={{ color: data.color }}>
                                 {formatCurrency(data.amount)}
                               </div>
@@ -318,8 +334,14 @@ const FinancialAllocationCharts = ({
               </ChartContainer>
             </div>
 
-            {/* Cash Flow Summary - Updated styling */}
-            <div className="mt-4 p-4 rounded-lg border-2" style={{ backgroundColor: palette.tertiary, borderColor: palette.border }}>
+            {/* Cash Flow Summary */}
+            <div 
+              className="mt-4 p-4 rounded-lg border-2" 
+              style={{ 
+                backgroundColor: palette.tertiary, 
+                borderColor: palette.border 
+              }}
+            >
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span style={{ color: palette.text }}>Monthly Surplus/Deficit:</span>
@@ -338,16 +360,24 @@ const FinancialAllocationCharts = ({
           </Card>
         </div>
 
-        {/* Financial Insights - Updated styling */}
-        <Card className="p-6 border-2" style={{ backgroundColor: palette.tertiary, borderColor: palette.border }}>
-          <h3 className="text-lg font-semibold mb-4" style={{ color: palette.text }}>💡 Financial Insights</h3>
+        {/* Financial Insights */}
+        <Card 
+          className="p-6 border-2" 
+          style={{ 
+            backgroundColor: palette.tertiary, 
+            borderColor: palette.border 
+          }}
+        >
+          <h3 className="text-lg font-semibold mb-4" style={{ color: palette.text }}>
+            💡 Financial Insights
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="space-y-2">
               <div className="font-medium" style={{ color: palette.text }}>Buffer Analysis:</div>
               <ul className="space-y-1" style={{ color: palette.text }}>
                 <li>• Emergency fund covers {(totalCash / monthlyExpenses).toFixed(1)} months</li>
                 <li>• Recommended: 6 months ({formatCurrency(emergencyFundTarget)})</li>
-                <li>• Status: <span className="font-medium" style={{ color: palette.text }}>{bufferStatus}</span></li>
+                <li>• Status: <span className="font-medium">{bufferStatus}</span></li>
               </ul>
             </div>
             <div className="space-y-2">

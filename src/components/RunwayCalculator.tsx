@@ -15,6 +15,7 @@ import IncomeManager, { IncomeEvent } from "./IncomeManager";
 import FinancialInsights from "./FinancialInsights";
 import EnhancedRunwayChart from "./EnhancedRunwayChart";
 import EnhancedSnapshotManager from "./EnhancedSnapshotManager";
+import FinancialAllocationCharts from "./FinancialAllocationCharts";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles, TrendingUp } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
@@ -384,6 +385,14 @@ const RunwayCalculator = () => {
     toast.success("Financial data restored successfully!");
   };
 
+  // Add update function for income events
+  const updateIncomeEvent = (id: string, updatedEvent: Omit<IncomeEvent, 'id'>) => {
+    // This would need to be implemented in the useFinancialData hook
+    // For now, we'll remove and add (not ideal but functional)
+    removeIncomeEvent(id);
+    addIncomeEvent(updatedEvent);
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="grid lg:grid-cols-5 gap-6">
@@ -446,6 +455,7 @@ const RunwayCalculator = () => {
             incomeEnabled={incomeEnabled}
             onAddIncomeEvent={addIncomeEvent}
             onRemoveIncomeEvent={removeIncomeEvent}
+            onUpdateIncomeEvent={updateIncomeEvent}
             onToggleIncomeEnabled={toggleIncomeEnabled}
           />
           

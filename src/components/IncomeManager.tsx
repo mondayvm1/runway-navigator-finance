@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, TrendingUp, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Calendar, TrendingUp, Plus, Trash2, ToggleLeft, ToggleRight, Edit, Check, X } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 
 export interface IncomeEvent {
@@ -23,6 +23,7 @@ interface IncomeManagerProps {
   incomeEnabled: boolean;
   onAddIncomeEvent: (event: Omit<IncomeEvent, 'id'>) => void;
   onRemoveIncomeEvent: (id: string) => void;
+  onUpdateIncomeEvent: (id: string, event: Omit<IncomeEvent, 'id'>) => void;
   onToggleIncomeEnabled: () => void;
 }
 
@@ -31,9 +32,11 @@ const IncomeManager = ({
   incomeEnabled,
   onAddIncomeEvent,
   onRemoveIncomeEvent,
+  onUpdateIncomeEvent,
   onToggleIncomeEnabled
 }: IncomeManagerProps) => {
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newEvent, setNewEvent] = useState({
     name: '',
     amount: 0,
@@ -45,10 +48,18 @@ const IncomeManager = ({
   const handleSubmit = () => {
     if (!newEvent.name || !newEvent.amount || !newEvent.date) return;
     
-    onAddIncomeEvent({
-      ...newEvent,
-      endDate: newEvent.endDate || undefined
-    });
+    if (editingId) {
+      onUpdateIncomeEvent(editingId, {
+        ...newEvent,
+        endDate: newEvent.endDate || undefined
+      });
+      setEditingId(null);
+    } else {
+      onAddIncomeEvent({
+        ...newEvent,
+        endDate: newEvent.endDate || undefined
+      });
+    }
     
     setNewEvent({
       name: '',
@@ -57,6 +68,30 @@ const IncomeManager = ({
       frequency: 'one-time' as 'one-time' | 'monthly' | 'yearly',
       endDate: ''
     });
+    setShowForm(false);
+  };
+
+  const handleEdit = (event: IncomeEvent) => {
+    setNewEvent({
+      name: event.name,
+      amount: event.amount,
+      date: event.date,
+      frequency: event.frequency,
+      endDate: event.endDate || ''
+    });
+    setEditingId(event.id);
+    setShowForm(true);
+  };
+
+  const handleCancel = () => {
+    setNewEvent({
+      name: '',
+      amount: 0,
+      date: '',
+      frequency: 'one-time' as 'one-time' | 'monthly' | 'yearly',
+      endDate: ''
+    });
+    setEditingId(null);
     setShowForm(false);
   };
 
@@ -145,10 +180,26 @@ const IncomeManager = ({
         )}
       </Card>
 
-      {/* Add Income Form */}
+      {/* Add/Edit Income Form */}
       {showForm && incomeEnabled && (
         <Card className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
           <div className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-lg font-semibold text-slate-800">
+                {editingId ? 'Edit Income Event' : 'Add New Income Event'}
+              </h4>
+              {editingId && (
+                <Button
+                  onClick={handleCancel}
+                  variant="ghost"
+                  size="sm"
+                  className="text-slate-500 hover:text-slate-700"
+                >
+                  <X size={16} />
+                </Button>
+              )}
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-slate-700">Event Name</Label>
@@ -214,12 +265,13 @@ const IncomeManager = ({
             <div className="flex gap-3 pt-2">
               <Button 
                 onClick={handleSubmit} 
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
               >
-                Add Event
+                {editingId ? <Check size={16} /> : <Plus size={16} />}
+                {editingId ? 'Update Event' : 'Add Event'}
               </Button>
               <Button 
-                onClick={() => setShowForm(false)} 
+                onClick={handleCancel} 
                 variant="outline"
                 className="border-slate-300 text-slate-600 hover:bg-slate-50"
               >
@@ -278,14 +330,25 @@ const IncomeManager = ({
                     }`}>
                       {formatCurrency(event.amount)}
                     </span>
-                    <Button
-                      onClick={() => onRemoveIncomeEvent(event.id)}
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 size={16} />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        onClick={() => handleEdit(event)}
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                        disabled={!incomeEnabled}
+                      >
+                        <Edit size={16} />
+                      </Button>
+                      <Button
+                        onClick={() => onRemoveIncomeEvent(event.id)}
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </Card>

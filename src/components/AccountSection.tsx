@@ -38,7 +38,7 @@ const AccountSection = ({
   onToggleHidden,
 }: AccountSectionProps) => {
   const [editingNames, setEditingNames] = useState<{ [key: string]: boolean }>({});
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const toggleNameEdit = (id: string) => {
     setEditingNames(prev => ({ ...prev, [id]: !prev[id] }));

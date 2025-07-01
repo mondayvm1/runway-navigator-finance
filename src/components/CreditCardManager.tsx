@@ -169,6 +169,22 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
               className="h-8 text-sm"
             />
           </div>
+
+          <div>
+            <Label className="text-xs text-gray-600">Interest Rate (%)</Label>
+            <Input
+              type="number"
+              step="0.01"
+              min="0"
+              max="100"
+              placeholder="Interest rate"
+              value={account.interestRate || ""}
+              onChange={(e) => onUpdateAccount(account.id, {
+                interestRate: parseFloat(e.target.value) || 0
+              })}
+              className="h-8 text-sm"
+            />
+          </div>
           
           <div>
             <Label className="text-xs text-gray-600">Available Credit</Label>

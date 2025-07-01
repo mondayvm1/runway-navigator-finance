@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,7 +15,7 @@ interface AccountSectionProps {
   isNegative?: boolean;
   isHidden?: boolean;
   onAddAccount: () => void;
-  onUpdateAccount: (id: string, balance: number) => void;
+  onUpdateAccount?: (id: string, balance: number) => void;
   onUpdateAccountName: (id: string, name: string) => void;
   onUpdateInterestRate?: (id: string, rate: number) => void;
   onUpdateAccountData?: (id: string, updates: Partial<AccountItem>) => void;
@@ -31,7 +30,7 @@ const AccountSection = ({
   isNegative = false,
   isHidden = false,
   onAddAccount,
-  onUpdateAccount,
+  onUpdateAccount = () => {},
   onUpdateAccountName,
   onUpdateInterestRate,
   onUpdateAccountData,
@@ -122,7 +121,13 @@ const AccountSection = ({
                     type="number"
                     placeholder="0"
                     value={account.balance || ""}
-                    onChange={(e) => onUpdateAccount(account.id, parseFloat(e.target.value) || 0)}
+                    onChange={(e) => {
+                      if (onUpdateAccountData) {
+                        onUpdateAccountData(account.id, { balance: parseFloat(e.target.value) || 0 });
+                      } else {
+                        onUpdateAccount(account.id, parseFloat(e.target.value) || 0);
+                      }
+                    }}
                     className="h-8 text-sm"
                   />
                 </div>
@@ -132,7 +137,13 @@ const AccountSection = ({
                     <Label className="text-xs text-gray-600">Interest Rate (%)</Label>
                     <InterestRateInput
                       value={account.interestRate || 0}
-                      onUpdate={(rate) => onUpdateInterestRate(account.id, rate)}
+                      onUpdate={(rate) => {
+                        if (onUpdateAccountData) {
+                          onUpdateAccountData(account.id, { interestRate: rate });
+                        } else {
+                          onUpdateInterestRate(account.id, rate);
+                        }
+                      }}
                       accountType={title.toLowerCase()}
                     />
                   </div>

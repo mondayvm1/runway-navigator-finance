@@ -4,51 +4,44 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 247 247 247; /* #F7F7F7 */
+    --foreground: 34 34 59;     /* #22223B */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 255 255 255;        /* #FFFFFF */
+    --card-foreground: 34 34 59; /* #22223B */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 255 255 255;     /* #FFFFFF */
+    --popover-foreground: 34 34 59; /* #22223B */
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 46 196 182;      /* #2EC4B6 */
+    --primary-foreground: 255 255 255; /* #FFFFFF */
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 255 191 105;   /* #FFBF69 */
+    --secondary-foreground: 34 34 59; /* #22223B */
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 191 192 192;       /* #BFC0C0 */
+    --muted-foreground: 34 34 59; /* #22223B */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 255 111 97;       /* #FF6F61 */
+    --accent-foreground: 255 255 255; /* #FFFFFF */
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 255 111 97;  /* #FF6F61 */
+    --destructive-foreground: 255 255 255; /* #FFFFFF */
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 191 192 192;      /* #BFC0C0 */
+    --input: 247 247 247;       /* #F7F7F7 */
+    --ring: 46 196 182;         /* #2EC4B6 */
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 255 255 255; /* #FFFFFF */
+    --sidebar-foreground: 34 34 59;    /* #22223B */
+    --sidebar-primary: 46 196 182;     /* #2EC4B6 */
+    --sidebar-primary-foreground: 255 255 255; /* #FFFFFF */
+    --sidebar-accent: 255 191 105;     /* #FFBF69 */
+    --sidebar-accent-foreground: 34 34 59; /* #22223B */
+    --sidebar-border: 191 192 192;     /* #BFC0C0 */
+    --sidebar-ring: 46 196 182;        /* #2EC4B6 */
   }
 
   .dark {

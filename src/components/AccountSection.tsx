@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Plus, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { AccountItem } from '@/hooks/useFinancialData';
 import CreditCardManager, { CreditSummary } from './CreditCardManager';
 import InterestRateInput from './InterestRateInput';
@@ -38,6 +38,7 @@ const AccountSection = ({
   onToggleHidden,
 }: AccountSectionProps) => {
   const [editingNames, setEditingNames] = useState<{ [key: string]: boolean }>({});
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const toggleNameEdit = (id: string) => {
     setEditingNames(prev => ({ ...prev, [id]: !prev[id] }));
@@ -54,6 +55,13 @@ const AccountSection = ({
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
+          <button
+            onClick={() => setIsCollapsed((prev) => !prev)}
+            className="mr-2 p-1 rounded hover:bg-gray-100 transition-colors"
+            aria-label={isCollapsed ? 'Expand section' : 'Collapse section'}
+          >
+            {isCollapsed ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
+          </button>
           {icon}
           <h3 className="text-lg font-medium text-gray-700 ml-2">{title}</h3>
         </div>
@@ -73,11 +81,11 @@ const AccountSection = ({
       </div>
 
       {/* Show Credit Summary for credit accounts */}
-      {title === 'Credit' && accounts.length > 0 && !isHidden && (
+      {title === 'Credit' && accounts.length > 0 && !isHidden && !isCollapsed && (
         <CreditSummary accounts={accounts} />
       )}
 
-      {!isHidden && (
+      {!isHidden && !isCollapsed && (
         <div className="space-y-4">
           {accounts.map((account) => (
             <div key={account.id} className="space-y-2">

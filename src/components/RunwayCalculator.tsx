@@ -91,32 +91,40 @@ const RunwayCalculator = () => {
       totalCash: accountData.cash.reduce((sum, account) => sum + account.balance, 0)
     });
 
+    // Calculate total available for runway based on visible categories
+    const totalAssets =
+      (!hiddenCategories.cash ? accountData.cash.reduce((sum, account) => sum + account.balance, 0) : 0) +
+      (!hiddenCategories.investments ? accountData.investments.reduce((sum, account) => sum + account.balance, 0) : 0) +
+      (!hiddenCategories.otherAssets ? accountData.otherAssets.reduce((sum, account) => sum + account.balance, 0) : 0);
+    const totalLiabilities =
+      (!hiddenCategories.credit ? accountData.credit.reduce((sum, account) => sum + account.balance, 0) : 0) +
+      (!hiddenCategories.loans ? accountData.loans.reduce((sum, account) => sum + account.balance, 0) : 0);
+    const netAvailable = totalAssets - totalLiabilities;
+
     if (monthlyExpenses <= 0) {
       console.log('No monthly expenses set, setting runway to 0');
       setRunway({ days: 0, months: 0, withIncomeMonths: 0, additionalMonthsFromIncome: 0 });
       return;
     }
 
-    const totalCash = accountData.cash.reduce((sum, account) => sum + account.balance, 0);
-    
-    if (totalCash <= 0) {
+    if (netAvailable <= 0) {
       console.log('No cash available, setting runway to 0');
       setRunway({ days: 0, months: 0, withIncomeMonths: 0, additionalMonthsFromIncome: 0 });
       return;
     }
 
     const dailyExpenses = monthlyExpenses / 30;
-    const totalDays = Math.floor(totalCash / dailyExpenses);
-    const baseMonths = parseFloat((totalCash / monthlyExpenses).toFixed(1));
+    const totalDays = Math.floor(netAvailable / dailyExpenses);
+    const baseMonths = parseFloat((netAvailable / monthlyExpenses).toFixed(1));
 
-    console.log('Base calculations:', { totalCash, baseMonths, incomeEnabled, totalDays });
+    console.log('Base calculations:', { netAvailable, baseMonths, incomeEnabled, totalDays });
 
     // Calculate runway with income events only if income is enabled
     let withIncomeMonths = baseMonths;
     
     if (incomeEnabled && incomeEvents.length > 0) {
       console.log('Calculating with income events:', incomeEvents);
-      let remainingSavings = totalCash;
+      let remainingSavings = netAvailable;
       const maxProjectionMonths = 60;
       let monthsCalculated = 0;
 
@@ -451,7 +459,15 @@ const RunwayCalculator = () => {
               onUpdateAccount={() => {}}
               onUpdateAccountData={(id, updates) => updateAccountField('cash', id, updates)}
               onUpdateAccountName={(id, name) => updateAccountName('cash', id, name)}
-              onRemoveAccount={(id) => {/* restore/removeAccount logic here if needed */}}
+              onRemoveAccount={async (id) => {
+                // Remove from backend
+                await updateAccountField('cash', id, { balance: 0, name: '', interestRate: 0 });
+                // Remove from local state
+                setAccountData(prev => ({
+                  ...prev,
+                  cash: prev.cash.filter(account => account.id !== id)
+                }));
+              }}
               onToggleHidden={() => setHiddenCategories(prev => ({ ...prev, cash: !prev.cash }))}
             />
             
@@ -464,7 +480,13 @@ const RunwayCalculator = () => {
               onUpdateAccount={() => {}}
               onUpdateAccountData={(id, updates) => updateAccountField('investments', id, updates)}
               onUpdateAccountName={(id, name) => updateAccountName('investments', id, name)}
-              onRemoveAccount={(id) => {/* restore/removeAccount logic here if needed */}}
+              onRemoveAccount={async (id) => {
+                await updateAccountField('investments', id, { balance: 0, name: '', interestRate: 0 });
+                setAccountData(prev => ({
+                  ...prev,
+                  investments: prev.investments.filter(account => account.id !== id)
+                }));
+              }}
               onToggleHidden={() => setHiddenCategories(prev => ({ ...prev, investments: !prev.investments }))}
             />
             
@@ -478,7 +500,13 @@ const RunwayCalculator = () => {
               onUpdateAccount={() => {}}
               onUpdateAccountData={(id, updates) => updateAccountField('credit', id, updates)}
               onUpdateAccountName={(id, name) => updateAccountName('credit', id, name)}
-              onRemoveAccount={(id) => {/* restore/removeAccount logic here if needed */}}
+              onRemoveAccount={async (id) => {
+                await updateAccountField('credit', id, { balance: 0, name: '', interestRate: 0 });
+                setAccountData(prev => ({
+                  ...prev,
+                  credit: prev.credit.filter(account => account.id !== id)
+                }));
+              }}
               onToggleHidden={() => setHiddenCategories(prev => ({ ...prev, credit: !prev.credit }))}
             />
             
@@ -492,7 +520,13 @@ const RunwayCalculator = () => {
               onUpdateAccount={() => {}}
               onUpdateAccountData={(id, updates) => updateAccountField('loans', id, updates)}
               onUpdateAccountName={(id, name) => updateAccountName('loans', id, name)}
-              onRemoveAccount={(id) => {/* restore/removeAccount logic here if needed */}}
+              onRemoveAccount={async (id) => {
+                await updateAccountField('loans', id, { balance: 0, name: '', interestRate: 0 });
+                setAccountData(prev => ({
+                  ...prev,
+                  loans: prev.loans.filter(account => account.id !== id)
+                }));
+              }}
               onToggleHidden={() => setHiddenCategories(prev => ({ ...prev, loans: !prev.loans }))}
             />
             
@@ -505,7 +539,13 @@ const RunwayCalculator = () => {
               onUpdateAccount={() => {}}
               onUpdateAccountData={(id, updates) => updateAccountField('otherAssets', id, updates)}
               onUpdateAccountName={(id, name) => updateAccountName('otherAssets', id, name)}
-              onRemoveAccount={(id) => {/* restore/removeAccount logic here if needed */}}
+              onRemoveAccount={async (id) => {
+                await updateAccountField('otherAssets', id, { balance: 0, name: '', interestRate: 0 });
+                setAccountData(prev => ({
+                  ...prev,
+                  otherAssets: prev.otherAssets.filter(account => account.id !== id)
+                }));
+              }}
               onToggleHidden={() => setHiddenCategories(prev => ({ ...prev, otherAssets: !prev.otherAssets }))}
             />
           </div>

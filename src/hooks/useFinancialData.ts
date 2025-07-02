@@ -331,12 +331,18 @@ export const useFinancialData = () => {
     // Find the account
     const account = accountData[category].find((a) => a.id === id);
     if (!account) return;
+    // Filter out undefined fields
+    const filteredUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([_, v]) => v !== undefined)
+    );
+    // Debug logging
+    console.log('Updating account:', { filteredUpdates, id, userId: user.id });
     // Update Supabase
     try {
       const { error } = await supabase
         .from('user_accounts')
         .update({
-          ...updates,
+          ...filteredUpdates,
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id)
@@ -347,13 +353,13 @@ export const useFinancialData = () => {
       setAccountData((prev) => ({
         ...prev,
         [category]: prev[category].map((a) =>
-          a.id === id ? { ...a, ...updates } : a
+          a.id === id ? { ...a, ...filteredUpdates } : a
         ),
       }));
       toast.success('Account updated!');
     } catch (e) {
       toast.error('Failed to update account');
-      console.error(e);
+      console.error('Update account error:', e);
     }
   };
 

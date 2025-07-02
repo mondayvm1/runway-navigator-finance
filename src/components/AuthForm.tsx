@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -41,8 +40,8 @@ const AuthForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto p-6">
-      <h2 className="text-2xl font-bold text-center mb-6">
+    <Card className="w-full max-w-md mx-auto p-6 bg-white/90 shadow-lg">
+      <h2 className="text-2xl font-bold text-center mb-6 text-blue-700">
         {isSignUp ? 'Create Account' : 'Sign In'}
       </h2>
       
@@ -54,6 +53,7 @@ const AuthForm = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            className="bg-white border border-blue-200 text-slate-800 placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
           />
         </div>
         
@@ -64,6 +64,7 @@ const AuthForm = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            className="bg-white border border-blue-200 text-slate-800 placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
           />
         </div>
         

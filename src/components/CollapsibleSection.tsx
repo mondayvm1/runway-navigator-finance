@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,11 +14,11 @@ interface CollapsibleSectionProps {
 }
 
 const palette = {
-  headerBg: '#F0F2AC', // Potential-3
-  border: '#D9D9D9',  // Potential-4
-  text: '#0D0D0D',    // Potential-5
-  accent1: '#E0F252', // Potential-1
-  accent2: '#EDF25C', // Potential-2
+  headerBg: '#e0e7ff', // indigo-50
+  border: '#c7d2fe',  // indigo-200
+  text: '#1e293b',    // slate-800
+  accent1: '#2563eb', // blue-600
+  accent2: '#a78bfa', // purple-400
 };
 
 const CollapsibleSection = ({ 
@@ -70,12 +69,12 @@ const CollapsibleSection = ({
 
   return (
     <Card 
-      className="overflow-hidden border-2" 
-      style={{ borderColor: palette.border }}
+      className="overflow-hidden border-2 shadow-lg" 
+      style={{ borderColor: palette.border, background: 'linear-gradient(90deg, #e0e7ff 0%, #f3e8ff 100%)' }}
     >
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <div
-          className="p-4 border-b-2 flex items-center justify-between transition-all duration-200 hover:brightness-95"
+          className="p-4 border-b-2 flex items-center justify-between transition-all duration-200 hover:brightness-95 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50"
           style={{ 
             backgroundColor: palette.headerBg, 
             borderBottomColor: palette.border 
@@ -106,7 +105,7 @@ const CollapsibleSection = ({
         </div>
         
         <CollapsibleContent className="data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-          <div className="p-6 bg-white">
+          <div className="p-6 bg-white/80 rounded-b-lg">
             {children}
           </div>
         </CollapsibleContent>

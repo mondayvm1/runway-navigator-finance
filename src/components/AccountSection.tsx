@@ -114,9 +114,9 @@ const AccountSection = ({
                 </div>
                 <Button
                   onClick={() => onRemoveAccount(account.id)}
-                  variant="ghost"
+                  variant="destructive"
                   size="sm"
-                  className="text-red-600 hover:text-red-800 p-1"
+                  className="p-1"
                 >
                   <Trash2 size={16} />
                 </Button>

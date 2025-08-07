@@ -15,6 +15,7 @@ import IncomeManager, { IncomeEvent } from "./IncomeManager";
 import FinancialInsights from "./FinancialInsights";
 import EnhancedRunwayChart from "./EnhancedRunwayChart";
 import EnhancedSnapshotManager from "./EnhancedSnapshotManager";
+import RunwayChart from "./RunwayChart";
 import FinancialAllocationCharts from "./FinancialAllocationCharts";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles, TrendingUp } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
@@ -644,16 +645,16 @@ const RunwayCalculator = () => {
 
       {/* Runway Chart - Always visible at bottom */}
       <div className="mt-6">
-        <Card className="p-6">
-          <h3 className="text-lg font-medium text-gray-700 mb-4">Financial Runway Chart</h3>
-          <EnhancedRunwayChart 
-            savings={getTotalAssets() - getTotalLiabilities()} 
-            monthlyExpenses={monthlyExpenses} 
-            months={runway.months}
-            incomeEvents={incomeEvents}
-            incomeEnabled={incomeEnabled}
-          />
-        </Card>
+        <RunwayChart 
+          getTotalAssets={getTotalAssets}
+          getTotalLiabilities={getTotalLiabilities}
+          accountData={accountData}
+          monthlyExpenses={monthlyExpenses}
+          runway={runway}
+          incomeEvents={incomeEvents}
+          incomeEnabled={incomeEnabled}
+          hiddenCategories={hiddenCategories}
+        />
       </div>
 
       {showSnapshotViewer && (

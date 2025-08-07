@@ -1,88 +1,175 @@
-
-import { useEffect, useRef } from 'react';
-import { Bar } from 'recharts';
-import { BarChart, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useState } from 'react';
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import EnhancedRunwayChart from './EnhancedRunwayChart';
+import { IncomeEvent } from './IncomeManager';
+import { AccountItem } from '@/hooks/useFinancialData';
+import { formatCurrency } from '@/utils/formatters';
 
 interface RunwayChartProps {
-  savings: number;
+  getTotalAssets: () => number;
+  getTotalLiabilities: () => number;
+  accountData: {
+    cash: AccountItem[];
+    investments: AccountItem[];
+    credit: AccountItem[];
+    loans: AccountItem[];
+    otherAssets: AccountItem[];
+  };
   monthlyExpenses: number;
-  months: number;
+  runway: {
+    days: number;
+    months: number;
+    withIncomeMonths: number;
+    additionalMonthsFromIncome: number;
+  };
+  incomeEvents: IncomeEvent[];
+  incomeEnabled: boolean;
+  hiddenCategories: {
+    cash: boolean;
+    investments: boolean;
+    credit: boolean;
+    loans: boolean;
+    otherAssets: boolean;
+  };
 }
 
-const RunwayChart = ({ savings, monthlyExpenses, months }: RunwayChartProps) => {
-  const generateChartData = () => {
-    if (monthlyExpenses <= 0) return [];
-    
-    const data = [];
-    let remainingSavings = savings;
-    
-    // Generate data for each month until savings run out
-    for (let i = 0; i <= Math.ceil(months); i++) {
-      if (i > 0) {
-        remainingSavings -= monthlyExpenses;
-      }
-      
-      // Don't show negative balances
-      const balance = Math.max(0, remainingSavings);
-      
-      data.push({
-        month: i,
-        balance: balance,
-      });
-      
-      // Stop if we've reached zero
-      if (balance <= 0) break;
+const RunwayChart = ({
+  getTotalAssets,
+  getTotalLiabilities,
+  accountData,
+  monthlyExpenses,
+  runway,
+  incomeEvents,
+  incomeEnabled,
+  hiddenCategories
+}: RunwayChartProps) => {
+  const [selectedMode, setSelectedMode] = useState<'cash' | 'all' | 'net'>('cash');
+
+  // Calculate different savings amounts based on mode
+  const getSavingsAmount = () => {
+    switch (selectedMode) {
+      case 'cash':
+        return accountData.cash.reduce((sum, account) => sum + account.balance, 0);
+      case 'all':
+        return getTotalAssets();
+      case 'net':
+        return getTotalAssets() - getTotalLiabilities();
+      default:
+        return 0;
     }
-    
-    return data;
   };
 
-  const chartData = generateChartData();
-  
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(value);
+  // Calculate runway for current mode
+  const getRunwayMonths = () => {
+    if (monthlyExpenses <= 0) return 0;
+    const savings = getSavingsAmount();
+    return Number((savings / monthlyExpenses).toFixed(1));
   };
 
-  const customTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-gray-200 shadow-md rounded">
-          <p className="font-medium">{`Month ${label}`}</p>
-          <p className="text-green-600">
-            {`Remaining: ${formatCurrency(payload[0].value)}`}
-          </p>
-        </div>
-      );
+  const savingsAmount = getSavingsAmount();
+  const calculatedRunway = getRunwayMonths();
+
+  const getModeLabel = () => {
+    switch (selectedMode) {
+      case 'cash':
+        return 'Cash Only';
+      case 'all':
+        return 'All Assets';
+      case 'net':
+        return 'Net Worth';
+      default:
+        return 'Cash Only';
     }
-    return null;
+  };
+
+  const getModeDescription = () => {
+    switch (selectedMode) {
+      case 'cash':
+        return 'Using only cash accounts for runway calculation';
+      case 'all':
+        return 'Using all assets (cash + investments + other assets) for runway calculation';
+      case 'net':
+        return 'Using net worth (assets minus liabilities) for runway calculation';
+      default:
+        return '';
+    }
   };
 
   return (
-    <div className="w-full h-60 mt-4">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-          <XAxis 
-            dataKey="month" 
-            label={{ value: 'Months', position: 'insideBottom', offset: -5 }}
-          />
-          <YAxis 
-            tickFormatter={formatCurrency}
-            label={{ value: 'Balance', angle: -90, position: 'insideLeft' }}
-          />
-          <Tooltip content={customTooltip} />
-          <Bar 
-            dataKey="balance" 
-            fill="#4ade80" 
-            name="Remaining Savings" 
-            radius={[4, 4, 0, 0]}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+    <Card className="p-6">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium text-gray-700">Financial Runway Chart</h3>
+          <div className="flex gap-2">
+            <Button
+              variant={selectedMode === 'cash' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedMode('cash')}
+            >
+              Cash Only
+            </Button>
+            <Button
+              variant={selectedMode === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedMode('all')}
+            >
+              All Assets
+            </Button>
+            <Button
+              variant={selectedMode === 'net' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedMode('net')}
+            >
+              Net Worth
+            </Button>
+          </div>
+        </div>
+
+        {/* Current Mode Summary */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <p className="text-sm text-gray-600">Mode</p>
+              <p className="text-lg font-semibold text-gray-900">{getModeLabel()}</p>
+              <p className="text-xs text-gray-500">{getModeDescription()}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Available Funds</p>
+              <p className="text-lg font-semibold text-blue-700">{formatCurrency(savingsAmount)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Runway (Months)</p>
+              <p className="text-lg font-semibold text-green-700">
+                {calculatedRunway >= 60 ? '60+' : calculatedRunway.toFixed(1)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart */}
+        <EnhancedRunwayChart 
+          savings={savingsAmount} 
+          monthlyExpenses={monthlyExpenses} 
+          months={calculatedRunway}
+          incomeEvents={incomeEvents}
+          incomeEnabled={incomeEnabled}
+        />
+
+        {/* Additional Info */}
+        {monthlyExpenses > 0 && (
+          <div className="text-sm text-gray-600">
+            <p><strong>Monthly Expenses:</strong> {formatCurrency(monthlyExpenses)}</p>
+            <p><strong>Daily Burn Rate:</strong> {formatCurrency(monthlyExpenses / 30)}</p>
+            {incomeEnabled && incomeEvents.length > 0 && (
+              <p className="text-green-600 mt-1">
+                <strong>Income Events:</strong> {incomeEvents.length} events configured
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </Card>
   );
 };
 

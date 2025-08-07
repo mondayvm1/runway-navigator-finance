@@ -130,10 +130,12 @@ const AccountSection = ({
                     placeholder="0"
                     value={account.balance || ""}
                     onChange={(e) => {
+                      const value = e.target.value;
+                      const numericValue = value === '' ? 0 : Number(value);
                       if (onUpdateAccountData) {
-                        onUpdateAccountData(account.id, { balance: parseFloat(e.target.value) || 0 });
+                        onUpdateAccountData(account.id, { balance: numericValue });
                       } else {
-                        onUpdateAccount(account.id, parseFloat(e.target.value) || 0);
+                        onUpdateAccount(account.id, numericValue);
                       }
                     }}
                     className="h-8 text-sm"

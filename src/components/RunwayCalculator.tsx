@@ -115,7 +115,7 @@ const RunwayCalculator = () => {
 
     const dailyExpenses = monthlyExpenses / 30;
     const totalDays = Math.floor(netAvailable / dailyExpenses);
-    const baseMonths = parseFloat((netAvailable / monthlyExpenses).toFixed(1));
+    const baseMonths = Number((netAvailable / monthlyExpenses).toFixed(1));
 
     console.log('Base calculations:', { netAvailable, baseMonths, incomeEnabled, totalDays });
 
@@ -189,7 +189,7 @@ const RunwayCalculator = () => {
         console.log('Still have money after max projection, setting to 60 months');
       }
 
-      withIncomeMonths = parseFloat(monthsCalculated.toFixed(1));
+      withIncomeMonths = Number(monthsCalculated.toFixed(1));
       console.log('Final withIncomeMonths:', withIncomeMonths);
     }
 
@@ -440,7 +440,10 @@ const RunwayCalculator = () => {
                   className="pl-10"
                   placeholder="Enter your monthly expenses"
                   value={monthlyExpenses || ""}
-                  onChange={(e) => updateMonthlyExpenses(parseFloat(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : Number(e.target.value);
+                    updateMonthlyExpenses(value);
+                  }}
                 />
               </div>
               <Button onClick={handleCalculate} className="w-full bg-blue-600 hover:bg-blue-700">

@@ -26,7 +26,7 @@ const InterestRateInput = ({ value, onUpdate, accountType }: InterestRateInputPr
   };
 
   const handleSave = () => {
-    const newRate = parseFloat(tempValue) || 0;
+    const newRate = tempValue === '' ? 0 : Number(tempValue);
     onUpdate(newRate);
     setIsEditing(false);
   };

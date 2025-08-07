@@ -217,7 +217,10 @@ const IncomeManager = ({
                   type="number"
                   placeholder="Amount"
                   value={newEvent.amount || ""}
-                  onChange={(e) => setNewEvent(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : Number(e.target.value);
+                    setNewEvent(prev => ({ ...prev, amount: value }));
+                  }}
                   className="border-slate-200 focus:border-blue-400 focus:ring-blue-400"
                 />
               </div>

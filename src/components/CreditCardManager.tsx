@@ -138,9 +138,10 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
               type="number"
               placeholder="Credit limit"
               value={account.creditLimit || ""}
-              onChange={(e) => onUpdateAccount(account.id, { 
-                creditLimit: parseFloat(e.target.value) || 0 
-              })}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : Number(e.target.value);
+                onUpdateAccount(account.id, { creditLimit: value });
+              }}
               className="h-8 text-sm"
             />
           </div>
@@ -163,9 +164,10 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
               type="number"
               placeholder="Min payment"
               value={account.minimumPayment || ""}
-              onChange={(e) => onUpdateAccount(account.id, { 
-                minimumPayment: parseFloat(e.target.value) || 0 
-              })}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : Number(e.target.value);
+                onUpdateAccount(account.id, { minimumPayment: value });
+              }}
               className="h-8 text-sm"
             />
           </div>
@@ -179,9 +181,10 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
               max="100"
               placeholder="Interest rate"
               value={account.interestRate || ""}
-              onChange={(e) => onUpdateAccount(account.id, {
-                interestRate: parseFloat(e.target.value) || 0
-              })}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : Number(e.target.value);
+                onUpdateAccount(account.id, { interestRate: value });
+              }}
               className="h-8 text-sm"
             />
           </div>
@@ -255,7 +258,10 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
                 <Input
                   type="number"
                   value={customPayment || ""}
-                  onChange={(e) => setCustomPayment(parseFloat(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : Number(e.target.value);
+                    setCustomPayment(value);
+                  }}
                   className="h-6 w-20 text-xs"
                   min={scenarios.minPayment}
                 />

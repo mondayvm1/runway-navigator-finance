@@ -70,7 +70,7 @@ const MassImportDialog = ({ onImport }: MassImportDialogProps) => {
       if (colonMatch || spaceMatch) {
         const match = colonMatch || spaceMatch;
         const name = match[1].trim();
-        const amount = parseFloat(match[2].replace(/,/g, ''));
+        const amount = Number(match[2].replace(/,/g, ''));
         
         if (currentCategory === 'expenses') {
           monthlyExpenses = amount;

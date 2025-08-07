@@ -642,6 +642,20 @@ const RunwayCalculator = () => {
         </div>
       </div>
 
+      {/* Runway Chart - Always visible at bottom */}
+      <div className="mt-6">
+        <Card className="p-6">
+          <h3 className="text-lg font-medium text-gray-700 mb-4">Financial Runway Chart</h3>
+          <EnhancedRunwayChart 
+            savings={getTotalAssets() - getTotalLiabilities()} 
+            monthlyExpenses={monthlyExpenses} 
+            months={runway.months}
+            incomeEvents={incomeEvents}
+            incomeEnabled={incomeEnabled}
+          />
+        </Card>
+      </div>
+
       {showSnapshotViewer && (
         <SnapshotViewer 
           onClose={() => setShowSnapshotViewer(false)} 

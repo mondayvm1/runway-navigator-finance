@@ -4,44 +4,46 @@
 
 @layer base {
   :root {
-    --background: 254 249 195; /* yellow-50 */
-    --foreground: 30 41 59;     /* slate-800 */
+    /* Modern Financial Dashboard - Light Theme */
+    --background: 220 13% 97%; /* Clean light gray */
+    --foreground: 215 25% 27%; /* Dark slate for text */
 
-    --card: 254 243 199;        /* yellow-100 */
-    --card-foreground: 30 41 59; /* slate-800 */
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 215 25% 27%; /* Dark slate for text */
 
-    --popover: 232 240 254;     /* blue-100 */
-    --popover-foreground: 30 41 59; /* slate-800 */
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 27%;
 
-    --primary: 253 224 71;      /* yellow-400 */
-    --primary-foreground: 30 41 59; /* slate-800 */
+    --primary: 142 76% 36%; /* Professional green */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
 
-    --secondary: 37 99 235;     /* blue-600 */
-    --secondary-foreground: 255 255 255; /* white */
+    --secondary: 210 40% 98%; /* Light background */
+    --secondary-foreground: 215 25% 27%; /* Dark text */
 
-    --muted: 199 210 254;       /* indigo-100 */
-    --muted-foreground: 71 85 105; /* slate-600 */
+    --muted: 220 13% 95%; /* Subtle gray */
+    --muted-foreground: 215 20% 65%; /* Medium gray text */
 
-    --accent: 253 224 71;       /* yellow-400 */
-    --accent-foreground: 30 41 59; /* slate-800 */
+    --accent: 217 91% 60%; /* Accent blue */
+    --accent-foreground: 0 0% 100%; /* White text on accent */
 
-    --destructive: 239 68 68;   /* red-500 */
-    --destructive-foreground: 255 255 255; /* white */
+    --destructive: 0 84% 60%; /* Modern red */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 253 224 71;       /* yellow-400 */
-    --input: 254 249 195;       /* yellow-50 */
-    --ring: 253 224 71;         /* yellow-400 */
+    --border: 220 13% 91%; /* Light border */
+    --input: 220 13% 97%; /* Input background */
+    --ring: 142 76% 36%; /* Primary color for focus rings */
 
-    --radius: 0.5rem;
+    --radius: 0.75rem; /* Slightly more rounded */
 
-    --sidebar-background: 254 249 195; /* yellow-50 */
-    --sidebar-foreground: 30 41 59;    /* slate-800 */
-    --sidebar-primary: 253 224 71;     /* yellow-400 */
-    --sidebar-primary-foreground: 30 41 59; /* slate-800 */
-    --sidebar-accent: 37 99 235;       /* blue-600 */
-    --sidebar-accent-foreground: 255 255 255; /* white */
-    --sidebar-border: 253 224 71;      /* yellow-400 */
-    --sidebar-ring: 253 224 71;        /* yellow-400 */
+    /* Sidebar colors */
+    --sidebar-background: 220 13% 97%;
+    --sidebar-foreground: 215 25% 27%;
+    --sidebar-primary: 142 76% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 91% 60%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 142 76% 36%;
   }
 
   .dark {
@@ -89,8 +91,8 @@
   }
 
   body {
-    /* Gradient background: yellow to blue to purple */
-    background: linear-gradient(135deg, #fef9c3 0%, #e0e7ff 50%, #f3e8ff 100%);
+    /* Clean gradient background */
+    background: linear-gradient(135deg, hsl(220 13% 97%) 0%, hsl(217 91% 97%) 50%, hsl(142 76% 97%) 100%);
     color: hsl(var(--foreground));
   }
 }

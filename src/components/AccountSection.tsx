@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Plus, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Eye, EyeOff, Plus, Trash2, ChevronDown, ChevronRight, Edit } from 'lucide-react';
 import { AccountItem } from '@/hooks/useFinancialData';
 import CreditCardManager, { CreditSummary } from './CreditCardManager';
 import InterestRateInput from './InterestRateInput';
@@ -112,14 +112,24 @@ const AccountSection = ({
                     </button>
                   )}
                 </div>
-                <Button
-                  onClick={() => onRemoveAccount(account.id)}
-                  variant="destructive"
-                  size="sm"
-                  className="p-1"
-                >
-                  <Trash2 size={16} />
-                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    onClick={() => toggleNameEdit(account.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    <Edit size={16} />
+                  </Button>
+                  <Button
+                    onClick={() => onRemoveAccount(account.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">

@@ -331,18 +331,26 @@ export const useFinancialData = () => {
     // Find the account
     const account = accountData[category].find((a) => a.id === id);
     if (!account) return;
-    // Filter out undefined fields
-    const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([_, v]) => v !== undefined)
-    );
+    
+    // Map camelCase properties to snake_case database columns
+    const dbUpdates: any = {};
+    
+    if (updates.balance !== undefined) dbUpdates.balance = updates.balance;
+    if (updates.interestRate !== undefined) dbUpdates.interest_rate = updates.interestRate;
+    if (updates.creditLimit !== undefined) dbUpdates.credit_limit = updates.creditLimit;
+    if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
+    if (updates.minimumPayment !== undefined) dbUpdates.minimum_payment = updates.minimumPayment;
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    
     // Debug logging
-    console.log('Updating account:', { filteredUpdates, id, userId: user.id });
+    console.log('Updating account:', { dbUpdates, id, userId: user.id });
+    
     // Update Supabase
     try {
       const { error } = await supabase
         .from('user_accounts')
         .update({
-          ...filteredUpdates,
+          ...dbUpdates,
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id)
@@ -353,7 +361,7 @@ export const useFinancialData = () => {
       setAccountData((prev) => ({
         ...prev,
         [category]: prev[category].map((a) =>
-          a.id === id ? { ...a, ...filteredUpdates } : a
+          a.id === id ? { ...a, ...updates } : a
         ),
       }));
       toast.success('Account updated!');

@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { FcGoogle } from 'react-icons/fc';
-import { FaXTwitter } from 'react-icons/fa6';
 
 const AuthForm = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -13,7 +12,7 @@ const AuthForm = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState(false);
-  const { signIn, signUp, signInWithGoogle, signInWithTwitter } = useAuth();
+  const { signIn, signUp, signInWithGoogle } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,12 +41,10 @@ const AuthForm = () => {
     }
   };
 
-  const handleSocialLogin = async (provider: 'google' | 'twitter') => {
+  const handleSocialLogin = async () => {
     setSocialLoading(true);
     try {
-      const { error } = provider === 'google' 
-        ? await signInWithGoogle() 
-        : await signInWithTwitter();
+      const { error } = await signInWithGoogle();
       
       if (error) {
         toast.error(error.message);
@@ -108,22 +105,11 @@ const AuthForm = () => {
           type="button"
           variant="outline"
           className="w-full"
-          onClick={() => handleSocialLogin('google')}
+          onClick={handleSocialLogin}
           disabled={loading || socialLoading}
         >
           <FcGoogle className="w-5 h-5 mr-2" />
           Continue with Google
-        </Button>
-        
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={() => handleSocialLogin('twitter')}
-          disabled={loading || socialLoading}
-        >
-          <FaXTwitter className="w-5 h-5 mr-2" />
-          Continue with X
         </Button>
       </div>
       

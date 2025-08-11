@@ -64,15 +64,6 @@ export const useAuth = () => {
     return { error };
   };
 
-  const signInWithTwitter = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'twitter',
-      options: {
-        redirectTo: `${window.location.origin}/`
-      }
-    });
-    return { error };
-  };
 
   return {
     user,
@@ -82,6 +73,5 @@ export const useAuth = () => {
     signUp,
     signOut,
     signInWithGoogle,
-    signInWithTwitter,
   };
 };

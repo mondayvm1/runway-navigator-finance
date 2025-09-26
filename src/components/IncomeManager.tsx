@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, TrendingUp, Plus, Trash2, ToggleLeft, ToggleRight, Edit, Check, X } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
+import CollapsibleSection from './CollapsibleSection';
 
 export interface IncomeEvent {
   id: string;
@@ -287,8 +288,12 @@ const IncomeManager = ({
 
       {/* Income Events List */}
       {incomeEvents.length > 0 && (
-        <div className="space-y-4">
-          <h4 className="text-lg font-semibold text-slate-800">Upcoming Income Events</h4>
+        <CollapsibleSection
+          title="Upcoming Income Events"
+          category="upcoming-income"
+          icon={<Calendar className="h-5 w-5 text-emerald-600" />}
+          defaultOpen={true}
+        >
           <div className="space-y-3">
             {incomeEvents.map((event) => (
               <Card 
@@ -357,7 +362,7 @@ const IncomeManager = ({
               </Card>
             ))}
           </div>
-        </div>
+        </CollapsibleSection>
       )}
 
       {!incomeEnabled && incomeEvents.length > 0 && (

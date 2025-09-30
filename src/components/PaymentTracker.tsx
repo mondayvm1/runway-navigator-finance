@@ -83,7 +83,20 @@ const PaymentTracker = ({ accountData }: PaymentTrackerProps) => {
   const totalRemaining = payments.filter(p => !p.isPaid).reduce((sum, p) => sum + p.amount, 0);
 
   if (payments.length === 0) {
-    return null;
+    return (
+      <CollapsibleSection
+        title="Payment Tracker"
+        category="payment-tracker"
+        icon={<CreditCard className="h-5 w-5 text-primary" />}
+        defaultOpen={true}
+      >
+        <Card className="p-6 bg-blue-50 border-blue-200">
+          <p className="text-center text-slate-600">
+            No payments to track. Add credit cards with minimum payments or loans to see payment tiles here.
+          </p>
+        </Card>
+      </CollapsibleSection>
+    );
   }
 
   return (
@@ -96,23 +109,23 @@ const PaymentTracker = ({ accountData }: PaymentTrackerProps) => {
       <div className="space-y-6">
         {/* Summary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-4 bg-emerald-50 border-emerald-200">
+          <Card className="p-4 bg-blue-50 border-blue-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-emerald-600 font-medium">Paid This Month</p>
-                <p className="text-2xl font-bold text-emerald-700">{formatCurrency(totalPaid)}</p>
+                <p className="text-sm text-blue-600 font-medium">Paid This Month</p>
+                <p className="text-2xl font-bold text-blue-700">{formatCurrency(totalPaid)}</p>
               </div>
-              <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+              <CheckCircle2 className="h-8 w-8 text-blue-600" />
             </div>
           </Card>
           
-          <Card className="p-4 bg-amber-50 border-amber-200">
+          <Card className="p-4 bg-blue-50 border-blue-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-amber-600 font-medium">Remaining</p>
-                <p className="text-2xl font-bold text-amber-700">{formatCurrency(totalRemaining)}</p>
+                <p className="text-sm text-blue-600 font-medium">Remaining</p>
+                <p className="text-2xl font-bold text-blue-700">{formatCurrency(totalRemaining)}</p>
               </div>
-              <XCircle className="h-8 w-8 text-amber-600" />
+              <XCircle className="h-8 w-8 text-blue-600" />
             </div>
           </Card>
         </div>
@@ -140,7 +153,7 @@ const PaymentTracker = ({ accountData }: PaymentTrackerProps) => {
               >
                 {/* Front Face - Unpaid */}
                 <Card
-                  className="absolute w-full h-full backface-hidden p-5 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 hover:border-red-300 transition-colors"
+                  className="absolute w-full h-full backface-hidden p-5 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 hover:border-blue-400 transition-colors"
                   style={{
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden'
@@ -149,30 +162,30 @@ const PaymentTracker = ({ accountData }: PaymentTrackerProps) => {
                   <div className="flex flex-col h-full justify-between">
                     <div>
                       <div className="flex items-start justify-between mb-3">
-                        <div className="p-2 bg-red-100 rounded-lg">
+                        <div className="p-2 bg-blue-100 rounded-lg">
                           {payment.category === 'credit' ? (
-                            <CreditCard className="h-5 w-5 text-red-600" />
+                            <CreditCard className="h-5 w-5 text-blue-600" />
                           ) : (
-                            <DollarSign className="h-5 w-5 text-red-600" />
+                            <DollarSign className="h-5 w-5 text-blue-600" />
                           )}
                         </div>
-                        <XCircle className="h-5 w-5 text-red-400" />
+                        <XCircle className="h-5 w-5 text-blue-400" />
                       </div>
                       <h4 className="font-semibold text-slate-800 mb-2">{payment.name}</h4>
-                      <p className="text-2xl font-bold text-red-600">{formatCurrency(payment.amount)}</p>
+                      <p className="text-2xl font-bold text-blue-600">{formatCurrency(payment.amount)}</p>
                     </div>
                     <div className="text-xs text-slate-500 mt-2">
                       {payment.dueDate && (
                         <p>Due: {payment.dueDate.toLocaleDateString()}</p>
                       )}
-                      <p className="font-medium text-red-600 mt-1">Click to mark paid</p>
+                      <p className="font-medium text-blue-600 mt-1">Click to mark paid</p>
                     </div>
                   </div>
                 </Card>
 
                 {/* Back Face - Paid */}
                 <Card
-                  className="absolute w-full h-full backface-hidden p-5 bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200 hover:border-emerald-300 transition-colors"
+                  className="absolute w-full h-full backface-hidden p-5 bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-300 hover:border-green-400 transition-colors"
                   style={{
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
@@ -182,20 +195,20 @@ const PaymentTracker = ({ accountData }: PaymentTrackerProps) => {
                   <div className="flex flex-col h-full justify-between">
                     <div>
                       <div className="flex items-start justify-between mb-3">
-                        <div className="p-2 bg-emerald-100 rounded-lg">
+                        <div className="p-2 bg-green-100 rounded-lg">
                           {payment.category === 'credit' ? (
-                            <CreditCard className="h-5 w-5 text-emerald-600" />
+                            <CreditCard className="h-5 w-5 text-green-600" />
                           ) : (
-                            <DollarSign className="h-5 w-5 text-emerald-600" />
+                            <DollarSign className="h-5 w-5 text-green-600" />
                           )}
                         </div>
-                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
                       </div>
                       <h4 className="font-semibold text-slate-800 mb-2">{payment.name}</h4>
-                      <p className="text-2xl font-bold text-emerald-600">{formatCurrency(payment.amount)}</p>
+                      <p className="text-2xl font-bold text-green-600">{formatCurrency(payment.amount)}</p>
                     </div>
                     <div className="text-xs text-slate-500 mt-2">
-                      <p className="font-medium text-emerald-600">✓ Paid</p>
+                      <p className="font-medium text-green-600">✓ Paid</p>
                       <p className="text-slate-400 mt-1">Click to mark unpaid</p>
                     </div>
                   </div>

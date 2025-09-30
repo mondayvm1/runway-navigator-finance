@@ -463,13 +463,6 @@ const RunwayCalculator = () => {
             </div>
           </Card>
 
-          <FinancialAllocationCharts 
-            accountData={accountData}
-            monthlyExpenses={monthlyExpenses}
-            incomeEvents={incomeEvents}
-            incomeEnabled={incomeEnabled}
-          />
-
           <div className="space-y-4">
             <AccountSection 
               title="Cash" 

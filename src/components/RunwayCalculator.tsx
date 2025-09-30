@@ -17,6 +17,7 @@ import EnhancedRunwayChart from "./EnhancedRunwayChart";
 import EnhancedSnapshotManager from "./EnhancedSnapshotManager";
 import RunwayChart from "./RunwayChart";
 import FinancialAllocationCharts from "./FinancialAllocationCharts";
+import PaymentTracker from "./PaymentTracker";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles, TrendingUp } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
@@ -423,6 +424,15 @@ const RunwayCalculator = () => {
             onUpdateIncomeEvent={updateIncomeEvent}
             onToggleIncomeEnabled={() => updateIncomeEnabled(!incomeEnabled)}
           />
+
+          <FinancialAllocationCharts 
+            accountData={accountData} 
+            monthlyExpenses={monthlyExpenses}
+            incomeEvents={incomeEvents}
+            incomeEnabled={incomeEnabled}
+          />
+
+          <PaymentTracker accountData={accountData} />
           
           <Card className="p-6">
             <div className="space-y-4">

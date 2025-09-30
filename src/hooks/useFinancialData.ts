@@ -16,7 +16,7 @@ export interface AccountItem {
   minimumPayment?: number;
 }
 
-interface AccountData {
+export interface AccountData {
   cash: AccountItem[];
   investments: AccountItem[];
   credit: AccountItem[];

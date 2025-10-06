@@ -19,6 +19,7 @@ import RunwayChart from "./RunwayChart";
 import FinancialAllocationCharts from "./FinancialAllocationCharts";
 import PaymentTracker from "./PaymentTracker";
 import FinancialQuestJourney from "./FinancialQuestJourney";
+import DatabaseCleanupTool from "./DatabaseCleanupTool";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles, TrendingUp } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
@@ -418,7 +419,9 @@ const RunwayCalculator = () => {
 
           <EnhancedSnapshotManager onCreateSnapshot={handleCreateSnapshot} onSaveData={saveData} />
           
-          <NetWorthSummary 
+          <DatabaseCleanupTool />
+          
+          <NetWorthSummary
             assets={getTotalAssets()} 
             liabilities={getTotalLiabilities()}
             incomeEvents={incomeEvents}

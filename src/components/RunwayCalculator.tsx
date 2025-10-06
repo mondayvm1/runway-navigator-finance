@@ -554,7 +554,7 @@ const RunwayCalculator = () => {
             
             <AccountSection 
               title="Other Assets" 
-              accounts={accountData.otherAssets}
+              accounts={[...accountData.otherAssets].sort((a, b) => b.balance - a.balance)}
               icon={<Coins size={18} className="text-purple-600" />}
               isHidden={hiddenCategories.otherAssets}
               onAddAccount={() => addAccount('otherAssets')}

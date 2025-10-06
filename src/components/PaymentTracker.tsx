@@ -47,7 +47,8 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
       if (min > 0) {
         const key = `credit:${account.id}`;
         map.set(key, {
-          id: account.id,
+          id: key,
+          accountId: account.id,
           name: account.name,
           amount: min,
           dueDate: account.dueDate ? new Date(account.dueDate) : undefined,
@@ -67,7 +68,8 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
       if (amt > 0) {
         const key = `loan:${account.id}`;
         map.set(key, {
-          id: account.id,
+          id: key,
+          accountId: account.id,
           name: account.name,
           amount: amt,
           dueDate: account.dueDate ? new Date(account.dueDate) : undefined,
@@ -114,7 +116,7 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
     if (!editing) return;
     const categoryKey = editing.category === 'credit' ? 'credit' : 'loans';
     await Promise.resolve(
-      updateAccountField(categoryKey as keyof AccountData, editing.id, {
+      updateAccountField(categoryKey as keyof AccountData, editing.accountId, {
         name: editName,
         minimumPayment: Number(editAmount),
         dueDate: editDueDate || undefined,
@@ -272,10 +274,80 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
           ))}
         </div>
 
+        {/* Survivability Goals */}
+        <Card className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200">
+          <h3 className="text-lg font-bold text-emerald-900 mb-4 flex items-center gap-2">
+            <span>💪</span> Survivability Goals
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <p className="text-sm text-emerald-700 font-medium">Monthly Obligation</p>
+              <p className="text-2xl font-bold text-emerald-900">{formatCurrency(totalRemaining)}</p>
+              <p className="text-xs text-emerald-600">Keep this low to maximize runway</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-emerald-700 font-medium">Survival Impact</p>
+              <p className="text-2xl font-bold text-emerald-900">
+                {totalRemaining > 0 ? `${Math.max(1, Math.round(totalRemaining / 100))} mo` : '∞'}
+              </p>
+              <p className="text-xs text-emerald-600">Months of runway consumed</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-emerald-700 font-medium">Freedom Score</p>
+              <p className="text-2xl font-bold text-emerald-900">
+                {payments.filter(p => p.isPaid).length}/{payments.length}
+              </p>
+              <p className="text-xs text-emerald-600">Payments cleared this cycle</p>
+            </div>
+          </div>
+        </Card>
+
         <p className="text-xs text-slate-500 text-center">
-          Click any tile to toggle payment status
+          Click any tile to toggle payment status • Click edit icon to adjust payment details
         </p>
       </div>
+
+      {/* Edit Payment Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Payment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="edit-name">Payment Name</Label>
+              <Input
+                id="edit-name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-amount">Amount</Label>
+              <Input
+                id="edit-amount"
+                type="number"
+                step="0.01"
+                value={editAmount}
+                onChange={(e) => setEditAmount(Number(e.target.value))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-due">Due Date (optional)</Label>
+              <Input
+                id="edit-due"
+                type="date"
+                value={editDueDate}
+                onChange={(e) => setEditDueDate(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button onClick={saveEdit}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </CollapsibleSection>
   );
 };

@@ -591,17 +591,6 @@ const RunwayCalculator = () => {
             snapshotCount={3}
             totalAssets={getTotalAssets()}
           />
-          
-          <FinancialArchetype
-            totalAssets={getTotalAssets()}
-            totalLiabilities={getTotalLiabilities()}
-            runway={runway.months}
-            monthlyExpenses={monthlyExpenses}
-            cashBalance={accountData.cash.reduce((sum, acc) => sum + acc.balance, 0)}
-            investmentBalance={accountData.investments.reduce((sum, acc) => sum + acc.balance, 0)}
-            creditBalance={accountData.credit.reduce((sum, acc) => sum + acc.balance, 0)}
-            accountCount={accountData.cash.length + accountData.investments.length + accountData.credit.length + accountData.loans.length + accountData.otherAssets.length}
-          />
         </div>
       </div>
 
@@ -651,6 +640,40 @@ const RunwayCalculator = () => {
                     accountData.credit.filter(acc => (acc.minimumPayment || 0) > 0).length +
                     accountData.loans.filter(acc => acc.balance > 0).length
                   }
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </Card>
+      </div>
+
+      {/* Financial Archetype - Collapsible at bottom */}
+      <div className="mt-6">
+        <Card className="overflow-hidden">
+          <Collapsible defaultOpen={false}>
+            <CollapsibleTrigger className="w-full p-4 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="w-5 h-5 text-primary animate-pulse" />
+                  <h3 className="text-lg font-semibold">Financial Personality Traits</h3>
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full animate-pulse">
+                    Discover your archetype
+                  </span>
+                </div>
+                <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform" />
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-6 pt-0 animate-fade-in">
+                <FinancialArchetype
+                  totalAssets={getTotalAssets()}
+                  totalLiabilities={getTotalLiabilities()}
+                  runway={runway.months}
+                  monthlyExpenses={monthlyExpenses}
+                  cashBalance={accountData.cash.reduce((sum, acc) => sum + acc.balance, 0)}
+                  investmentBalance={accountData.investments.reduce((sum, acc) => sum + acc.balance, 0)}
+                  creditBalance={accountData.credit.reduce((sum, acc) => sum + acc.balance, 0)}
+                  accountCount={accountData.cash.length + accountData.investments.length + accountData.credit.length + accountData.loans.length + accountData.otherAssets.length}
                 />
               </div>
             </CollapsibleContent>

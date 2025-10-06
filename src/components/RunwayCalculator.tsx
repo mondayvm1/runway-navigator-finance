@@ -18,6 +18,7 @@ import EnhancedSnapshotManager from "./EnhancedSnapshotManager";
 import RunwayChart from "./RunwayChart";
 import FinancialAllocationCharts from "./FinancialAllocationCharts";
 import PaymentTracker from "./PaymentTracker";
+import FinancialQuestJourney from "./FinancialQuestJourney";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles, TrendingUp } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
@@ -441,6 +442,22 @@ const RunwayCalculator = () => {
           />
 
           <PaymentTracker accountData={accountData} updateAccountField={updateAccountField} />
+          
+          <FinancialQuestJourney
+            netWorth={getTotalAssets() - getTotalLiabilities()}
+            runway={runway.months}
+            totalAssets={getTotalAssets()}
+            totalLiabilities={getTotalLiabilities()}
+            monthlyObligations={
+              accountData.credit.reduce((sum, acc) => sum + (acc.minimumPayment || 0), 0) +
+              accountData.loans.reduce((sum, acc) => sum + (acc.minimumPayment || (acc.balance * 0.02)), 0)
+            }
+            paymentsCleared={0}
+            totalPayments={
+              accountData.credit.filter(acc => (acc.minimumPayment || 0) > 0).length +
+              accountData.loans.filter(acc => acc.balance > 0).length
+            }
+          />
           
           <Card className="p-6">
             <div className="space-y-4">

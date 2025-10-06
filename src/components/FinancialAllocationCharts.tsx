@@ -22,11 +22,11 @@ interface FinancialAllocationChartsProps {
 
 // Color palette matching CollapsibleSection
 const palette = {
-  primary: '#E0F252',    // Potential-1 - bright green-yellow
-  secondary: '#EDF25C',  // Potential-2 - lighter green-yellow  
-  tertiary: '#F0F2AC',   // Potential-3 - pale yellow-green
-  border: '#D9D9D9',     // Potential-4 - light gray
-  text: '#0D0D0D',       // Potential-5 - almost black
+  primary: '#2563eb',    // blue-600
+  secondary: '#a78bfa',  // purple-400
+  tertiary: '#c7d2fe',   // indigo-200
+  border: '#c7d2fe',     // indigo-200
+  text: '#1e293b',       // slate-800
   background: '#FFFFFF', // White for contrast
 };
 

@@ -121,65 +121,63 @@ const IncomeManager = ({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-emerald-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-slate-800">Income Planning</h3>
-          </div>
-          <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-full border border-slate-200">
+    <CollapsibleSection
+      title="Income Planning"
+      category="income-planning"
+      icon={<TrendingUp className="h-5 w-5" />}
+      defaultOpen={true}
+    >
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 px-4 py-2 bg-blue-50 rounded-full border border-blue-200">
             <Switch
               checked={incomeEnabled}
               onCheckedChange={onToggleIncomeEnabled}
-              className="data-[state=checked]:bg-emerald-500"
+              className="data-[state=checked]:bg-blue-600"
             />
             <span className="text-sm font-medium text-slate-700">
               {incomeEnabled ? 'Enabled' : 'Disabled'}
             </span>
             {incomeEnabled ? (
-              <ToggleRight className="h-4 w-4 text-emerald-500" />
+              <ToggleRight className="h-4 w-4 text-blue-600" />
             ) : (
               <ToggleLeft className="h-4 w-4 text-slate-400" />
             )}
           </div>
+          <Button 
+            onClick={() => setShowForm(!showForm)}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            disabled={!incomeEnabled}
+          >
+            <Plus size={16} />
+            Add Income Event
+          </Button>
         </div>
-        <Button 
-          onClick={() => setShowForm(!showForm)}
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300"
-          disabled={!incomeEnabled}
-        >
-          <Plus size={16} />
-          Add Income Event
-        </Button>
-      </div>
 
-      {/* Summary Card */}
-      <Card className={`p-6 transition-all duration-200 ${
-        incomeEnabled 
-          ? 'bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200' 
-          : 'bg-gradient-to-br from-slate-50 to-gray-50 border-slate-200'
-      }`}>
-        <div className={`text-sm mb-2 font-medium ${
-          incomeEnabled ? 'text-emerald-700' : 'text-slate-500'
+        {/* Summary Card */}
+        <Card className={`p-6 transition-all duration-200 ${
+          incomeEnabled 
+            ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200' 
+            : 'bg-gradient-to-br from-slate-50 to-gray-50 border-slate-200'
         }`}>
-          Projected Income (Next 12 Months)
-        </div>
-        <div className={`text-3xl font-bold mb-1 ${
-          incomeEnabled ? 'text-emerald-800' : 'text-slate-600'
-        }`}>
-          {formatCurrency(getTotalProjectedIncome())}
-        </div>
-        {!incomeEnabled && (
-          <div className="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full inline-block">
-            Income planning is disabled - toggle above to include in calculations
+          <div className={`text-sm mb-2 font-medium ${
+            incomeEnabled ? 'text-blue-700' : 'text-slate-500'
+          }`}>
+            Projected Income (Next 12 Months)
           </div>
-        )}
-      </Card>
+          <div className={`text-3xl font-bold mb-1 ${
+            incomeEnabled ? 'text-blue-800' : 'text-slate-600'
+          }`}>
+            {formatCurrency(getTotalProjectedIncome())}
+          </div>
+          {!incomeEnabled && (
+            <div className="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full inline-block">
+              Income planning is disabled - toggle above to include in calculations
+            </div>
+          )}
+        </Card>
 
       {/* Add/Edit Income Form */}
       {showForm && incomeEnabled && (
@@ -286,96 +284,97 @@ const IncomeManager = ({
         </Card>
       )}
 
-      {/* Income Events List */}
-      {incomeEvents.length > 0 && (
-        <CollapsibleSection
-          title="Upcoming Income Events"
-          category="upcoming-income"
-          icon={<Calendar className="h-5 w-5 text-emerald-600" />}
-          defaultOpen={true}
-        >
-          <div className="space-y-3">
-            {incomeEvents.map((event) => (
-              <Card 
-                key={event.id} 
-                className={`p-4 transition-all duration-200 hover:shadow-md ${
-                  incomeEnabled 
-                    ? 'bg-white border-slate-200 hover:border-slate-300' 
-                    : 'bg-slate-50 border-slate-200 opacity-60'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-lg ${
-                      incomeEnabled ? 'bg-blue-100' : 'bg-slate-100'
-                    }`}>
-                      <Calendar className={`h-5 w-5 ${
-                        incomeEnabled ? 'text-blue-600' : 'text-slate-400'
-                      }`} />
-                    </div>
-                    <div>
-                      <div className={`font-semibold text-base ${
-                        incomeEnabled ? 'text-slate-800' : 'text-slate-500'
+        {/* Income Events List */}
+        {incomeEvents.length > 0 && (
+          <CollapsibleSection
+            title="Upcoming Income Events"
+            category="upcoming-income"
+            icon={<Calendar className="h-5 w-5" />}
+            defaultOpen={true}
+          >
+            <div className="space-y-3">
+              {incomeEvents.map((event) => (
+                <Card 
+                  key={event.id} 
+                  className={`p-4 transition-all duration-200 hover:shadow-md ${
+                    incomeEnabled 
+                      ? 'bg-white border-slate-200 hover:border-slate-300' 
+                      : 'bg-slate-50 border-slate-200 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-2 rounded-lg ${
+                        incomeEnabled ? 'bg-blue-100' : 'bg-slate-100'
                       }`}>
-                        {event.name}
+                        <Calendar className={`h-5 w-5 ${
+                          incomeEnabled ? 'text-blue-600' : 'text-slate-400'
+                        }`} />
                       </div>
-                      <div className="text-sm text-slate-600 flex items-center gap-2">
-                        <span>{new Date(event.date).toLocaleDateString()}</span>
-                        <span>•</span>
-                        <span className="capitalize">{event.frequency}</span>
-                        {event.endDate && (
-                          <>
-                            <span>•</span>
-                            <span>until {new Date(event.endDate).toLocaleDateString()}</span>
-                          </>
-                        )}
+                      <div>
+                        <div className={`font-semibold text-base ${
+                          incomeEnabled ? 'text-slate-800' : 'text-slate-500'
+                        }`}>
+                          {event.name}
+                        </div>
+                        <div className="text-sm text-slate-600 flex items-center gap-2">
+                          <span>{new Date(event.date).toLocaleDateString()}</span>
+                          <span>•</span>
+                          <span className="capitalize">{event.frequency}</span>
+                          {event.endDate && (
+                            <>
+                              <span>•</span>
+                              <span>until {new Date(event.endDate).toLocaleDateString()}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`font-bold text-lg ${
+                        incomeEnabled ? 'text-blue-600' : 'text-slate-500'
+                      }`}>
+                        {formatCurrency(event.amount)}
+                      </span>
+                      <div className="flex gap-1">
+                        <Button
+                          onClick={() => handleEdit(event)}
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                          disabled={!incomeEnabled}
+                        >
+                          <Edit size={16} />
+                        </Button>
+                        <Button
+                          onClick={() => onRemoveIncomeEvent(event.id)}
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 size={16} />
+                        </Button>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`font-bold text-lg ${
-                      incomeEnabled ? 'text-emerald-600' : 'text-slate-500'
-                    }`}>
-                      {formatCurrency(event.amount)}
-                    </span>
-                    <div className="flex gap-1">
-                      <Button
-                        onClick={() => handleEdit(event)}
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
-                        disabled={!incomeEnabled}
-                      >
-                        <Edit size={16} />
-                      </Button>
-                      <Button
-                        onClick={() => onRemoveIncomeEvent(event.id)}
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </CollapsibleSection>
-      )}
+                </Card>
+              ))}
+            </div>
+          </CollapsibleSection>
+        )}
 
-      {!incomeEnabled && incomeEvents.length > 0 && (
-        <Card className="p-6 bg-gradient-to-br from-slate-50 to-gray-50 border-slate-200 text-center">
-          <p className="text-slate-600">
-            You have <span className="font-semibold text-slate-800">{incomeEvents.length}</span> income event{incomeEvents.length > 1 ? 's' : ''} configured.
-          </p>
-          <p className="text-sm text-slate-500 mt-1">
-            Enable income planning above to include them in your runway calculations.
-          </p>
-        </Card>
-      )}
-    </div>
+        {!incomeEnabled && incomeEvents.length > 0 && (
+          <Card className="p-6 bg-gradient-to-br from-slate-50 to-gray-50 border-slate-200 text-center">
+            <p className="text-slate-600">
+              You have <span className="font-semibold text-slate-800">{incomeEvents.length}</span> income event{incomeEvents.length > 1 ? 's' : ''} configured.
+            </p>
+            <p className="text-sm text-slate-500 mt-1">
+              Enable income planning above to include them in your runway calculations.
+            </p>
+          </Card>
+        )}
+      </div>
+    </CollapsibleSection>
   );
 };
 

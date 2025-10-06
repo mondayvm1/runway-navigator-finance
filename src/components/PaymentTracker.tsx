@@ -42,9 +42,13 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
     // Generate payments from accounts with de-duplication and overrides
     const map = new Map<string, Payment>();
 
-    // Credit cards: use minimumPayment when available
+    // Credit cards: use minimumPayment or estimate 2% of balance
     accountData.credit.forEach((account) => {
-      const min = account.minimumPayment && account.minimumPayment > 0 ? account.minimumPayment : 0;
+      const min = account.minimumPayment && account.minimumPayment > 0 
+        ? account.minimumPayment 
+        : account.balance > 0 
+          ? account.balance * 0.02 
+          : 0;
       if (min > 0) {
         const key = `credit:${account.id}`;
         map.set(key, {
@@ -236,9 +240,11 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
                       <h4 className="font-semibold text-slate-800 mb-2">{payment.name}</h4>
                       <p className="text-2xl font-bold text-blue-600">{formatCurrency(payment.amount)}</p>
                     </div>
-                    <div className="text-xs text-slate-500 mt-2">
-                      {payment.dueDate && (
-                        <p>Due: {payment.dueDate.toLocaleDateString()}</p>
+                    <div className="text-xs text-slate-600 mt-2">
+                      {payment.dueDate ? (
+                        <p className="font-semibold">📅 Due: {payment.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                      ) : (
+                        <p className="text-slate-400">No due date set</p>
                       )}
                       <p className="font-medium text-blue-600 mt-1">Click to mark paid</p>
                     </div>
@@ -277,9 +283,13 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
                       <h4 className="font-semibold text-slate-800 mb-2">{payment.name}</h4>
                       <p className="text-2xl font-bold text-green-600">{formatCurrency(payment.amount)}</p>
                     </div>
-                    <div className="text-xs text-slate-500 mt-2">
-                      <p className="font-medium text-green-600">✓ Paid</p>
-                      <p className="text-slate-400 mt-1">Click to mark unpaid</p>
+                    <div className="text-xs text-slate-600 mt-2">
+                      {payment.dueDate ? (
+                        <p className="font-semibold text-slate-500">📅 Due: {payment.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                      ) : (
+                        <p className="text-slate-400">No due date set</p>
+                      )}
+                      <p className="font-medium text-green-600 mt-1">✓ Paid - Click to undo</p>
                     </div>
                   </div>
                 </Card>

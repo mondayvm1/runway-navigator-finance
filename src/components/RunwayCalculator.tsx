@@ -481,10 +481,7 @@ const RunwayCalculator = () => {
               onUpdateAccount={() => {}}
               onUpdateAccountData={(id, updates) => updateAccountField('cash', id, updates)}
               onUpdateAccountName={(id, name) => updateAccountName('cash', id, name)}
-              onRemoveAccount={async (id) => {
-                // Remove from backend
-                await updateAccountField('cash', id, { balance: 0, name: '', interestRate: 0 });
-                // Remove from local state
+              onRemoveAccount={(id) => {
                 setAccountData(prev => ({
                   ...prev,
                   cash: prev.cash.filter(account => account.id !== id)
@@ -502,8 +499,7 @@ const RunwayCalculator = () => {
               onUpdateAccount={() => {}}
               onUpdateAccountData={(id, updates) => updateAccountField('investments', id, updates)}
               onUpdateAccountName={(id, name) => updateAccountName('investments', id, name)}
-              onRemoveAccount={async (id) => {
-                await updateAccountField('investments', id, { balance: 0, name: '', interestRate: 0 });
+              onRemoveAccount={(id) => {
                 setAccountData(prev => ({
                   ...prev,
                   investments: prev.investments.filter(account => account.id !== id)
@@ -522,8 +518,7 @@ const RunwayCalculator = () => {
               onUpdateAccount={() => {}}
               onUpdateAccountData={(id, updates) => updateAccountField('credit', id, updates)}
               onUpdateAccountName={(id, name) => updateAccountName('credit', id, name)}
-              onRemoveAccount={async (id) => {
-                await updateAccountField('credit', id, { balance: 0, name: '', interestRate: 0 });
+              onRemoveAccount={(id) => {
                 setAccountData(prev => ({
                   ...prev,
                   credit: prev.credit.filter(account => account.id !== id)
@@ -542,8 +537,7 @@ const RunwayCalculator = () => {
               onUpdateAccount={() => {}}
               onUpdateAccountData={(id, updates) => updateAccountField('loans', id, updates)}
               onUpdateAccountName={(id, name) => updateAccountName('loans', id, name)}
-              onRemoveAccount={async (id) => {
-                await updateAccountField('loans', id, { balance: 0, name: '', interestRate: 0 });
+              onRemoveAccount={(id) => {
                 setAccountData(prev => ({
                   ...prev,
                   loans: prev.loans.filter(account => account.id !== id)
@@ -561,8 +555,7 @@ const RunwayCalculator = () => {
               onUpdateAccount={() => {}}
               onUpdateAccountData={(id, updates) => updateAccountField('otherAssets', id, updates)}
               onUpdateAccountName={(id, name) => updateAccountName('otherAssets', id, name)}
-              onRemoveAccount={async (id) => {
-                await updateAccountField('otherAssets', id, { balance: 0, name: '', interestRate: 0 });
+              onRemoveAccount={(id) => {
                 setAccountData(prev => ({
                   ...prev,
                   otherAssets: prev.otherAssets.filter(account => account.id !== id)

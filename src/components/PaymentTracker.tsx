@@ -56,6 +56,9 @@ const PaymentTracker = ({ accountData }: PaymentTrackerProps) => {
       }
     });
 
+    // Sort by amount descending (largest first)
+    generatedPayments.sort((a, b) => b.amount - a.amount);
+    
     setPayments(generatedPayments);
   }, [accountData]);
 

@@ -30,7 +30,15 @@ interface PaymentTrackerProps {
 
 const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps) => {
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem('payment_excluded_ids_v1');
+      const arr = raw ? (JSON.parse(raw) as string[]) : [];
+      return new Set(arr);
+    } catch {
+      return new Set();
+    }
+  });
   const [flippingIds, setFlippingIds] = useState<Set<string>>(new Set());
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<Payment | null>(null);
@@ -90,6 +98,12 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
       .sort((a, b) => b.amount - a.amount);
     setPayments(generated);
   }, [accountData, deletedIds]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('payment_excluded_ids_v1', JSON.stringify(Array.from(deletedIds)));
+    } catch {}
+  }, [deletedIds]);
 
   const togglePayment = (id: string) => {
     setFlippingIds(prev => new Set(prev).add(id));

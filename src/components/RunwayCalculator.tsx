@@ -495,7 +495,7 @@ const RunwayCalculator = () => {
           <div className="space-y-4">
             <AccountSection 
               title="Cash" 
-              accounts={accountData.cash}
+              accounts={[...accountData.cash].sort((a, b) => b.balance - a.balance)}
               icon={<Wallet size={18} className="text-green-600" />}
               isHidden={hiddenCategories.cash}
               onAddAccount={() => addAccount('cash')}
@@ -513,7 +513,7 @@ const RunwayCalculator = () => {
             
             <AccountSection 
               title="Investments" 
-              accounts={accountData.investments}
+              accounts={[...accountData.investments].sort((a, b) => b.balance - a.balance)}
               icon={<ChartPie size={18} className="text-blue-600" />}
               isHidden={hiddenCategories.investments}
               onAddAccount={() => addAccount('investments')}
@@ -531,7 +531,7 @@ const RunwayCalculator = () => {
             
             <AccountSection 
               title="Credit" 
-              accounts={accountData.credit}
+              accounts={[...accountData.credit].sort((a, b) => b.balance - a.balance)}
               icon={<CreditCard size={18} className="text-red-600" />}
               isNegative={true}
               isHidden={hiddenCategories.credit}
@@ -550,7 +550,7 @@ const RunwayCalculator = () => {
             
             <AccountSection 
               title="Loans" 
-              accounts={accountData.loans}
+              accounts={[...accountData.loans].sort((a, b) => b.balance - a.balance)}
               icon={<BadgeEuro size={18} className="text-orange-600" />}
               isNegative={true}
               isHidden={hiddenCategories.loans}

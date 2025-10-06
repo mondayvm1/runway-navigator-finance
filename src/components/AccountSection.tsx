@@ -86,11 +86,11 @@ const AccountSection = ({
       )}
 
       {!isHidden && !isCollapsed && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {accounts.map((account) => (
-            <div key={account.id} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center flex-1">
+            <div key={account.id} className="p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-border transition-colors">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 flex-1">
                   {editingNames[account.id] ? (
                     <Input
                       defaultValue={account.name}
@@ -100,41 +100,28 @@ const AccountSection = ({
                           handleNameChange(account.id, e.currentTarget.value);
                         }
                       }}
-                      className="w-48 h-8 text-sm"
+                      className="h-9 font-medium"
                       autoFocus
                     />
                   ) : (
-                    <button
-                      onClick={() => toggleNameEdit(account.id)}
-                      className="text-left hover:text-blue-600 transition-colors"
-                    >
-                      <Label className="text-sm font-medium cursor-pointer">{account.name}</Label>
-                    </button>
+                    <div className="flex items-center justify-between flex-1">
+                      <button
+                        onClick={() => toggleNameEdit(account.id)}
+                        className="text-left hover:text-primary transition-colors"
+                      >
+                        <span className="font-medium">{account.name}</span>
+                      </button>
+                      <span className={`text-lg font-semibold ${isNegative ? 'text-destructive' : 'text-primary'}`}>
+                        {isNegative ? '-' : ''}${Math.abs(account.balance).toLocaleString()}
+                      </span>
+                    </div>
                   )}
-                </div>
-                <div className="flex gap-1">
-                  <Button
-                    onClick={() => toggleNameEdit(account.id)}
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
-                  >
-                    <Edit size={16} />
-                  </Button>
-                  <Button
-                    onClick={() => onRemoveAccount(account.id)}
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div>
-                  <Label className="text-xs text-gray-600">Balance</Label>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">Balance</Label>
                   <Input
                     type="number"
                     placeholder="0"
@@ -148,13 +135,13 @@ const AccountSection = ({
                         onUpdateAccount(account.id, numericValue);
                       }
                     }}
-                    className="h-8 text-sm"
+                    className="h-9"
                   />
                 </div>
                 
                 {onUpdateInterestRate && (
                   <div>
-                    <Label className="text-xs text-gray-600">Interest Rate (%)</Label>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Interest Rate (%)</Label>
                     <InterestRateInput
                       value={account.interestRate || 0}
                       onUpdate={(rate) => {
@@ -168,19 +155,40 @@ const AccountSection = ({
                     />
                   </div>
                 )}
+
+                <div className="flex gap-1 items-end justify-end md:justify-start">
+                  <Button
+                    onClick={() => toggleNameEdit(account.id)}
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3"
+                  >
+                    <Edit size={14} />
+                  </Button>
+                  <Button
+                    onClick={() => onRemoveAccount(account.id)}
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </div>
               </div>
 
               {/* Credit Card Manager for credit accounts */}
               {title === 'Credit' && onUpdateAccountData && (
-                <CreditCardManager 
-                  account={account} 
-                  onUpdateAccount={onUpdateAccountData}
-                />
+                <div className="mt-3">
+                  <CreditCardManager 
+                    account={account} 
+                    onUpdateAccount={onUpdateAccountData}
+                  />
+                </div>
               )}
             </div>
           ))}
           
-          <Button onClick={onAddAccount} variant="outline" className="w-full">
+          <Button onClick={onAddAccount} variant="outline" className="w-full h-10 mt-2">
             <Plus size={16} className="mr-2" />
             Add {title} Account
           </Button>

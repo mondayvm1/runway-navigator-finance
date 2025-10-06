@@ -92,10 +92,10 @@ const DatabaseCleanupTool = () => {
 
       if (fetchError) throw fetchError;
 
-      // Group by category + name + balance
+      // Group by category + name + balance + all fields to find exact duplicates
       const grouped = new Map<string, any[]>();
       accounts?.forEach(account => {
-        const key = `${account.category}|${account.name}|${account.balance}`;
+        const key = `${account.category}|${account.name}|${account.balance}|${account.interest_rate}|${account.credit_limit}|${account.due_date}|${account.minimum_payment}`;
         if (!grouped.has(key)) {
           grouped.set(key, []);
         }
@@ -103,25 +103,37 @@ const DatabaseCleanupTool = () => {
       });
 
       let deletedCount = 0;
+      const deletePromises = [];
       
-      // For each group, keep the first and delete the rest
+      // For each group, keep the most recent one and delete the rest
       for (const [key, group] of grouped.entries()) {
         if (group.length > 1) {
-          // Keep the first one, delete the rest
-          const toDelete = group.slice(1).map(acc => acc.id);
+          // Sort by created_at to keep the most recent
+          const sorted = group.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
           
-          const { error: deleteError } = await supabase
-            .from('user_accounts')
-            .delete()
-            .in('id', toDelete);
-
-          if (deleteError) {
-            console.error(`Error deleting duplicates for ${key}:`, deleteError);
-          } else {
-            deletedCount += toDelete.length;
-          }
+          // Keep the first (most recent), delete the rest
+          const toDelete = sorted.slice(1).map(acc => acc.id);
+          
+          // Batch delete
+          deletePromises.push(
+            supabase
+              .from('user_accounts')
+              .delete()
+              .in('id', toDelete)
+              .then(({ error }) => {
+                if (error) {
+                  console.error(`Error deleting duplicates for ${key}:`, error);
+                  throw error;
+                } else {
+                  deletedCount += toDelete.length;
+                }
+              })
+          );
         }
       }
+
+      // Wait for all deletes to complete
+      await Promise.all(deletePromises);
 
       toast.success(`Cleaned up ${deletedCount} duplicate entries!`);
       setDuplicates([]);
@@ -130,7 +142,7 @@ const DatabaseCleanupTool = () => {
       setTimeout(() => window.location.reload(), 1000);
     } catch (error) {
       console.error('Error removing duplicates:', error);
-      toast.error('Failed to remove duplicates');
+      toast.error('Failed to remove duplicates. Please try again.');
     } finally {
       setLoading(false);
     }

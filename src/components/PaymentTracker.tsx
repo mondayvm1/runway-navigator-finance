@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CreditCard, DollarSign, CheckCircle2, XCircle, Pencil } from 'lucide-react';
+import { CreditCard, DollarSign, CheckCircle2, XCircle, Pencil, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { AccountData, AccountItem } from '@/hooks/useFinancialData';
 import CollapsibleSection from './CollapsibleSection';
@@ -30,6 +30,7 @@ interface PaymentTrackerProps {
 
 const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps) => {
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [flippingIds, setFlippingIds] = useState<Set<string>>(new Set());
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<Payment | null>(null);
@@ -79,10 +80,12 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
       }
     });
 
-    // Sort by amount descending (largest first)
-    const generated = Array.from(map.values()).sort((a, b) => b.amount - a.amount);
+    // Sort by amount descending (largest first) and filter out deleted
+    const generated = Array.from(map.values())
+      .filter(p => !deletedIds.has(p.id))
+      .sort((a, b) => b.amount - a.amount);
     setPayments(generated);
-  }, [accountData]);
+  }, [accountData, deletedIds]);
 
   const togglePayment = (id: string) => {
     setFlippingIds(prev => new Set(prev).add(id));
@@ -125,6 +128,11 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
     setEditOpen(false);
     setEditing(null);
   };
+
+  const deletePayment = (id: string) => {
+    setDeletedIds(prev => new Set(prev).add(id));
+  };
+
   const totalPaid = payments.filter(p => p.isPaid).reduce((sum, p) => sum + p.amount, 0);
   const totalRemaining = payments.filter(p => !p.isPaid).reduce((sum, p) => sum + p.amount, 0);
 
@@ -215,9 +223,12 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
                               <DollarSign className="h-5 w-5 text-blue-600" />
                             )}
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openEdit(payment); }}>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); openEdit(payment); }}>
                               <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:text-destructive" onClick={(e) => { e.stopPropagation(); deletePayment(payment.id); }}>
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                             <XCircle className="h-5 w-5 text-blue-400" />
                           </div>
@@ -253,9 +264,12 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
                             <DollarSign className="h-5 w-5 text-green-600" />
                           )}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openEdit(payment); }}>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); openEdit(payment); }}>
                             <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:text-destructive" onClick={(e) => { e.stopPropagation(); deletePayment(payment.id); }}>
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                           <CheckCircle2 className="h-5 w-5 text-green-600" />
                         </div>

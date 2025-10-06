@@ -20,6 +20,7 @@ import FinancialAllocationCharts from "./FinancialAllocationCharts";
 import PaymentTracker from "./PaymentTracker";
 import FinancialQuestJourney from "./FinancialQuestJourney";
 import DatabaseCleanupTool from "./DatabaseCleanupTool";
+import FinancialArchetype from "./FinancialArchetype";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles, TrendingUp } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
@@ -604,6 +605,17 @@ const RunwayCalculator = () => {
             runway={runway.months}
             snapshotCount={3}
             totalAssets={getTotalAssets()}
+          />
+          
+          <FinancialArchetype
+            totalAssets={getTotalAssets()}
+            totalLiabilities={getTotalLiabilities()}
+            runway={runway.months}
+            monthlyExpenses={monthlyExpenses}
+            cashBalance={accountData.cash.reduce((sum, acc) => sum + acc.balance, 0)}
+            investmentBalance={accountData.investments.reduce((sum, acc) => sum + acc.balance, 0)}
+            creditBalance={accountData.credit.reduce((sum, acc) => sum + acc.balance, 0)}
+            accountCount={accountData.cash.length + accountData.investments.length + accountData.credit.length + accountData.loans.length + accountData.otherAssets.length}
           />
         </div>
       </div>

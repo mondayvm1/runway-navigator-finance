@@ -299,12 +299,20 @@ const RunwayCalculator = () => {
     };
     monthlyExpenses: number;
   }) => {
+    // Assign new unique IDs to imported accounts to prevent duplicates
+    const assignNewIds = (accounts: AccountItem[]): AccountItem[] => {
+      return accounts.map(account => ({
+        ...account,
+        id: uuidv4()
+      }));
+    };
+
     setAccountData(prev => ({
-      cash: [...prev.cash, ...importedData.accounts.cash],
-      investments: [...prev.investments, ...importedData.accounts.investments],
-      credit: [...prev.credit, ...importedData.accounts.credit],
-      loans: [...prev.loans, ...importedData.accounts.loans],
-      otherAssets: [...prev.otherAssets, ...importedData.accounts.otherAssets]
+      cash: [...prev.cash, ...assignNewIds(importedData.accounts.cash)],
+      investments: [...prev.investments, ...assignNewIds(importedData.accounts.investments)],
+      credit: [...prev.credit, ...assignNewIds(importedData.accounts.credit)],
+      loans: [...prev.loans, ...assignNewIds(importedData.accounts.loans)],
+      otherAssets: [...prev.otherAssets, ...assignNewIds(importedData.accounts.otherAssets)]
     }));
 
     if (importedData.monthlyExpenses > 0) {

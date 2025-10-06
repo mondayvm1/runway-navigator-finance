@@ -21,7 +21,8 @@ import PaymentTracker from "./PaymentTracker";
 import FinancialQuestJourney from "./FinancialQuestJourney";
 import DatabaseCleanupTool from "./DatabaseCleanupTool";
 import FinancialArchetype from "./FinancialArchetype";
-import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles, TrendingUp } from "lucide-react";
+import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles, TrendingUp, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
 import { useFinancialData, AccountItem } from '@/hooks/useFinancialData';
@@ -447,22 +448,6 @@ const RunwayCalculator = () => {
 
           <PaymentTracker accountData={accountData} updateAccountField={updateAccountField} />
           
-          <FinancialQuestJourney
-            netWorth={getTotalAssets() - getTotalLiabilities()}
-            runway={runway.months}
-            totalAssets={getTotalAssets()}
-            totalLiabilities={getTotalLiabilities()}
-            monthlyObligations={
-              accountData.credit.reduce((sum, acc) => sum + (acc.minimumPayment || 0), 0) +
-              accountData.loans.reduce((sum, acc) => sum + (acc.minimumPayment || (acc.balance * 0.02)), 0)
-            }
-            paymentsCleared={0}
-            totalPayments={
-              accountData.credit.filter(acc => (acc.minimumPayment || 0) > 0).length +
-              accountData.loans.filter(acc => acc.balance > 0).length
-            }
-          />
-          
           <Card className="p-6">
             <div className="space-y-4">
               <label htmlFor="monthlyExpenses" className="block text-lg font-medium text-gray-700">
@@ -632,6 +617,45 @@ const RunwayCalculator = () => {
           incomeEnabled={incomeEnabled}
           hiddenCategories={hiddenCategories}
         />
+      </div>
+
+      {/* Quest Journey - Collapsible at bottom */}
+      <div className="mt-6">
+        <Card className="overflow-hidden">
+          <Collapsible defaultOpen={false}>
+            <CollapsibleTrigger className="w-full p-4 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+                  <h3 className="text-lg font-semibold">Financial Quest Journey</h3>
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full animate-pulse">
+                    Click to explore your progress
+                  </span>
+                </div>
+                <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform" />
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-6 pt-0 animate-fade-in">
+                <FinancialQuestJourney
+                  netWorth={getTotalAssets() - getTotalLiabilities()}
+                  runway={runway.months}
+                  totalAssets={getTotalAssets()}
+                  totalLiabilities={getTotalLiabilities()}
+                  monthlyObligations={
+                    accountData.credit.reduce((sum, acc) => sum + (acc.minimumPayment || 0), 0) +
+                    accountData.loans.reduce((sum, acc) => sum + (acc.minimumPayment || (acc.balance * 0.02)), 0)
+                  }
+                  paymentsCleared={0}
+                  totalPayments={
+                    accountData.credit.filter(acc => (acc.minimumPayment || 0) > 0).length +
+                    accountData.loans.filter(acc => acc.balance > 0).length
+                  }
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </Card>
       </div>
 
       {showSnapshotViewer && (

@@ -440,7 +440,7 @@ const RunwayCalculator = () => {
             incomeEnabled={incomeEnabled}
           />
 
-          <PaymentTracker accountData={accountData} />
+          <PaymentTracker accountData={accountData} updateAccountField={updateAccountField} />
           
           <Card className="p-6">
             <div className="space-y-4">

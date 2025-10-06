@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CreditCard, DollarSign, CheckCircle2, XCircle } from 'lucide-react';
+import { CreditCard, DollarSign, CheckCircle2, XCircle, Pencil } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
-import { AccountData } from '@/hooks/useFinancialData';
+import { AccountData, AccountItem } from '@/hooks/useFinancialData';
 import CollapsibleSection from './CollapsibleSection';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface Payment {
-  id: string;
+  id: string; // unique composite id per payment (e.g., "credit:uuid")
+  accountId: string; // original account id in DB
   name: string;
   amount: number;
   dueDate?: Date;
@@ -17,49 +21,65 @@ interface Payment {
 
 interface PaymentTrackerProps {
   accountData: AccountData;
+  updateAccountField: (
+    category: keyof AccountData,
+    id: string,
+    updates: Partial<AccountItem>
+  ) => Promise<void> | void;
 }
 
-const PaymentTracker = ({ accountData }: PaymentTrackerProps) => {
+const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps) => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [flippingIds, setFlippingIds] = useState<Set<string>>(new Set());
+  const [editOpen, setEditOpen] = useState(false);
+  const [editing, setEditing] = useState<Payment | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editAmount, setEditAmount] = useState<number>(0);
+  const [editDueDate, setEditDueDate] = useState<string>('');
 
   useEffect(() => {
-    // Generate payments from accounts
-    const generatedPayments: Payment[] = [];
+    // Generate payments from accounts with de-duplication and overrides
+    const map = new Map<string, Payment>();
 
-    // Credit cards with minimum payments
-    accountData.credit.forEach(account => {
-      if (account.minimumPayment && account.minimumPayment > 0) {
-        generatedPayments.push({
+    // Credit cards: use minimumPayment when available
+    accountData.credit.forEach((account) => {
+      const min = account.minimumPayment && account.minimumPayment > 0 ? account.minimumPayment : 0;
+      if (min > 0) {
+        const key = `credit:${account.id}`;
+        map.set(key, {
           id: account.id,
           name: account.name,
-          amount: account.minimumPayment,
+          amount: min,
           dueDate: account.dueDate ? new Date(account.dueDate) : undefined,
           isPaid: false,
-          category: 'credit'
+          category: 'credit',
         });
       }
     });
 
-    // Loans (could add payment amounts if available)
-    accountData.loans.forEach(account => {
-      if (account.balance > 0) {
-        // Estimate monthly payment (simplified)
-        const estimatedPayment = account.balance * 0.02; // 2% of balance
-        generatedPayments.push({
+    // Loans: prefer explicit minimumPayment, fallback to 2% estimate
+    accountData.loans.forEach((account) => {
+      const amt = account.minimumPayment && account.minimumPayment > 0
+        ? account.minimumPayment
+        : account.balance > 0
+          ? account.balance * 0.02
+          : 0;
+      if (amt > 0) {
+        const key = `loan:${account.id}`;
+        map.set(key, {
           id: account.id,
           name: account.name,
-          amount: estimatedPayment,
+          amount: amt,
+          dueDate: account.dueDate ? new Date(account.dueDate) : undefined,
           isPaid: false,
-          category: 'loan'
+          category: 'loan',
         });
       }
     });
 
     // Sort by amount descending (largest first)
-    generatedPayments.sort((a, b) => b.amount - a.amount);
-    
-    setPayments(generatedPayments);
+    const generated = Array.from(map.values()).sort((a, b) => b.amount - a.amount);
+    setPayments(generated);
   }, [accountData]);
 
   const togglePayment = (id: string) => {
@@ -82,6 +102,27 @@ const PaymentTracker = ({ accountData }: PaymentTrackerProps) => {
     }, 150);
   };
 
+  const openEdit = (p: Payment) => {
+    setEditing(p);
+    setEditName(p.name);
+    setEditAmount(Number(p.amount.toFixed(2)));
+    setEditDueDate(p.dueDate ? p.dueDate.toISOString().slice(0, 10) : '');
+    setEditOpen(true);
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    const categoryKey = editing.category === 'credit' ? 'credit' : 'loans';
+    await Promise.resolve(
+      updateAccountField(categoryKey as keyof AccountData, editing.id, {
+        name: editName,
+        minimumPayment: Number(editAmount),
+        dueDate: editDueDate || undefined,
+      })
+    );
+    setEditOpen(false);
+    setEditing(null);
+  };
   const totalPaid = payments.filter(p => p.isPaid).reduce((sum, p) => sum + p.amount, 0);
   const totalRemaining = payments.filter(p => !p.isPaid).reduce((sum, p) => sum + p.amount, 0);
 
@@ -164,16 +205,21 @@ const PaymentTracker = ({ accountData }: PaymentTrackerProps) => {
                 >
                   <div className="flex flex-col h-full justify-between">
                     <div>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          {payment.category === 'credit' ? (
-                            <CreditCard className="h-5 w-5 text-blue-600" />
-                          ) : (
-                            <DollarSign className="h-5 w-5 text-blue-600" />
-                          )}
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            {payment.category === 'credit' ? (
+                              <CreditCard className="h-5 w-5 text-blue-600" />
+                            ) : (
+                              <DollarSign className="h-5 w-5 text-blue-600" />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openEdit(payment); }}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <XCircle className="h-5 w-5 text-blue-400" />
+                          </div>
                         </div>
-                        <XCircle className="h-5 w-5 text-blue-400" />
-                      </div>
                       <h4 className="font-semibold text-slate-800 mb-2">{payment.name}</h4>
                       <p className="text-2xl font-bold text-blue-600">{formatCurrency(payment.amount)}</p>
                     </div>
@@ -205,7 +251,12 @@ const PaymentTracker = ({ accountData }: PaymentTrackerProps) => {
                             <DollarSign className="h-5 w-5 text-green-600" />
                           )}
                         </div>
-                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openEdit(payment); }}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        </div>
                       </div>
                       <h4 className="font-semibold text-slate-800 mb-2">{payment.name}</h4>
                       <p className="text-2xl font-bold text-green-600">{formatCurrency(payment.amount)}</p>

@@ -65,10 +65,13 @@ const AccountSection = ({
           {icon}
           <h3 className="text-lg font-medium text-gray-700 ml-2">{title}</h3>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`text-lg font-semibold ${isNegative ? 'text-red-600' : 'text-green-600'}`}>
-            {isNegative ? '-' : ''}${Math.abs(total).toLocaleString()}
-          </span>
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <div className="text-xs text-muted-foreground">Total</div>
+            <span className={`text-xl font-bold ${isNegative ? 'text-red-600' : 'text-green-600'}`}>
+              {isNegative ? '-' : ''}${Math.abs(total).toLocaleString()}
+            </span>
+          </div>
           <Button
             onClick={onToggleHidden}
             variant="ghost"
@@ -90,33 +93,26 @@ const AccountSection = ({
           {accounts.map((account) => (
             <div key={account.id} className="p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-border transition-colors">
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2 flex-1">
-                  {editingNames[account.id] ? (
-                    <Input
-                      defaultValue={account.name}
-                      onBlur={(e) => handleNameChange(account.id, e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleNameChange(account.id, e.currentTarget.value);
-                        }
-                      }}
-                      className="h-9 font-medium"
-                      autoFocus
-                    />
-                  ) : (
-                    <div className="flex items-center justify-between flex-1">
-                      <button
-                        onClick={() => toggleNameEdit(account.id)}
-                        className="text-left hover:text-primary transition-colors"
-                      >
-                        <span className="font-medium">{account.name}</span>
-                      </button>
-                      <span className={`text-lg font-semibold ${isNegative ? 'text-destructive' : 'text-primary'}`}>
-                        {isNegative ? '-' : ''}${Math.abs(account.balance).toLocaleString()}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                {editingNames[account.id] ? (
+                  <Input
+                    defaultValue={account.name}
+                    onBlur={(e) => handleNameChange(account.id, e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleNameChange(account.id, e.currentTarget.value);
+                      }
+                    }}
+                    className="h-9 font-medium"
+                    autoFocus
+                  />
+                ) : (
+                  <button
+                    onClick={() => toggleNameEdit(account.id)}
+                    className="text-left hover:text-primary transition-colors"
+                  >
+                    <span className="font-medium">{account.name}</span>
+                  </button>
+                )}
               </div>
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">

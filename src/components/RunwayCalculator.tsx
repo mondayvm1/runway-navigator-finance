@@ -608,25 +608,14 @@ const RunwayCalculator = () => {
         />
       </div>
 
-      {/* Quest Journey - Collapsible at bottom */}
+      {/* Quest Journey - Always Open */}
       <div className="mt-6">
-        <Card className="overflow-hidden">
-          <Collapsible defaultOpen={true}>
-            <CollapsibleTrigger className="w-full p-4 hover:bg-muted/50 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Sparkles className="w-5 h-5 text-primary animate-pulse" />
-                  <h3 className="text-lg font-semibold">Financial Quest Journey</h3>
-                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full animate-pulse">
-                    Click to explore your progress
-                  </span>
-                </div>
-                <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform" />
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="p-6 pt-0 animate-fade-in">
-                <FinancialQuestJourney
+        <Card className="p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold">Financial Quest Journey</h3>
+          </div>
+          <FinancialQuestJourney
                   netWorth={getTotalAssets() - getTotalLiabilities()}
                   runway={runway.months}
                   totalAssets={getTotalAssets()}
@@ -641,16 +630,13 @@ const RunwayCalculator = () => {
                     accountData.loans.filter(acc => acc.balance > 0).length
                   }
                 />
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
         </Card>
       </div>
 
       {/* Financial Archetype - Collapsible at bottom */}
       <div className="mt-6">
         <Card className="overflow-hidden">
-          <Collapsible defaultOpen={true}>
+          <Collapsible defaultOpen={false}>
             <CollapsibleTrigger className="w-full p-4 hover:bg-muted/50 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">

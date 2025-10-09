@@ -71,6 +71,11 @@ const AccountSection = ({
             <span className={`text-xl font-bold ${isNegative ? 'text-red-600' : 'text-green-600'}`}>
               {isNegative ? '-' : ''}${Math.abs(total).toLocaleString()}
             </span>
+            {title === 'Credit' && accounts.length > 0 && (
+              <div className="text-xs text-muted-foreground mt-1">
+                Available: ${accounts.reduce((sum, acc) => sum + (acc.creditLimit || 0) - acc.balance, 0).toLocaleString()}
+              </div>
+            )}
           </div>
           <Button
             onClick={onToggleHidden}

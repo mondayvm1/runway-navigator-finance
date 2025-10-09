@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Legend } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
-import { PieChart as PieChartIcon, BarChart3, TrendingUp, Shield, Wallet, AlertTriangle } from 'lucide-react';
+import { PieChart as PieChartIcon, BarChart3, TrendingUp, Shield, Wallet, AlertTriangle, CalendarDays } from 'lucide-react';
 import { IncomeEvent } from './IncomeManager';
 import { AccountItem } from '@/hooks/useFinancialData';
 import CollapsibleSection from './CollapsibleSection';
@@ -104,10 +104,12 @@ const FinancialAllocationCharts = ({
   ];
 
   // Cash flow breakdown with new colors
+  const annualCashFlow = projectedIncome - annualExpenses;
+  
   const cashFlowData = [
     { category: 'Projected Income', amount: projectedIncome, color: palette.primary },
-    { category: 'Annual Expenses', amount: -annualExpenses, color: palette.text },
-    { category: 'Net Cash Flow', amount: projectedIncome - annualExpenses, color: projectedIncome >= annualExpenses ? palette.primary : palette.text }
+    { category: 'Annual Expenses', amount: annualExpenses, color: palette.secondary },
+    { category: 'Net Cash Flow', amount: Math.abs(annualCashFlow), color: annualCashFlow >= 0 ? palette.primary : palette.text }
   ];
 
   const chartConfig = {
@@ -125,7 +127,7 @@ const FinancialAllocationCharts = ({
     >
       <div className="space-y-6">
         {/* Financial Health Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card 
             className="p-4 border-2" 
             style={{ 
@@ -192,6 +194,25 @@ const FinancialAllocationCharts = ({
               Assets - Liabilities
             </div>
           </Card>
+
+          <Card 
+            className="p-4 border-2" 
+            style={{ 
+              backgroundColor: annualCashFlow >= 0 ? palette.primary : '#fecaca',
+              borderColor: palette.border,
+            }}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <CalendarDays className="h-5 w-5" style={{ color: palette.text }} />
+              <span className="font-medium" style={{ color: palette.text }}>Annual Cashflow</span>
+            </div>
+            <div className="text-2xl font-bold mb-1" style={{ color: palette.text }}>
+              {formatCurrency(annualCashFlow)}
+            </div>
+            <div className="text-sm" style={{ color: palette.text }}>
+              {annualCashFlow >= 0 ? 'Surplus' : 'Deficit'}
+            </div>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -203,7 +224,7 @@ const FinancialAllocationCharts = ({
             </div>
             
             {assetAllocationData.length > 0 ? (
-              <div className="h-80">
+              <div className="h-64 sm:h-80">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -294,7 +315,7 @@ const FinancialAllocationCharts = ({
               <h3 className="text-lg font-semibold" style={{ color: palette.text }}>Annual Cash Flow</h3>
             </div>
             
-            <div className="h-80">
+            <div className="h-64 sm:h-80">
               <ChartContainer config={chartConfig}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={cashFlowData} layout="horizontal">

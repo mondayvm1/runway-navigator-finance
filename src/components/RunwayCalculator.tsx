@@ -611,7 +611,7 @@ const RunwayCalculator = () => {
       {/* Quest Journey - Collapsible at bottom */}
       <div className="mt-6">
         <Card className="overflow-hidden">
-          <Collapsible defaultOpen={false}>
+          <Collapsible defaultOpen={true}>
             <CollapsibleTrigger className="w-full p-4 hover:bg-muted/50 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -650,7 +650,7 @@ const RunwayCalculator = () => {
       {/* Financial Archetype - Collapsible at bottom */}
       <div className="mt-6">
         <Card className="overflow-hidden">
-          <Collapsible defaultOpen={false}>
+          <Collapsible defaultOpen={true}>
             <CollapsibleTrigger className="w-full p-4 hover:bg-muted/50 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">

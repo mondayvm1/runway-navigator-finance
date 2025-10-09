@@ -60,12 +60,14 @@ const FinancialInsights = ({
 
   const insights = [
     {
-      title: 'Net Worth Status',
+      title: 'Net Worth',
       value: formatCurrency(netWorth),
       status: netWorthStatus.status,
       icon: NetWorthIcon,
       color: netWorthStatus.color,
-      description: netWorth > 0 ? 'Your assets exceed your liabilities' : 'Focus on reducing debt and building assets'
+      description: netWorth >= 0 
+        ? `Assets (${formatCurrency(totalAssets)}) - Liabilities (${formatCurrency(totalLiabilities)})`
+        : `Focus on reducing debt (${formatCurrency(totalLiabilities)}) and building assets (${formatCurrency(totalAssets)})`
     },
     {
       title: 'Financial Runway',

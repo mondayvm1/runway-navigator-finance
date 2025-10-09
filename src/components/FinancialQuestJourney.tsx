@@ -3,9 +3,6 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Sparkles, Compass, Shield, TrendingUp, Target, Crown, Zap } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
-import CollapsibleSection from './CollapsibleSection';
-import { useEffect } from 'react';
-import { useCategorySettings } from '@/hooks/useCategorySettings';
 
 interface FinancialQuestJourneyProps {
   netWorth: number;
@@ -37,12 +34,6 @@ const FinancialQuestJourney = ({
   paymentsCleared,
   totalPayments,
 }: FinancialQuestJourneyProps) => {
-  const { isCategoryHidden, updateCategoryVisibility } = useCategorySettings();
-  useEffect(() => {
-    if (isCategoryHidden('quest-journey')) {
-      updateCategoryVisibility('quest-journey', false);
-    }
-  }, [isCategoryHidden, updateCategoryVisibility]);
   
   const getQuests = (): Quest[] => {
     const quests: Quest[] = [];
@@ -147,13 +138,7 @@ const FinancialQuestJourney = ({
   const stage = getJourneyStage();
   
   return (
-    <CollapsibleSection
-      title="Quest Journey"
-      category="quest-journey"
-      icon={<Sparkles className="h-5 w-5 text-primary" />}
-      defaultOpen={true}
-    >
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Journey Header */}
         <Card className="p-6 bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 border-purple-200">
           <div className="flex items-center justify-between mb-4">
@@ -252,8 +237,7 @@ const FinancialQuestJourney = ({
             </div>
           </div>
         </Card>
-      </div>
-    </CollapsibleSection>
+    </div>
   );
 };
 

@@ -4,6 +4,8 @@ import { Progress } from '@/components/ui/progress';
 import { Sparkles, Compass, Shield, TrendingUp, Target, Crown, Zap } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import CollapsibleSection from './CollapsibleSection';
+import { useEffect } from 'react';
+import { useCategorySettings } from '@/hooks/useCategorySettings';
 
 interface FinancialQuestJourneyProps {
   netWorth: number;
@@ -35,6 +37,12 @@ const FinancialQuestJourney = ({
   paymentsCleared,
   totalPayments,
 }: FinancialQuestJourneyProps) => {
+  const { isCategoryHidden, updateCategoryVisibility } = useCategorySettings();
+  useEffect(() => {
+    if (isCategoryHidden('quest-journey')) {
+      updateCategoryVisibility('quest-journey', false);
+    }
+  }, [isCategoryHidden, updateCategoryVisibility]);
   
   const getQuests = (): Quest[] => {
     const quests: Quest[] = [];

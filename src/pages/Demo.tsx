@@ -320,7 +320,7 @@ const Demo = () => {
                   <p className="text-sm mb-6 opacity-90">
                     Join 10,000+ users building wealth with our dashboard
                   </p>
-                  <Button asChild size="lg" className="w-full !bg-white !text-blue-700 hover:!bg-gray-100 hover:!text-blue-800 font-bold shadow-lg">
+                  <Button asChild size="lg" className="w-full text-white font-extrabold text-lg py-3 h-auto shadow-lg">
                     <Link to="/#auth" className="flex items-center justify-center">
                       Create Free Account
                       <ArrowRight className="ml-2" size={18} />
@@ -404,10 +404,10 @@ const Demo = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
-              <Button asChild size="lg" className="!bg-white !text-blue-700 hover:!bg-gray-100 hover:!text-blue-800 font-bold text-xl px-12 py-4 h-auto shadow-xl">
+              <Button asChild size="lg" className="text-white font-extrabold text-xl px-12 py-4 h-auto shadow-xl">
                 <Link to="/#auth">Start Your Free Account →</Link>
               </Button>
-              <Button asChild size="lg" className="!bg-transparent !border-2 !border-white !text-white hover:!bg-white hover:!text-blue-700 font-bold text-xl px-12 py-4 h-auto">
+              <Button asChild size="lg" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-blue-700 font-bold text-xl px-12 py-4 h-auto">
                 <Link to="/#auth">Sign In to Existing Account</Link>
               </Button>
             </div>

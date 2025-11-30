@@ -44,20 +44,30 @@ const EnhancedRunwayChart = ({
           const eventDate = new Date(event.date);
           const eventMonth = eventDate.getFullYear() * 12 + eventDate.getMonth();
           const currentMonth = currentDate.getFullYear() * 12 + currentDate.getMonth();
+          const startMonth = new Date().getFullYear() * 12 + new Date().getMonth();
           
-          if (event.frequency === 'one-time' && eventMonth === currentMonth) {
-            return total + event.amount;
+          if (event.frequency === 'one-time') {
+            // One-time event: only count it in the exact month it occurs (if in the future)
+            if (eventMonth === currentMonth && currentMonth >= startMonth) {
+              return total + event.amount;
+            }
           } else if (event.frequency === 'monthly') {
+            // Monthly recurring: count every month from event start date
             const endDate = event.endDate ? new Date(event.endDate) : null;
-            if (eventMonth <= currentMonth && (!endDate || currentDate <= endDate)) {
+            const endMonth = endDate ? endDate.getFullYear() * 12 + endDate.getMonth() : Infinity;
+            
+            // Include if current month is at or after event month and before end date
+            if (currentMonth >= Math.max(eventMonth, startMonth) && currentMonth <= endMonth) {
               return total + event.amount;
             }
           } else if (event.frequency === 'yearly') {
-            const eventAnnualDate = new Date(currentDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
-            const timeDiff = Math.abs(eventAnnualDate.getTime() - currentDate.getTime());
-            const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-            if (daysDiff <= 15) { // Within 15 days of the annual date
-              return total + event.amount;
+            // Yearly recurring: count once per year on anniversary month
+            if (currentMonth >= startMonth) {
+              const yearsSinceEvent = Math.floor((currentMonth - eventMonth) / 12);
+              const anniversaryMonth = eventMonth + (yearsSinceEvent * 12);
+              if (currentMonth === anniversaryMonth) {
+                return total + event.amount;
+              }
             }
           }
           
@@ -65,6 +75,7 @@ const EnhancedRunwayChart = ({
         }, 0);
       }
       
+      // Add income BEFORE subtracting expenses to show the buffer it provides
       remainingSavingsWithIncome += monthlyIncome;
       
       data.push({

@@ -18,6 +18,7 @@ import EnhancedSnapshotManager from "./EnhancedSnapshotManager";
 import RunwayChart from "./RunwayChart";
 import FinancialAllocationCharts from "./FinancialAllocationCharts";
 import PaymentTracker from "./PaymentTracker";
+import CreditCardDebtAnalyzer from "./CreditCardDebtAnalyzer";
 import FinancialQuestJourney from "./FinancialQuestJourney";
 import DatabaseCleanupTool from "./DatabaseCleanupTool";
 import FinancialArchetype from "./FinancialArchetype";
@@ -447,6 +448,8 @@ const RunwayCalculator = () => {
           />
 
           <PaymentTracker accountData={accountData} updateAccountField={updateAccountField} />
+          
+          <CreditCardDebtAnalyzer creditAccounts={accountData.credit} />
           
           <Card className="p-6">
             <div className="space-y-4">

@@ -92,10 +92,20 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
       }
     });
 
-    // Sort by amount descending (largest first) and filter out deleted
+    // Sort by due date first (earliest first, no due date last), then by balance descending
     const generated = Array.from(map.values())
       .filter(p => !deletedIds.has(p.id))
-      .sort((a, b) => b.amount - a.amount);
+      .sort((a, b) => {
+        // If both have due dates, sort by date (earliest first)
+        if (a.dueDate && b.dueDate) {
+          return a.dueDate.getTime() - b.dueDate.getTime();
+        }
+        // If only one has a due date, prioritize it
+        if (a.dueDate && !b.dueDate) return -1;
+        if (!a.dueDate && b.dueDate) return 1;
+        // If neither has due date, sort by amount descending
+        return b.amount - a.amount;
+      });
     setPayments(generated);
   }, [accountData, deletedIds]);
 

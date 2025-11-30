@@ -84,10 +84,9 @@ const EnhancedRunwayChart = ({
         incomeEnabled: incomeEnabled
       });
       
-      // Stop if both scenarios have reached zero and no more income
-      if (remainingSavingsWithIncome <= 0 && remainingSavingsWithoutIncome <= 0 && monthlyIncome === 0) {
-        break;
-      }
+      // Do NOT stop early – even if savings hit zero before income arrives,
+      // we keep simulating so future income spikes (like Feb 2026, Jun 2026)
+      // can bring the "with income" line back above zero.
     }
     
     return data;

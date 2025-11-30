@@ -44,13 +44,15 @@ const RunwayChart = ({
   incomeEnabled,
   hiddenCategories
 }: RunwayChartProps) => {
-  const [selectedMode, setSelectedMode] = useState<'cash' | 'all' | 'net'>('cash');
+  const [selectedMode, setSelectedMode] = useState<'cash' | 'investments' | 'all' | 'net'>('cash');
 
   // Calculate different savings amounts based on mode
   const getSavingsAmount = () => {
     switch (selectedMode) {
       case 'cash':
         return accountData.cash.reduce((sum, account) => sum + account.balance, 0);
+      case 'investments':
+        return accountData.investments.reduce((sum, account) => sum + account.balance, 0);
       case 'all':
         return getTotalAssets();
       case 'net':
@@ -69,6 +71,8 @@ const RunwayChart = ({
     switch (selectedMode) {
       case 'cash':
         return 'Cash Only';
+      case 'investments':
+        return 'Investments Only';
       case 'all':
         return 'All Assets';
       case 'net':
@@ -82,6 +86,8 @@ const RunwayChart = ({
     switch (selectedMode) {
       case 'cash':
         return 'Using only cash accounts for runway calculation';
+      case 'investments':
+        return 'Using only investment accounts for runway calculation';
       case 'all':
         return 'Using all assets (cash + investments + other assets) for runway calculation';
       case 'net':
@@ -103,6 +109,13 @@ const RunwayChart = ({
               onClick={() => setSelectedMode('cash')}
             >
               Cash Only
+            </Button>
+            <Button
+              variant={selectedMode === 'investments' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedMode('investments')}
+            >
+              Investments
             </Button>
             <Button
               variant={selectedMode === 'all' ? 'default' : 'outline'}

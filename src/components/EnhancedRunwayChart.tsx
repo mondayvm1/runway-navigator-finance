@@ -44,30 +44,25 @@ const EnhancedRunwayChart = ({
           const eventDate = new Date(event.date);
           const eventMonth = eventDate.getFullYear() * 12 + eventDate.getMonth();
           const currentMonth = currentDate.getFullYear() * 12 + currentDate.getMonth();
-          const startMonth = new Date().getFullYear() * 12 + new Date().getMonth();
           
           if (event.frequency === 'one-time') {
-            // One-time event: only count it in the exact month it occurs (if in the future)
-            if (eventMonth === currentMonth && currentMonth >= startMonth) {
+            // One-time: only in the exact month
+            if (eventMonth === currentMonth) {
               return total + event.amount;
             }
           } else if (event.frequency === 'monthly') {
-            // Monthly recurring: count every month from event start date
+            // Monthly: every month starting from event date until end date (if specified)
             const endDate = event.endDate ? new Date(event.endDate) : null;
             const endMonth = endDate ? endDate.getFullYear() * 12 + endDate.getMonth() : Infinity;
             
-            // Include if current month is at or after event month and before end date
-            if (currentMonth >= Math.max(eventMonth, startMonth) && currentMonth <= endMonth) {
+            if (currentMonth >= eventMonth && currentMonth <= endMonth) {
               return total + event.amount;
             }
           } else if (event.frequency === 'yearly') {
-            // Yearly recurring: count once per year on anniversary month
-            if (currentMonth >= startMonth) {
-              const yearsSinceEvent = Math.floor((currentMonth - eventMonth) / 12);
-              const anniversaryMonth = eventMonth + (yearsSinceEvent * 12);
-              if (currentMonth === anniversaryMonth) {
-                return total + event.amount;
-              }
+            // Yearly: on anniversary month each year
+            const monthsSinceEvent = currentMonth - eventMonth;
+            if (monthsSinceEvent >= 0 && monthsSinceEvent % 12 === 0) {
+              return total + event.amount;
             }
           }
           
@@ -75,7 +70,6 @@ const EnhancedRunwayChart = ({
         }, 0);
       }
       
-      // Add income BEFORE subtracting expenses to show the buffer it provides
       remainingSavingsWithIncome += monthlyIncome;
       
       data.push({

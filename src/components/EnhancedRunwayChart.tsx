@@ -26,12 +26,35 @@ const EnhancedRunwayChart = ({
     let balanceWithIncome = savings;
     let balanceWithoutIncome = savings;
     const today = new Date();
-    const startMonth = today.getFullYear() * 12 + today.getMonth();
     
-    // Simulate up to 120 months (10 years) to show long-term income impact
-    const maxMonths = 120;
+    // Base horizon from the simple months estimate we pass in
+    const baseMonths = Math.max(Math.ceil(months) + 6, 12); // at least 1 year, extend a bit past
+
+    // Find how far out income events matter
+    let lastIncomeOffset = 0;
+    incomeEvents.forEach(event => {
+      const eventDate = new Date(event.date);
+      const offset = (eventDate.getFullYear() - today.getFullYear()) * 12 + (eventDate.getMonth() - today.getMonth());
+      if (offset > lastIncomeOffset) {
+        lastIncomeOffset = offset;
+      }
+      // If it’s recurring without an end date, give it extra horizon
+      if ((event.frequency === 'monthly' || event.frequency === 'yearly') && !event.endDate) {
+        lastIncomeOffset = Math.max(lastIncomeOffset, offset + 24); // +2 years
+      }
+      if (event.endDate) {
+        const endDate = new Date(event.endDate);
+        const endOffset = (endDate.getFullYear() - today.getFullYear()) * 12 + (endDate.getMonth() - today.getMonth());
+        if (endOffset > lastIncomeOffset) {
+          lastIncomeOffset = endOffset;
+        }
+      }
+    });
+
+    // Final horizon: enough to cover runway + income, but never more than 5 years
+    const endMonth = Math.min(Math.max(baseMonths, lastIncomeOffset + 12), 60);
     
-    for (let i = 0; i <= maxMonths; i++) {
+    for (let i = 0; i <= endMonth; i++) {
       const projectionDate = new Date(today);
       projectionDate.setMonth(today.getMonth() + i);
       const projectionMonth = projectionDate.getFullYear() * 12 + projectionDate.getMonth();

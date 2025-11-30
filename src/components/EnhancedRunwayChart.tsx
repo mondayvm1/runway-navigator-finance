@@ -23,47 +23,43 @@ const EnhancedRunwayChart = ({
     if (monthlyExpenses <= 0) return [];
     
     const data = [];
-    let remainingSavingsWithIncome = savings;
-    let remainingSavingsWithoutIncome = savings;
-    // Project a long enough horizon so planned income impact is obvious,
-    // independent of the simple "months" estimate passed in
-    const endMonth = 120; // simulate up to 10 years
+    let balanceWithIncome = savings;
+    let balanceWithoutIncome = savings;
+    const today = new Date();
+    const startMonth = today.getFullYear() * 12 + today.getMonth();
     
-    for (let i = 0; i <= endMonth; i++) {
-      const currentDate = new Date();
-      currentDate.setMonth(currentDate.getMonth() + i);
+    // Simulate up to 120 months (10 years) to show long-term income impact
+    const maxMonths = 120;
+    
+    for (let i = 0; i <= maxMonths; i++) {
+      const projectionDate = new Date(today);
+      projectionDate.setMonth(today.getMonth() + i);
+      const projectionMonth = projectionDate.getFullYear() * 12 + projectionDate.getMonth();
       
-      // Apply monthly expenses to both scenarios
-      if (i > 0) {
-        remainingSavingsWithIncome -= monthlyExpenses;
-        remainingSavingsWithoutIncome -= monthlyExpenses;
-      }
-      
-      // Apply income events only if income is enabled
-      let monthlyIncome = 0;
+      // Calculate income for this month
+      let incomeThisMonth = 0;
       if (incomeEnabled && incomeEvents.length > 0) {
-        monthlyIncome = incomeEvents.reduce((total, event) => {
+        incomeThisMonth = incomeEvents.reduce((total, event) => {
           const eventDate = new Date(event.date);
-          const eventMonth = eventDate.getFullYear() * 12 + eventDate.getMonth();
-          const currentMonth = currentDate.getFullYear() * 12 + currentDate.getMonth();
+          const eventStartMonth = eventDate.getFullYear() * 12 + eventDate.getMonth();
           
           if (event.frequency === 'one-time') {
-            // One-time: only in the exact month
-            if (eventMonth === currentMonth) {
+            // One-time payment: only add in the exact month it occurs
+            if (projectionMonth === eventStartMonth) {
               return total + event.amount;
             }
           } else if (event.frequency === 'monthly') {
-            // Monthly: every month starting from event date until end date (if specified)
+            // Monthly recurring: add every month starting from event date
             const endDate = event.endDate ? new Date(event.endDate) : null;
-            const endMonth = endDate ? endDate.getFullYear() * 12 + endDate.getMonth() : Infinity;
+            const eventEndMonth = endDate ? endDate.getFullYear() * 12 + endDate.getMonth() : Infinity;
             
-            if (currentMonth >= eventMonth && currentMonth <= endMonth) {
+            if (projectionMonth >= eventStartMonth && projectionMonth <= eventEndMonth) {
               return total + event.amount;
             }
           } else if (event.frequency === 'yearly') {
-            // Yearly: on anniversary month each year
-            const monthsSinceEvent = currentMonth - eventMonth;
-            if (monthsSinceEvent >= 0 && monthsSinceEvent % 12 === 0) {
+            // Yearly: only on anniversary months
+            const monthsSinceStart = projectionMonth - eventStartMonth;
+            if (monthsSinceStart >= 0 && monthsSinceStart % 12 === 0) {
               return total + event.amount;
             }
           }
@@ -72,21 +68,28 @@ const EnhancedRunwayChart = ({
         }, 0);
       }
       
-      remainingSavingsWithIncome += monthlyIncome;
+      // First: add income for this month to the "with income" balance
+      balanceWithIncome += incomeThisMonth;
       
+      // Then: subtract expenses from both balances
+      balanceWithIncome -= monthlyExpenses;
+      balanceWithoutIncome -= monthlyExpenses;
+      
+      // Record the data point
       data.push({
         month: i,
-        balance: Math.max(0, remainingSavingsWithIncome),
-        balanceWithIncome: Math.max(0, remainingSavingsWithIncome),
-        balanceWithoutIncome: Math.max(0, remainingSavingsWithoutIncome),
-        income: monthlyIncome,
-        monthLabel: currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        balance: Math.max(0, balanceWithIncome),
+        balanceWithIncome: Math.max(0, balanceWithIncome),
+        balanceWithoutIncome: Math.max(0, balanceWithoutIncome),
+        income: incomeThisMonth,
+        monthLabel: projectionDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
         incomeEnabled: incomeEnabled
       });
       
-      // Do NOT stop early – even if savings hit zero before income arrives,
-      // we keep simulating so future income spikes (like Feb 2026, Jun 2026)
-      // can bring the "with income" line back above zero.
+      // Stop if both are deeply negative and no future income
+      if (balanceWithIncome < -100000 && balanceWithoutIncome < -100000) {
+        break;
+      }
     }
     
     return data;

@@ -25,7 +25,9 @@ const EnhancedRunwayChart = ({
     const data = [];
     let remainingSavingsWithIncome = savings;
     let remainingSavingsWithoutIncome = savings;
-    const endMonth = Math.max(Math.ceil(months) + 6, 12); // Show at least 12 months
+    // Project a long enough horizon so planned income impact is obvious,
+    // independent of the simple "months" estimate passed in
+    const endMonth = 120; // simulate up to 10 years
     
     for (let i = 0; i <= endMonth; i++) {
       const currentDate = new Date();

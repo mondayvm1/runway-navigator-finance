@@ -60,15 +60,10 @@ const RunwayChart = ({
     }
   };
 
-  // Calculate runway for current mode
-  const getRunwayMonths = () => {
-    if (monthlyExpenses <= 0) return 0;
-    const savings = getSavingsAmount();
-    return Number((savings / monthlyExpenses).toFixed(1));
-  };
+  // Choose which runway number to display based on income toggle
+  const displayRunwayMonths = incomeEnabled ? runway.withIncomeMonths : runway.months;
 
   const savingsAmount = getSavingsAmount();
-  const calculatedRunway = getRunwayMonths();
 
   const getModeLabel = () => {
     switch (selectedMode) {
@@ -141,7 +136,7 @@ const RunwayChart = ({
             <div>
               <p className="text-sm text-gray-600">Runway (Months)</p>
               <p className="text-lg font-semibold text-green-700">
-                {calculatedRunway >= 60 ? '60+' : calculatedRunway.toFixed(1)}
+                {displayRunwayMonths >= 60 ? '60+' : displayRunwayMonths.toFixed(1)}
               </p>
             </div>
           </div>
@@ -151,7 +146,7 @@ const RunwayChart = ({
         <EnhancedRunwayChart 
           savings={savingsAmount} 
           monthlyExpenses={monthlyExpenses} 
-          months={calculatedRunway}
+          months={displayRunwayMonths}
           incomeEvents={incomeEvents}
           incomeEnabled={incomeEnabled}
         />

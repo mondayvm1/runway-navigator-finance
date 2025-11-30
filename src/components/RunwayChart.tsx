@@ -44,92 +44,109 @@ const RunwayChart = ({
   incomeEnabled,
   hiddenCategories
 }: RunwayChartProps) => {
-  const [selectedMode, setSelectedMode] = useState<'cash' | 'investments' | 'all' | 'net'>('cash');
+  const [selectedCategories, setSelectedCategories] = useState<{
+    cash: boolean;
+    investments: boolean;
+    otherAssets: boolean;
+    netWorth: boolean;
+  }>({
+    cash: true,
+    investments: false,
+    otherAssets: false,
+    netWorth: false,
+  });
 
-  // Calculate different savings amounts based on mode
+  // Calculate savings based on selected categories
   const getSavingsAmount = () => {
-    switch (selectedMode) {
-      case 'cash':
-        return accountData.cash.reduce((sum, account) => sum + account.balance, 0);
-      case 'investments':
-        return accountData.investments.reduce((sum, account) => sum + account.balance, 0);
-      case 'all':
-        return getTotalAssets();
-      case 'net':
-        return getTotalAssets() - getTotalLiabilities();
-      default:
-        return 0;
+    let total = 0;
+    
+    if (selectedCategories.cash) {
+      total += accountData.cash.reduce((sum, account) => sum + account.balance, 0);
     }
+    if (selectedCategories.investments) {
+      total += accountData.investments.reduce((sum, account) => sum + account.balance, 0);
+    }
+    if (selectedCategories.otherAssets) {
+      total += accountData.otherAssets.reduce((sum, account) => sum + account.balance, 0);
+    }
+    
+    // If net worth is selected, subtract liabilities
+    if (selectedCategories.netWorth) {
+      total -= getTotalLiabilities();
+    }
+    
+    return total;
+  };
+
+  const toggleCategory = (category: keyof typeof selectedCategories) => {
+    setSelectedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+
+  const getModeLabel = () => {
+    const active = [];
+    if (selectedCategories.cash) active.push('Cash');
+    if (selectedCategories.investments) active.push('Investments');
+    if (selectedCategories.otherAssets) active.push('Other Assets');
+    if (selectedCategories.netWorth) return 'Net Worth (with liabilities)';
+    
+    return active.length > 0 ? active.join(' + ') : 'None Selected';
+  };
+
+  const getModeDescription = () => {
+    const active = [];
+    if (selectedCategories.cash) active.push('cash accounts');
+    if (selectedCategories.investments) active.push('investments');
+    if (selectedCategories.otherAssets) active.push('other assets');
+    
+    if (selectedCategories.netWorth) {
+      return 'Using selected assets minus all liabilities for runway calculation';
+    }
+    
+    return active.length > 0 
+      ? `Using ${active.join(', ')} for runway calculation`
+      : 'No categories selected';
   };
 
   // Choose which runway number to display based on income toggle
   const displayRunwayMonths = incomeEnabled ? runway.withIncomeMonths : runway.months;
-
   const savingsAmount = getSavingsAmount();
-
-  const getModeLabel = () => {
-    switch (selectedMode) {
-      case 'cash':
-        return 'Cash Only';
-      case 'investments':
-        return 'Investments Only';
-      case 'all':
-        return 'All Assets';
-      case 'net':
-        return 'Net Worth';
-      default:
-        return 'Cash Only';
-    }
-  };
-
-  const getModeDescription = () => {
-    switch (selectedMode) {
-      case 'cash':
-        return 'Using only cash accounts for runway calculation';
-      case 'investments':
-        return 'Using only investment accounts for runway calculation';
-      case 'all':
-        return 'Using all assets (cash + investments + other assets) for runway calculation';
-      case 'net':
-        return 'Using net worth (assets minus liabilities) for runway calculation';
-      default:
-        return '';
-    }
-  };
 
   return (
     <Card className="p-6">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium text-gray-700">Financial Runway Chart</h3>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
-              variant={selectedMode === 'cash' ? 'default' : 'outline'}
+              variant={selectedCategories.cash ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setSelectedMode('cash')}
+              onClick={() => toggleCategory('cash')}
             >
-              Cash Only
+              Cash
             </Button>
             <Button
-              variant={selectedMode === 'investments' ? 'default' : 'outline'}
+              variant={selectedCategories.investments ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setSelectedMode('investments')}
+              onClick={() => toggleCategory('investments')}
             >
               Investments
             </Button>
             <Button
-              variant={selectedMode === 'all' ? 'default' : 'outline'}
+              variant={selectedCategories.otherAssets ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setSelectedMode('all')}
+              onClick={() => toggleCategory('otherAssets')}
             >
-              All Assets
+              Other Assets
             </Button>
             <Button
-              variant={selectedMode === 'net' ? 'default' : 'outline'}
+              variant={selectedCategories.netWorth ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setSelectedMode('net')}
+              onClick={() => toggleCategory('netWorth')}
             >
-              Net Worth
+              - Liabilities
             </Button>
           </div>
         </div>

@@ -48,12 +48,10 @@ const RunwayChart = ({
     cash: boolean;
     investments: boolean;
     otherAssets: boolean;
-    netWorth: boolean;
   }>({
     cash: true,
     investments: false,
     otherAssets: false,
-    netWorth: false,
   });
 
   // Calculate savings based on selected categories
@@ -68,11 +66,6 @@ const RunwayChart = ({
     }
     if (selectedCategories.otherAssets) {
       total += accountData.otherAssets.reduce((sum, account) => sum + account.balance, 0);
-    }
-    
-    // If net worth is selected, subtract liabilities
-    if (selectedCategories.netWorth) {
-      total -= getTotalLiabilities();
     }
     
     return total;
@@ -90,7 +83,6 @@ const RunwayChart = ({
     if (selectedCategories.cash) active.push('Cash');
     if (selectedCategories.investments) active.push('Investments');
     if (selectedCategories.otherAssets) active.push('Other Assets');
-    if (selectedCategories.netWorth) return 'Net Worth (with liabilities)';
     
     return active.length > 0 ? active.join(' + ') : 'None Selected';
   };
@@ -100,10 +92,6 @@ const RunwayChart = ({
     if (selectedCategories.cash) active.push('cash accounts');
     if (selectedCategories.investments) active.push('investments');
     if (selectedCategories.otherAssets) active.push('other assets');
-    
-    if (selectedCategories.netWorth) {
-      return 'Using selected assets minus all liabilities for runway calculation';
-    }
     
     return active.length > 0 
       ? `Using ${active.join(', ')} for runway calculation`
@@ -140,13 +128,6 @@ const RunwayChart = ({
               onClick={() => toggleCategory('otherAssets')}
             >
               Other Assets
-            </Button>
-            <Button
-              variant={selectedCategories.netWorth ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => toggleCategory('netWorth')}
-            >
-              - Liabilities
             </Button>
           </div>
         </div>

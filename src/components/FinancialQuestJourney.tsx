@@ -9,6 +9,7 @@ interface FinancialQuestJourneyProps {
   runway: number;
   totalAssets: number;
   totalLiabilities: number;
+  creditCardDebt: number; // NEW: Just credit cards
   monthlyObligations: number;
   paymentsCleared: number;
   totalPayments: number;
@@ -31,6 +32,7 @@ const FinancialQuestJourney = ({
   runway,
   totalAssets,
   totalLiabilities,
+  creditCardDebt,
   monthlyObligations,
   paymentsCleared,
   totalPayments,
@@ -106,24 +108,21 @@ const FinancialQuestJourney = ({
       mysticalMessage: 'Six months of runway is the foundation upon which empires are built.',
     });
     
-    // Quest 5: Reduce Debt Ratio
-    const debtRatio = totalAssets > 0 ? (totalLiabilities / totalAssets) : 1;
-    const debtProgress = Math.max(0, (1 - debtRatio) * 100);
-    const debtPercentage = (debtRatio * 100).toFixed(1);
-    const targetDebt = totalAssets * 0.3; // 30% of assets
-    const debtToPayOff = Math.max(0, totalLiabilities - targetDebt);
+    // Quest 5: Slay Credit Card Debt (ONLY credit cards, not loans)
+    const creditDebtProgress = creditCardDebt <= 0 ? 100 : Math.max(0, 100 - (creditCardDebt / 1000) * 10); // Scale based on debt
+    const isDebtFree = creditCardDebt <= 0;
     quests.push({
       id: 'debt-slayer',
-      title: 'Slay the Dragon of Debt',
-      description: 'Reduce debt to less than 30% of assets',
-      detailLine: debtRatio < 0.3 && totalAssets > 0
-        ? `Debt ratio: ${debtPercentage}% — Dragon slain!`
-        : `Debt: ${formatCurrency(totalLiabilities)} (${debtPercentage}% of assets) • Pay off ${formatCurrency(debtToPayOff)} to reach 30%`,
+      title: 'Slay the Dragon of Credit Card Debt',
+      description: 'Pay off all credit card balances',
+      detailLine: isDebtFree
+        ? 'Credit card debt: $0 — Dragon slain!'
+        : `Credit card debt: ${formatCurrency(creditCardDebt)} remaining`,
       icon: Compass,
-      isComplete: debtRatio < 0.3 && totalAssets > 0,
-      progress: Math.min(debtProgress, 100),
+      isComplete: isDebtFree,
+      progress: isDebtFree ? 100 : Math.min(creditDebtProgress, 99),
       reward: '+200 Wisdom Points',
-      mysticalMessage: 'Each debt vanquished brings you closer to true financial freedom.',
+      mysticalMessage: 'Credit cards are the fiercest dragon. Each payment chips away at its armor.',
     });
     
     // Quest 6: Wealth Builder

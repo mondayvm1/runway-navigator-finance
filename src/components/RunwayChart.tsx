@@ -206,11 +206,14 @@ const RunwayChart = ({
           </div>
 
           {/* Stats Row */}
-          <div className="grid grid-cols-3 gap-4 mt-6 pt-4 border-t border-primary/20">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-4 border-t border-primary/20">
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-1">Runway</p>
               <p className="text-sm font-semibold text-foreground">
                 {displayRunwayMonths >= 60 ? '60+' : displayRunwayMonths.toFixed(1)} months
+              </p>
+              <p className="text-xs text-muted-foreground">
+                ({Math.round(displayRunwayMonths * 30)} days)
               </p>
             </div>
             <div className="text-center">
@@ -220,6 +223,15 @@ const RunwayChart = ({
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-1">Monthly Burn</p>
               <p className="text-sm font-semibold text-foreground">{formatCurrency(monthlyExpenses)}</p>
+              <p className="text-xs text-muted-foreground">
+                ({formatCurrency(monthlyExpenses / 30)}/day)
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground mb-1">Credit Card Debt</p>
+              <p className="text-sm font-semibold text-destructive">
+                {formatCurrency(accountData.credit.reduce((sum, acc) => sum + acc.balance, 0))}
+              </p>
             </div>
           </div>
         </div>

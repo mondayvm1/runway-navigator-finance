@@ -1,12 +1,13 @@
-
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { TrendingUp, TrendingDown, DollarSign, Target, Sparkles } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Target, Sparkles, ToggleLeft, ToggleRight } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { IncomeEvent } from './IncomeManager';
 
 interface NetWorthSummaryProps {
   assets: number;
   liabilities: number;
+  creditCardDebt?: number;
   incomeEvents?: IncomeEvent[];
   incomeEnabled?: boolean;
 }
@@ -14,10 +15,14 @@ interface NetWorthSummaryProps {
 const NetWorthSummary = ({ 
   assets, 
   liabilities, 
+  creditCardDebt = 0,
   incomeEvents = [],
   incomeEnabled = true 
 }: NetWorthSummaryProps) => {
-  const netWorth = assets - liabilities;
+  const [showCreditOnly, setShowCreditOnly] = useState(false);
+  
+  const displayedLiabilities = showCreditOnly ? creditCardDebt : liabilities;
+  const netWorth = assets - displayedLiabilities;
   const isPositive = netWorth >= 0;
   
   const calculateProjectedIncome = () => {
@@ -57,12 +62,30 @@ const NetWorthSummary = ({
           <div className="text-2xl font-bold text-green-700">{formatCurrency(assets)}</div>
         </div>
         
-        <div className="bg-red-50 p-4 rounded-lg text-center">
+        <div className="bg-red-50 p-4 rounded-lg text-center relative">
+          <button
+            onClick={() => setShowCreditOnly(!showCreditOnly)}
+            className="absolute top-2 right-2 p-1 rounded-full hover:bg-red-100 transition-colors"
+            title={showCreditOnly ? "Show all liabilities" : "Show credit cards only"}
+          >
+            {showCreditOnly ? (
+              <ToggleRight className="h-4 w-4 text-red-600" />
+            ) : (
+              <ToggleLeft className="h-4 w-4 text-red-400" />
+            )}
+          </button>
           <div className="flex justify-center mb-2">
             <TrendingDown className="h-6 w-6 text-red-600" />
           </div>
-          <div className="text-sm text-gray-500">Total Liabilities</div>
-          <div className="text-2xl font-bold text-red-700">{formatCurrency(liabilities)}</div>
+          <div className="text-sm text-gray-500">
+            {showCreditOnly ? '🐉 Credit Card Debt' : 'Total Liabilities'}
+          </div>
+          <div className="text-2xl font-bold text-red-700">{formatCurrency(displayedLiabilities)}</div>
+          {showCreditOnly && liabilities > creditCardDebt && (
+            <div className="text-xs text-gray-400 mt-1">
+              +{formatCurrency(liabilities - creditCardDebt)} slow debt
+            </div>
+          )}
         </div>
         
         <div className={`p-4 rounded-lg text-center ${isPositive ? 'bg-blue-50' : 'bg-yellow-50'}`}>

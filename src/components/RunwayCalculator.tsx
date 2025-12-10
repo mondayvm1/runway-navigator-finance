@@ -429,6 +429,7 @@ const RunwayCalculator = () => {
           <NetWorthSummary
             assets={getTotalAssets()} 
             liabilities={getTotalLiabilities()}
+            creditCardDebt={accountData.credit.reduce((sum, acc) => sum + acc.balance, 0)}
             incomeEvents={incomeEvents}
             incomeEnabled={incomeEnabled}
           />

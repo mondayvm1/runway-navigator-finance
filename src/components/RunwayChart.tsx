@@ -91,9 +91,13 @@ const RunwayChart = ({
     return active.length > 0 ? active.join(' + ') : 'None Selected';
   };
 
-  // Choose which runway number to display based on income toggle
-  const displayRunwayMonths = incomeEnabled ? runway.withIncomeMonths : runway.months;
+  // Calculate runway based on SELECTED categories, not total runway prop
   const savingsAmount = getSavingsAmount();
+  const calculatedRunwayMonths = monthlyExpenses > 0 ? savingsAmount / monthlyExpenses : 0;
+  // If income is enabled, add the additional months from income
+  const displayRunwayMonths = incomeEnabled 
+    ? calculatedRunwayMonths + runway.additionalMonthsFromIncome 
+    : calculatedRunwayMonths;
 
   // Calculate end date based on slider
   const getEndDate = (months: number) => {
@@ -205,33 +209,33 @@ const RunwayChart = ({
             </div>
           </div>
 
-          {/* Stats Row */}
+          {/* Stats Row - Mystical Theme */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-4 border-t border-primary/20">
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Runway</p>
-              <p className="text-sm font-semibold text-foreground">
-                {displayRunwayMonths >= 60 ? '60+' : displayRunwayMonths.toFixed(1)} months
+            <div className="text-center p-3 bg-gradient-to-b from-primary/10 to-transparent rounded-lg">
+              <p className="text-xs text-primary/80 mb-1 font-medium">⏳ Your Horizon</p>
+              <p className="text-lg font-bold text-foreground">
+                {displayRunwayMonths >= 60 ? '60+' : displayRunwayMonths.toFixed(1)} <span className="text-sm font-normal">months</span>
               </p>
               <p className="text-xs text-muted-foreground">
-                ({Math.round(displayRunwayMonths * 30)} days)
+                {Math.round(displayRunwayMonths * 30).toLocaleString()} days of freedom
               </p>
             </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Available Funds</p>
-              <p className="text-sm font-semibold text-foreground">{formatCurrency(savingsAmount)}</p>
+            <div className="text-center p-3 bg-gradient-to-b from-emerald-500/10 to-transparent rounded-lg">
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1 font-medium">💰 War Chest</p>
+              <p className="text-lg font-bold text-foreground">{formatCurrency(savingsAmount)}</p>
+              <p className="text-xs text-muted-foreground">{getModeLabel()}</p>
             </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Monthly Burn</p>
-              <p className="text-sm font-semibold text-foreground">{formatCurrency(monthlyExpenses)}</p>
-              <p className="text-xs text-muted-foreground">
-                ({formatCurrency(monthlyExpenses / 30)}/day)
-              </p>
+            <div className="text-center p-3 bg-gradient-to-b from-amber-500/10 to-transparent rounded-lg">
+              <p className="text-xs text-amber-600 dark:text-amber-400 mb-1 font-medium">🔥 Daily Burn</p>
+              <p className="text-lg font-bold text-foreground">{formatCurrency(monthlyExpenses / 30)}</p>
+              <p className="text-xs text-muted-foreground">{formatCurrency(monthlyExpenses)}/month</p>
             </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Credit Card Debt</p>
-              <p className="text-sm font-semibold text-destructive">
+            <div className="text-center p-3 bg-gradient-to-b from-destructive/10 to-transparent rounded-lg">
+              <p className="text-xs text-destructive mb-1 font-medium">🐉 The Dragon</p>
+              <p className="text-lg font-bold text-destructive">
                 {formatCurrency(accountData.credit.reduce((sum, acc) => sum + acc.balance, 0))}
               </p>
+              <p className="text-xs text-muted-foreground">Credit card debt</p>
             </div>
           </div>
         </div>

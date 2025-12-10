@@ -603,6 +603,7 @@ const RunwayCalculator = () => {
                   runway={runway.months}
                   totalAssets={getTotalAssets()}
                   totalLiabilities={getTotalLiabilities()}
+                  creditCardDebt={accountData.credit.reduce((sum, acc) => sum + acc.balance, 0)}
                   monthlyObligations={
                     accountData.credit.reduce((sum, acc) => sum + (acc.minimumPayment || 0), 0) +
                     accountData.loans.reduce((sum, acc) => sum + (acc.minimumPayment || (acc.balance * 0.02)), 0)

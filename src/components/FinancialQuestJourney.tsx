@@ -18,6 +18,7 @@ interface Quest {
   id: string;
   title: string;
   description: string;
+  detailLine: string; // NEW: Shows actual numbers
   icon: any;
   isComplete: boolean;
   progress: number;
@@ -44,6 +45,9 @@ const FinancialQuestJourney = ({
       id: 'clear-obligations',
       title: 'The Path of Liberation',
       description: `Clear all ${totalPayments} monthly payment obligations`,
+      detailLine: totalPayments > 0 
+        ? `${paymentsCleared} of ${totalPayments} obligations cleared • ${formatCurrency(monthlyObligations)}/mo remaining`
+        : 'No obligations to clear!',
       icon: Zap,
       isComplete: paymentsCleared === totalPayments && totalPayments > 0,
       progress: paymentProgress,
@@ -53,10 +57,14 @@ const FinancialQuestJourney = ({
     
     // Quest 2: Achieve Positive Net Worth
     const netWorthProgress = netWorth > 0 ? 100 : Math.min(((netWorth + Math.abs(totalLiabilities)) / Math.abs(totalLiabilities)) * 100, 99);
+    const distanceToPositive = netWorth < 0 ? Math.abs(netWorth) : 0;
     quests.push({
       id: 'positive-worth',
       title: 'Cross the Threshold of Prosperity',
       description: 'Achieve positive net worth',
+      detailLine: netWorth >= 0 
+        ? `Net worth: ${formatCurrency(netWorth)} — You've crossed the threshold!`
+        : `Net worth: ${formatCurrency(netWorth)} • ${formatCurrency(distanceToPositive)} to go`,
       icon: TrendingUp,
       isComplete: netWorth > 0,
       progress: netWorth > 0 ? 100 : Math.max(0, netWorthProgress),
@@ -66,10 +74,14 @@ const FinancialQuestJourney = ({
     
     // Quest 3: Build 3-Month Runway
     const threeMonthProgress = Math.min((runway / 3) * 100, 100);
+    const monthsNeededFor3 = Math.max(0, 3 - runway);
     quests.push({
       id: 'three-month-shield',
       title: 'Forge the Shield of Security',
       description: 'Build a 3-month financial runway',
+      detailLine: runway >= 3 
+        ? `Runway: ${runway.toFixed(1)} months — Shield is forged!`
+        : `Runway: ${runway.toFixed(1)} of 3 months • ${monthsNeededFor3.toFixed(1)} months to go`,
       icon: Shield,
       isComplete: runway >= 3,
       progress: threeMonthProgress,
@@ -79,10 +91,14 @@ const FinancialQuestJourney = ({
     
     // Quest 4: Build 6-Month Runway
     const sixMonthProgress = Math.min((runway / 6) * 100, 100);
+    const monthsNeededFor6 = Math.max(0, 6 - runway);
     quests.push({
       id: 'six-month-fortress',
       title: 'Construct the Fortress of Freedom',
       description: 'Build a 6-month financial runway',
+      detailLine: runway >= 6 
+        ? `Runway: ${runway.toFixed(1)} months — Fortress complete!`
+        : `Runway: ${runway.toFixed(1)} of 6 months • ${monthsNeededFor6.toFixed(1)} months to go`,
       icon: Target,
       isComplete: runway >= 6,
       progress: sixMonthProgress,
@@ -93,10 +109,16 @@ const FinancialQuestJourney = ({
     // Quest 5: Reduce Debt Ratio
     const debtRatio = totalAssets > 0 ? (totalLiabilities / totalAssets) : 1;
     const debtProgress = Math.max(0, (1 - debtRatio) * 100);
+    const debtPercentage = (debtRatio * 100).toFixed(1);
+    const targetDebt = totalAssets * 0.3; // 30% of assets
+    const debtToPayOff = Math.max(0, totalLiabilities - targetDebt);
     quests.push({
       id: 'debt-slayer',
       title: 'Slay the Dragon of Debt',
       description: 'Reduce debt to less than 30% of assets',
+      detailLine: debtRatio < 0.3 && totalAssets > 0
+        ? `Debt ratio: ${debtPercentage}% — Dragon slain!`
+        : `Debt: ${formatCurrency(totalLiabilities)} (${debtPercentage}% of assets) • Pay off ${formatCurrency(debtToPayOff)} to reach 30%`,
       icon: Compass,
       isComplete: debtRatio < 0.3 && totalAssets > 0,
       progress: Math.min(debtProgress, 100),
@@ -106,10 +128,14 @@ const FinancialQuestJourney = ({
     
     // Quest 6: Wealth Builder
     const wealthProgress = Math.min((totalAssets / 100000) * 100, 100);
+    const assetsToGo = Math.max(0, 100000 - totalAssets);
     quests.push({
       id: 'wealth-master',
       title: 'Ascend to Wealth Mastery',
       description: 'Accumulate $100,000 in total assets',
+      detailLine: totalAssets >= 100000
+        ? `Assets: ${formatCurrency(totalAssets)} — Mastery achieved!`
+        : `Assets: ${formatCurrency(totalAssets)} • ${formatCurrency(assetsToGo)} to reach $100k`,
       icon: Crown,
       isComplete: totalAssets >= 100000,
       progress: wealthProgress,
@@ -186,8 +212,14 @@ const FinancialQuestJourney = ({
                     </div>
                     <div className="flex-1">
                       <h4 className="font-bold text-slate-800 mb-1">{quest.title}</h4>
-                      <p className="text-sm text-slate-600 mb-2">{quest.description}</p>
-                      <p className="text-xs italic text-slate-500">{quest.mysticalMessage}</p>
+                      <p className="text-sm text-slate-600 mb-1">{quest.description}</p>
+                      {/* NEW: Actual numbers line */}
+                      <p className={`text-sm font-semibold ${
+                        quest.isComplete ? 'text-green-700' : 'text-primary'
+                      }`}>
+                        {quest.detailLine}
+                      </p>
+                      <p className="text-xs italic text-slate-500 mt-2">{quest.mysticalMessage}</p>
                     </div>
                   </div>
                   

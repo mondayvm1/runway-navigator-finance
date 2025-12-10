@@ -209,11 +209,72 @@ const RunwayChart = ({
             </div>
           </div>
 
-          {/* Stats Row - Mystical Theme */}
+          {/* Stats Row - Dynamic based on slider position */}
           {(() => {
             const creditCardDebt = accountData.credit.reduce((sum, acc) => sum + acc.balance, 0);
             const totalCreditLimit = accountData.credit.reduce((sum, acc) => sum + (acc.creditLimit || 0), 0);
             const availableCredit = Math.max(0, totalCreditLimit - creditCardDebt);
+            
+            // Calculate projected values at the slider's time horizon
+            const calculateProjectedValues = () => {
+              let projectedFunds = savingsAmount;
+              let projectedCreditDebt = creditCardDebt;
+              
+              // Process each month up to the visible months
+              for (let month = 1; month <= visibleMonths; month++) {
+                // Subtract expenses
+                projectedFunds -= monthlyExpenses;
+                
+                // Add income if enabled
+                if (incomeEnabled && incomeEvents.length > 0) {
+                  const currentDate = new Date();
+                  currentDate.setMonth(currentDate.getMonth() + month);
+                  
+                  incomeEvents.forEach(event => {
+                    const eventStart = new Date(event.date);
+                    const eventEnd = event.endDate ? new Date(event.endDate) : null;
+                    
+                    // Check if income event is active in this month
+                    if (currentDate >= eventStart && (!eventEnd || currentDate <= eventEnd)) {
+                      if (event.frequency === 'monthly') {
+                        projectedFunds += event.amount;
+                      } else if (event.frequency === 'yearly') {
+                        const eventMonth = eventStart.getMonth();
+                        if (currentDate.getMonth() === eventMonth) {
+                          projectedFunds += event.amount;
+                        }
+                      } else if (event.frequency === 'one-time') {
+                        const sameMonth = currentDate.getMonth() === eventStart.getMonth() && 
+                                         currentDate.getFullYear() === eventStart.getFullYear();
+                        if (sameMonth) {
+                          projectedFunds += event.amount;
+                        }
+                      }
+                    }
+                  });
+                }
+              }
+              
+              return {
+                projectedFunds,
+                projectedCreditDebt, // Could add payment projections later
+                projectedAvailableCredit: Math.max(0, totalCreditLimit - projectedCreditDebt)
+              };
+            };
+            
+            const projected = calculateProjectedValues();
+            const projectedRunwayFromThatPoint = projected.projectedFunds > 0 && monthlyExpenses > 0 
+              ? projected.projectedFunds / monthlyExpenses 
+              : 0;
+            
+            // Status indicator for projected funds
+            const getFundsStatus = (funds: number) => {
+              if (funds > savingsAmount) return { color: 'text-emerald-600 dark:text-emerald-400', label: '📈 Growing' };
+              if (funds > 0) return { color: 'text-amber-600 dark:text-amber-400', label: '📉 Depleting' };
+              return { color: 'text-destructive', label: '⚠️ Empty' };
+            };
+            
+            const fundsStatus = getFundsStatus(projected.projectedFunds);
             
             return (
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-6 pt-4 border-t border-primary/20">
@@ -227,23 +288,27 @@ const RunwayChart = ({
                   </p>
                 </div>
                 <div className="text-center p-3 bg-gradient-to-b from-emerald-500/10 to-transparent rounded-lg">
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1 font-medium">💰 War Chest</p>
-                  <p className="text-lg font-bold text-foreground">{formatCurrency(savingsAmount)}</p>
-                  <p className="text-xs text-muted-foreground">{getModeLabel()}</p>
+                  <p className={`text-xs mb-1 font-medium ${fundsStatus.color}`}>💰 War Chest @ {getEndDate(visibleMonths)}</p>
+                  <p className={`text-lg font-bold ${projected.projectedFunds < 0 ? 'text-destructive' : 'text-foreground'}`}>
+                    {formatCurrency(projected.projectedFunds)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {projected.projectedFunds > 0 ? `+${projectedRunwayFromThatPoint.toFixed(1)} mo left` : 'Funds depleted'}
+                  </p>
                 </div>
                 <div className="text-center p-3 bg-gradient-to-b from-amber-500/10 to-transparent rounded-lg">
-                  <p className="text-xs text-amber-600 dark:text-amber-400 mb-1 font-medium">🔥 Daily Burn</p>
-                  <p className="text-lg font-bold text-foreground">{formatCurrency(monthlyExpenses / 30)}</p>
-                  <p className="text-xs text-muted-foreground">{formatCurrency(monthlyExpenses)}/mo</p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mb-1 font-medium">🔥 Total Burn</p>
+                  <p className="text-lg font-bold text-foreground">{formatCurrency(monthlyExpenses * visibleMonths)}</p>
+                  <p className="text-xs text-muted-foreground">over {visibleMonths} months</p>
                 </div>
                 <div className="text-center p-3 bg-gradient-to-b from-destructive/10 to-transparent rounded-lg">
                   <p className="text-xs text-destructive mb-1 font-medium">🐉 The Dragon</p>
-                  <p className="text-lg font-bold text-destructive">{formatCurrency(creditCardDebt)}</p>
+                  <p className="text-lg font-bold text-destructive">{formatCurrency(projected.projectedCreditDebt)}</p>
                   <p className="text-xs text-muted-foreground">Credit debt</p>
                 </div>
                 <div className="text-center p-3 bg-gradient-to-b from-blue-500/10 to-transparent rounded-lg">
                   <p className="text-xs text-blue-600 dark:text-blue-400 mb-1 font-medium">🛡️ Credit Shield</p>
-                  <p className="text-lg font-bold text-foreground">{formatCurrency(availableCredit)}</p>
+                  <p className="text-lg font-bold text-foreground">{formatCurrency(projected.projectedAvailableCredit)}</p>
                   <p className="text-xs text-muted-foreground">of {formatCurrency(totalCreditLimit)}</p>
                 </div>
               </div>

@@ -210,34 +210,45 @@ const RunwayChart = ({
           </div>
 
           {/* Stats Row - Mystical Theme */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-4 border-t border-primary/20">
-            <div className="text-center p-3 bg-gradient-to-b from-primary/10 to-transparent rounded-lg">
-              <p className="text-xs text-primary/80 mb-1 font-medium">⏳ Your Horizon</p>
-              <p className="text-lg font-bold text-foreground">
-                {displayRunwayMonths >= 60 ? '60+' : displayRunwayMonths.toFixed(1)} <span className="text-sm font-normal">months</span>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {Math.round(displayRunwayMonths * 30).toLocaleString()} days of freedom
-              </p>
-            </div>
-            <div className="text-center p-3 bg-gradient-to-b from-emerald-500/10 to-transparent rounded-lg">
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1 font-medium">💰 War Chest</p>
-              <p className="text-lg font-bold text-foreground">{formatCurrency(savingsAmount)}</p>
-              <p className="text-xs text-muted-foreground">{getModeLabel()}</p>
-            </div>
-            <div className="text-center p-3 bg-gradient-to-b from-amber-500/10 to-transparent rounded-lg">
-              <p className="text-xs text-amber-600 dark:text-amber-400 mb-1 font-medium">🔥 Daily Burn</p>
-              <p className="text-lg font-bold text-foreground">{formatCurrency(monthlyExpenses / 30)}</p>
-              <p className="text-xs text-muted-foreground">{formatCurrency(monthlyExpenses)}/month</p>
-            </div>
-            <div className="text-center p-3 bg-gradient-to-b from-destructive/10 to-transparent rounded-lg">
-              <p className="text-xs text-destructive mb-1 font-medium">🐉 The Dragon</p>
-              <p className="text-lg font-bold text-destructive">
-                {formatCurrency(accountData.credit.reduce((sum, acc) => sum + acc.balance, 0))}
-              </p>
-              <p className="text-xs text-muted-foreground">Credit card debt</p>
-            </div>
-          </div>
+          {(() => {
+            const creditCardDebt = accountData.credit.reduce((sum, acc) => sum + acc.balance, 0);
+            const totalCreditLimit = accountData.credit.reduce((sum, acc) => sum + (acc.creditLimit || 0), 0);
+            const availableCredit = Math.max(0, totalCreditLimit - creditCardDebt);
+            
+            return (
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-6 pt-4 border-t border-primary/20">
+                <div className="text-center p-3 bg-gradient-to-b from-primary/10 to-transparent rounded-lg">
+                  <p className="text-xs text-primary/80 mb-1 font-medium">⏳ Your Horizon</p>
+                  <p className="text-lg font-bold text-foreground">
+                    {displayRunwayMonths >= 60 ? '60+' : displayRunwayMonths.toFixed(1)} <span className="text-sm font-normal">mo</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {Math.round(displayRunwayMonths * 30).toLocaleString()} days
+                  </p>
+                </div>
+                <div className="text-center p-3 bg-gradient-to-b from-emerald-500/10 to-transparent rounded-lg">
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1 font-medium">💰 War Chest</p>
+                  <p className="text-lg font-bold text-foreground">{formatCurrency(savingsAmount)}</p>
+                  <p className="text-xs text-muted-foreground">{getModeLabel()}</p>
+                </div>
+                <div className="text-center p-3 bg-gradient-to-b from-amber-500/10 to-transparent rounded-lg">
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mb-1 font-medium">🔥 Daily Burn</p>
+                  <p className="text-lg font-bold text-foreground">{formatCurrency(monthlyExpenses / 30)}</p>
+                  <p className="text-xs text-muted-foreground">{formatCurrency(monthlyExpenses)}/mo</p>
+                </div>
+                <div className="text-center p-3 bg-gradient-to-b from-destructive/10 to-transparent rounded-lg">
+                  <p className="text-xs text-destructive mb-1 font-medium">🐉 The Dragon</p>
+                  <p className="text-lg font-bold text-destructive">{formatCurrency(creditCardDebt)}</p>
+                  <p className="text-xs text-muted-foreground">Credit debt</p>
+                </div>
+                <div className="text-center p-3 bg-gradient-to-b from-blue-500/10 to-transparent rounded-lg">
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mb-1 font-medium">🛡️ Credit Shield</p>
+                  <p className="text-lg font-bold text-foreground">{formatCurrency(availableCredit)}</p>
+                  <p className="text-xs text-muted-foreground">of {formatCurrency(totalCreditLimit)}</p>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </Card>

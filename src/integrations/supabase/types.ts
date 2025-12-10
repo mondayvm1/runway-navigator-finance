@@ -466,6 +466,9 @@ export type Database = {
         Row: {
           account_id: string
           account_type: string | null
+          autopay_amount_type: string | null
+          autopay_custom_amount: number | null
+          autopay_enabled: boolean | null
           balance: number
           category: string
           created_at: string
@@ -474,15 +477,20 @@ export type Database = {
           id: string
           interest_rate: number | null
           is_hidden: boolean
+          is_paid_off: boolean | null
           minimum_payment: number | null
           name: string
           snapshot_id: string | null
+          statement_date: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
           account_id: string
           account_type?: string | null
+          autopay_amount_type?: string | null
+          autopay_custom_amount?: number | null
+          autopay_enabled?: boolean | null
           balance?: number
           category: string
           created_at?: string
@@ -491,15 +499,20 @@ export type Database = {
           id?: string
           interest_rate?: number | null
           is_hidden?: boolean
+          is_paid_off?: boolean | null
           minimum_payment?: number | null
           name: string
           snapshot_id?: string | null
+          statement_date?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
           account_id?: string
           account_type?: string | null
+          autopay_amount_type?: string | null
+          autopay_custom_amount?: number | null
+          autopay_enabled?: boolean | null
           balance?: number
           category?: string
           created_at?: string
@@ -508,9 +521,11 @@ export type Database = {
           id?: string
           interest_rate?: number | null
           is_hidden?: boolean
+          is_paid_off?: boolean | null
           minimum_payment?: number | null
           name?: string
           snapshot_id?: string | null
+          statement_date?: number | null
           updated_at?: string
           user_id?: string
         }

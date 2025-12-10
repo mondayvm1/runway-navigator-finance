@@ -14,6 +14,11 @@ export interface AccountItem {
   creditLimit?: number;
   dueDate?: string;
   minimumPayment?: number;
+  statementDate?: number;
+  autopayEnabled?: boolean;
+  autopayAmountType?: 'MINIMUM' | 'FULL_BALANCE' | 'CUSTOM';
+  autopayCustomAmount?: number;
+  isPaidOff?: boolean;
 }
 
 export interface AccountData {
@@ -108,7 +113,12 @@ export const useFinancialData = () => {
           interestRate: Number(account.interest_rate || 0),
           creditLimit: account.credit_limit ? Number(account.credit_limit) : undefined,
           dueDate: account.due_date || undefined,
-          minimumPayment: account.minimum_payment ? Number(account.minimum_payment) : undefined
+          minimumPayment: account.minimum_payment ? Number(account.minimum_payment) : undefined,
+          statementDate: account.statement_date ?? undefined,
+          autopayEnabled: account.autopay_enabled ?? false,
+          autopayAmountType: (account.autopay_amount_type as 'MINIMUM' | 'FULL_BALANCE' | 'CUSTOM') || 'MINIMUM',
+          autopayCustomAmount: account.autopay_custom_amount ? Number(account.autopay_custom_amount) : undefined,
+          isPaidOff: account.is_paid_off ?? false,
         };
 
         if (account.category in groupedAccounts) {
@@ -181,7 +191,12 @@ export const useFinancialData = () => {
             credit_limit: account.creditLimit || null,
             due_date: account.dueDate || null,
             minimum_payment: account.minimumPayment || null,
-            is_hidden: hiddenCategories[category as keyof HiddenCategories]
+            is_hidden: hiddenCategories[category as keyof HiddenCategories],
+            statement_date: account.statementDate || null,
+            autopay_enabled: account.autopayEnabled ?? false,
+            autopay_amount_type: account.autopayAmountType || 'MINIMUM',
+            autopay_custom_amount: account.autopayCustomAmount || null,
+            is_paid_off: account.isPaidOff ?? false,
           });
         });
       });
@@ -341,6 +356,11 @@ export const useFinancialData = () => {
     if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
     if (updates.minimumPayment !== undefined) dbUpdates.minimum_payment = updates.minimumPayment;
     if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.statementDate !== undefined) dbUpdates.statement_date = updates.statementDate;
+    if (updates.autopayEnabled !== undefined) dbUpdates.autopay_enabled = updates.autopayEnabled;
+    if (updates.autopayAmountType !== undefined) dbUpdates.autopay_amount_type = updates.autopayAmountType;
+    if (updates.autopayCustomAmount !== undefined) dbUpdates.autopay_custom_amount = updates.autopayCustomAmount;
+    if (updates.isPaidOff !== undefined) dbUpdates.is_paid_off = updates.isPaidOff;
     
     // Debug logging
     console.log('Updating account:', { dbUpdates, id, userId: user.id });

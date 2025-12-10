@@ -1,4 +1,3 @@
-
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 import { IncomeEvent } from './IncomeManager';
@@ -9,6 +8,7 @@ interface EnhancedRunwayChartProps {
   months: number;
   incomeEvents?: IncomeEvent[];
   incomeEnabled?: boolean;
+  visibleMonths?: number;
 }
 
 const EnhancedRunwayChart = ({ 
@@ -16,7 +16,8 @@ const EnhancedRunwayChart = ({
   monthlyExpenses, 
   months, 
   incomeEvents = [],
-  incomeEnabled = true 
+  incomeEnabled = true,
+  visibleMonths = 12
 }: EnhancedRunwayChartProps) => {
   
   const generateChartData = () => {
@@ -27,32 +28,8 @@ const EnhancedRunwayChart = ({
     let balanceWithoutIncome = savings;
     const today = new Date();
     
-    // Base horizon from the simple months estimate we pass in
-    const baseMonths = Math.max(Math.ceil(months) + 6, 12); // at least 1 year, extend a bit past
-
-    // Find how far out income events matter
-    let lastIncomeOffset = 0;
-    incomeEvents.forEach(event => {
-      const eventDate = new Date(event.date);
-      const offset = (eventDate.getFullYear() - today.getFullYear()) * 12 + (eventDate.getMonth() - today.getMonth());
-      if (offset > lastIncomeOffset) {
-        lastIncomeOffset = offset;
-      }
-      // If it’s recurring without an end date, give it extra horizon
-      if ((event.frequency === 'monthly' || event.frequency === 'yearly') && !event.endDate) {
-        lastIncomeOffset = Math.max(lastIncomeOffset, offset + 24); // +2 years
-      }
-      if (event.endDate) {
-        const endDate = new Date(event.endDate);
-        const endOffset = (endDate.getFullYear() - today.getFullYear()) * 12 + (endDate.getMonth() - today.getMonth());
-        if (endOffset > lastIncomeOffset) {
-          lastIncomeOffset = endOffset;
-        }
-      }
-    });
-
-    // Final horizon: enough to cover runway + income, but never more than 5 years
-    const endMonth = Math.min(Math.max(baseMonths, lastIncomeOffset + 12), 60);
+    // Use visibleMonths as the chart horizon
+    const endMonth = visibleMonths;
     
     for (let i = 0; i <= endMonth; i++) {
       const projectionDate = new Date(today);
@@ -109,7 +86,7 @@ const EnhancedRunwayChart = ({
         incomeEnabled: incomeEnabled
       });
       
-      // Stop if both are deeply negative and no future income
+      // Stop if both are deeply negative
       if (balanceWithIncome < -100000 && balanceWithoutIncome < -100000) {
         break;
       }
@@ -124,10 +101,10 @@ const EnhancedRunwayChart = ({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-4 border border-gray-200 shadow-lg rounded-lg">
-          <p className="font-medium text-gray-800">{data.monthLabel}</p>
+        <div className="bg-background p-4 border border-border shadow-lg rounded-lg">
+          <p className="font-medium text-foreground">{data.monthLabel}</p>
           <div className="space-y-1 mt-2">
-            <p className={`${incomeEnabled ? 'text-blue-600' : 'text-gray-600'}`}>
+            <p className={`${incomeEnabled ? 'text-primary' : 'text-muted-foreground'}`}>
               {incomeEnabled ? 'Balance with Income' : 'Balance'}: {formatCurrency(data.balance)}
             </p>
             {incomeEnabled && data.income > 0 && (
@@ -136,12 +113,12 @@ const EnhancedRunwayChart = ({
               </p>
             )}
             {incomeEnabled && (
-              <p className="text-gray-600 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Without income: {formatCurrency(data.balanceWithoutIncome)}
               </p>
             )}
             {!incomeEnabled && incomeEvents.length > 0 && (
-              <p className="text-gray-500 text-xs">
+              <p className="text-muted-foreground text-xs">
                 Income planning disabled
               </p>
             )}
@@ -158,12 +135,12 @@ const EnhancedRunwayChart = ({
         <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
           <defs>
             <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={incomeEnabled ? "#3b82f6" : "#6b7280"} stopOpacity={0.3}/>
-              <stop offset="95%" stopColor={incomeEnabled ? "#3b82f6" : "#6b7280"} stopOpacity={0.05}/>
+              <stop offset="5%" stopColor={incomeEnabled ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))"} stopOpacity={0.3}/>
+              <stop offset="95%" stopColor={incomeEnabled ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))"} stopOpacity={0.05}/>
             </linearGradient>
             <linearGradient id="noIncomeGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2}/>
-              <stop offset="95%" stopColor="#ef4444" stopOpacity={0.05}/>
+              <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.2}/>
+              <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0.05}/>
             </linearGradient>
           </defs>
           <XAxis 
@@ -182,7 +159,7 @@ const EnhancedRunwayChart = ({
             <Area
               type="monotone"
               dataKey="balanceWithoutIncome"
-              stroke="#ef4444"
+              stroke="hsl(var(--destructive))"
               strokeWidth={1}
               fill="url(#noIncomeGradient)"
               strokeDasharray="5,5"
@@ -193,29 +170,29 @@ const EnhancedRunwayChart = ({
           <Area
             type="monotone"
             dataKey="balance"
-            stroke={incomeEnabled ? "#3b82f6" : "#6b7280"}
+            stroke={incomeEnabled ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))"}
             strokeWidth={2}
             fill="url(#balanceGradient)"
           />
           
           {/* Zero line */}
-          <ReferenceLine y={0} stroke="#dc2626" strokeDasharray="3,3" />
+          <ReferenceLine y={0} stroke="hsl(var(--destructive))" strokeDasharray="3,3" />
         </AreaChart>
       </ResponsiveContainer>
       
       <div className="flex items-center justify-center gap-6 mt-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className={`w-3 h-3 rounded ${incomeEnabled ? 'bg-blue-500' : 'bg-gray-400'}`}></div>
+          <div className={`w-3 h-3 rounded ${incomeEnabled ? 'bg-primary' : 'bg-muted-foreground'}`}></div>
           <span>{incomeEnabled ? 'With Planned Income' : 'Current Balance'}</span>
         </div>
         {incomeEnabled && (
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 border-2 border-red-500 border-dashed rounded"></div>
+            <div className="w-3 h-3 border-2 border-destructive border-dashed rounded"></div>
             <span>Without Income</span>
           </div>
         )}
         {!incomeEnabled && incomeEvents.length > 0 && (
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-muted-foreground">
             Income planning disabled ({incomeEvents.length} event{incomeEvents.length > 1 ? 's' : ''} available)
           </div>
         )}

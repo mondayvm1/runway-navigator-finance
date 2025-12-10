@@ -3,7 +3,9 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { CreditCard, Calendar, DollarSign, TrendingDown, Calculator } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CreditCard, Calendar, Calculator, AlertTriangle, CheckCircle2, Shield } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { AccountItem } from '@/hooks/useFinancialData';
 
@@ -17,10 +19,16 @@ interface CreditSummaryProps {
 }
 
 const CreditSummary = ({ accounts }: CreditSummaryProps) => {
-  const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
+  const activeAccounts = accounts.filter(a => !a.isPaidOff);
+  const paidOffAccounts = accounts.filter(a => a.isPaidOff);
+  
+  const totalBalance = activeAccounts.reduce((sum, account) => sum + account.balance, 0);
   const totalCreditLimit = accounts.reduce((sum, account) => sum + (account.creditLimit || 0), 0);
   const totalAvailableCredit = totalCreditLimit - totalBalance;
   const overallUtilization = totalCreditLimit > 0 ? (totalBalance / totalCreditLimit) * 100 : 0;
+  
+  const accountsWithAutopay = accounts.filter(a => a.autopayEnabled).length;
+  const accountsWithoutAutopay = accounts.filter(a => !a.isPaidOff && !a.autopayEnabled).length;
 
   return (
     <Card className="p-4 mb-4 bg-blue-50 border-blue-200">
@@ -72,6 +80,26 @@ const CreditSummary = ({ accounts }: CreditSummaryProps) => {
           />
         </div>
       </div>
+
+      {/* Autopay Status */}
+      <div className="mt-3 flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-1">
+          <Shield className="h-4 w-4 text-green-600" />
+          <span className="text-gray-600">{accountsWithAutopay} with autopay</span>
+        </div>
+        {accountsWithoutAutopay > 0 && (
+          <div className="flex items-center gap-1 text-amber-600">
+            <AlertTriangle className="h-4 w-4" />
+            <span>{accountsWithoutAutopay} without autopay</span>
+          </div>
+        )}
+        {paidOffAccounts.length > 0 && (
+          <div className="flex items-center gap-1 text-green-600">
+            <CheckCircle2 className="h-4 w-4" />
+            <span>{paidOffAccounts.length} paid off</span>
+          </div>
+        )}
+      </div>
     </Card>
   );
 };
@@ -79,18 +107,17 @@ const CreditSummary = ({ accounts }: CreditSummaryProps) => {
 const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps) => {
   const [customPayment, setCustomPayment] = useState(account.minimumPayment || 0);
 
+  const effectiveBalance = account.isPaidOff ? 0 : account.balance;
+
   const calculatePayoffScenarios = () => {
-    if (!account.balance || !account.interestRate) return null;
+    if (!effectiveBalance || !account.interestRate) return null;
 
     const monthlyRate = account.interestRate / 100 / 12;
-    const minPayment = account.minimumPayment || Math.max(25, account.balance * 0.02);
+    const minPayment = account.minimumPayment || Math.max(25, effectiveBalance * 0.02);
     
-    // Scenario 1: Minimum payments
-    const minScenario = calculatePayoff(account.balance, monthlyRate, minPayment);
-    
-    // Scenario 2: Custom payment
+    const minScenario = calculatePayoff(effectiveBalance, monthlyRate, minPayment);
     const customScenario = customPayment > minPayment ? 
-      calculatePayoff(account.balance, monthlyRate, customPayment) : null;
+      calculatePayoff(effectiveBalance, monthlyRate, customPayment) : null;
 
     return { minScenario, customScenario, minPayment };
   };
@@ -123,13 +150,47 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
     };
   };
 
-  const availableCredit = (account.creditLimit || 0) - account.balance;
-  const utilizationRate = account.creditLimit ? (account.balance / account.creditLimit) * 100 : 0;
+  const getNextStatementDate = () => {
+    if (!account.statementDate) return null;
+    const today = new Date();
+    const statementDay = account.statementDate;
+    let nextStatement = new Date(today.getFullYear(), today.getMonth(), statementDay);
+    if (nextStatement <= today) {
+      nextStatement = new Date(today.getFullYear(), today.getMonth() + 1, statementDay);
+    }
+    return nextStatement.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const getNextPaymentDate = () => {
+    if (!account.dueDate) return null;
+    return new Date(account.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const availableCredit = (account.creditLimit || 0) - effectiveBalance;
+  const utilizationRate = account.creditLimit ? (effectiveBalance / account.creditLimit) * 100 : 0;
   const scenarios = calculatePayoffScenarios();
 
   return (
-    <Card className="p-4 mt-2 bg-red-50 border-red-200">
+    <Card className={`p-4 mt-2 ${account.isPaidOff ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
       <div className="space-y-4">
+        {/* Paid Off Toggle */}
+        <div className="flex items-center justify-between p-2 bg-white rounded border">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className={`h-4 w-4 ${account.isPaidOff ? 'text-green-600' : 'text-gray-400'}`} />
+            <Label className="text-sm font-medium">Card Paid Off</Label>
+          </div>
+          <Switch
+            checked={account.isPaidOff || false}
+            onCheckedChange={(checked) => onUpdateAccount(account.id, { isPaidOff: checked })}
+          />
+        </div>
+
+        {account.isPaidOff && (
+          <div className="bg-green-100 text-green-800 p-3 rounded text-sm text-center">
+            🎉 This card is paid off! Balance treated as $0. Credit limit still counts toward available credit.
+          </div>
+        )}
+
         {/* Credit Card Details */}
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -141,6 +202,22 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
               onChange={(e) => {
                 const value = e.target.value === '' ? 0 : Number(e.target.value);
                 onUpdateAccount(account.id, { creditLimit: value });
+              }}
+              className="h-8 text-sm"
+            />
+          </div>
+          
+          <div>
+            <Label className="text-xs text-gray-600">Statement Day (1-31)</Label>
+            <Input
+              type="number"
+              min={1}
+              max={31}
+              placeholder="Day of month"
+              value={account.statementDate || ""}
+              onChange={(e) => {
+                const value = e.target.value === '' ? undefined : Math.min(31, Math.max(1, Number(e.target.value)));
+                onUpdateAccount(account.id, { statementDate: value });
               }}
               className="h-8 text-sm"
             />
@@ -197,8 +274,92 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
           </div>
         </div>
 
+        {/* Date Info */}
+        {(account.statementDate || account.dueDate) && (
+          <div className="flex gap-4 text-xs bg-white p-2 rounded border">
+            {account.statementDate && (
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3 text-blue-600" />
+                <span className="text-gray-600">Next statement:</span>
+                <span className="font-medium">{getNextStatementDate()}</span>
+              </div>
+            )}
+            {account.dueDate && (
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3 text-red-600" />
+                <span className="text-gray-600">Next payment:</span>
+                <span className="font-medium">{getNextPaymentDate()}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Autopay Settings */}
+        <div className="bg-white p-3 rounded border space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Shield className={`h-4 w-4 ${account.autopayEnabled ? 'text-green-600' : 'text-gray-400'}`} />
+              <Label className="text-sm font-medium">Autopay Enabled</Label>
+            </div>
+            <Switch
+              checked={account.autopayEnabled || false}
+              onCheckedChange={(checked) => onUpdateAccount(account.id, { autopayEnabled: checked })}
+            />
+          </div>
+
+          {!account.autopayEnabled && !account.isPaidOff && (
+            <div className="flex items-center gap-2 text-amber-600 text-xs bg-amber-50 p-2 rounded">
+              <AlertTriangle className="h-3 w-3" />
+              <span>No autopay – higher risk of missed payments</span>
+            </div>
+          )}
+
+          {account.autopayEnabled && (
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Autopay Amount</Label>
+              <Select
+                value={account.autopayAmountType || 'MINIMUM'}
+                onValueChange={(value) => onUpdateAccount(account.id, { 
+                  autopayAmountType: value as 'MINIMUM' | 'FULL_BALANCE' | 'CUSTOM'
+                })}
+              >
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MINIMUM">Minimum Payment</SelectItem>
+                  <SelectItem value="FULL_BALANCE">Full Balance</SelectItem>
+                  <SelectItem value="CUSTOM">Custom Amount</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {account.autopayAmountType === 'CUSTOM' && (
+                <div>
+                  <Label className="text-xs text-gray-600">Custom Amount</Label>
+                  <Input
+                    type="number"
+                    placeholder="Custom payment amount"
+                    value={account.autopayCustomAmount || ""}
+                    onChange={(e) => {
+                      const value = e.target.value === '' ? 0 : Number(e.target.value);
+                      onUpdateAccount(account.id, { autopayCustomAmount: value });
+                    }}
+                    className="h-8 text-sm"
+                  />
+                </div>
+              )}
+
+              {account.autopayAmountType === 'MINIMUM' && (
+                <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                  ⚠️ Paying only minimum will result in more interest charges
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Utilization Rate */}
-        {account.creditLimit && (
+        {account.creditLimit && !account.isPaidOff && (
           <div>
             <div className="flex justify-between text-xs text-gray-600 mb-1">
               <span>Credit Utilization</span>
@@ -216,7 +377,7 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
         )}
 
         {/* Payment Calculator */}
-        {scenarios && (
+        {scenarios && !account.isPaidOff && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Calculator className="h-4 w-4 text-blue-600" />

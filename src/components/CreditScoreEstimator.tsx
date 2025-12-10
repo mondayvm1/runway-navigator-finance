@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { TrendingUp, TrendingDown, Minus, Award, AlertCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { TrendingUp, TrendingDown, Minus, Award, AlertCircle, Target, ArrowRight } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { AccountItem } from '@/hooks/useFinancialData';
 import CollapsibleSection from './CollapsibleSection';
@@ -9,6 +11,7 @@ interface CreditScoreEstimatorProps {
 }
 
 const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => {
+  const [actualScore, setActualScore] = useState<number | null>(null);
   // Calculate credit utilization
   const totalBalance = creditAccounts.reduce((sum, acc) => sum + acc.balance, 0);
   const totalLimit = creditAccounts.reduce((sum, acc) => sum + (acc.creditLimit || 0), 0);
@@ -105,17 +108,79 @@ const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => 
       defaultOpen={true}
     >
       <div className="space-y-6">
-        {/* Estimated Score */}
+        {/* Estimated Score with Actual Comparison */}
         <Card className={`p-6 ${scoreCategory.bg} border-2 ${scoreCategory.border}`}>
-          <div className="text-center">
-            <p className="text-sm text-gray-600 mb-2">Estimated Credit Score</p>
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <Award className={`h-8 w-8 ${scoreCategory.color}`} />
-              <p className={`text-6xl font-bold ${scoreCategory.color}`}>{estimatedScore}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Estimated Score */}
+            <div className="text-center">
+              <p className="text-sm text-gray-600 mb-2">Estimated Score</p>
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Award className={`h-6 w-6 ${scoreCategory.color}`} />
+                <p className={`text-5xl font-bold ${scoreCategory.color}`}>{estimatedScore}</p>
+              </div>
+              <p className={`text-lg font-semibold ${scoreCategory.color}`}>{scoreCategory.label}</p>
             </div>
-            <p className={`text-xl font-semibold ${scoreCategory.color} mb-2`}>{scoreCategory.label}</p>
-            <p className="text-xs text-gray-500">Score range: 300-850</p>
+
+            {/* Actual Score Input */}
+            <div className="text-center">
+              <p className="text-sm text-gray-600 mb-2">Your Actual Score</p>
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Target className="h-6 w-6 text-indigo-500" />
+                <Input
+                  type="number"
+                  min={300}
+                  max={850}
+                  value={actualScore ?? ''}
+                  onChange={(e) => setActualScore(e.target.value ? Number(e.target.value) : null)}
+                  placeholder="Enter score"
+                  className="w-32 text-center text-2xl font-bold h-14 border-2 border-indigo-300 focus:border-indigo-500"
+                />
+              </div>
+              <p className="text-xs text-gray-500">From Credit Karma, Experian, etc.</p>
+            </div>
           </div>
+
+          {/* Score Comparison */}
+          {actualScore !== null && (
+            <div className="mt-4 p-4 bg-white rounded-lg border-2 border-indigo-200">
+              <div className="flex items-center justify-center gap-4">
+                <div className="text-center">
+                  <p className="text-xs text-gray-500">Estimated</p>
+                  <p className="text-2xl font-bold text-gray-700">{estimatedScore}</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-gray-400" />
+                <div className="text-center">
+                  <p className="text-xs text-gray-500">Actual</p>
+                  <p className="text-2xl font-bold text-indigo-600">{actualScore}</p>
+                </div>
+                <div className="text-center ml-4 pl-4 border-l-2 border-gray-200">
+                  <p className="text-xs text-gray-500">Difference</p>
+                  <p className={`text-2xl font-bold ${actualScore > estimatedScore ? 'text-green-600' : actualScore < estimatedScore ? 'text-red-600' : 'text-gray-600'}`}>
+                    {actualScore > estimatedScore ? '+' : ''}{actualScore - estimatedScore}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Analysis */}
+              <div className="mt-4 text-sm">
+                {actualScore > estimatedScore + 30 && (
+                  <p className="text-green-700 bg-green-50 p-3 rounded">
+                    🎉 <strong>Great news!</strong> Your actual score is higher than estimated. This suggests you have strong payment history or longer credit history than our model assumes.
+                  </p>
+                )}
+                {actualScore < estimatedScore - 30 && (
+                  <p className="text-amber-700 bg-amber-50 p-3 rounded">
+                    ⚠️ <strong>Score below estimate.</strong> This could indicate late payments, recent hard inquiries, or shorter credit history. Focus on on-time payments and reducing utilization.
+                  </p>
+                )}
+                {Math.abs(actualScore - estimatedScore) <= 30 && (
+                  <p className="text-blue-700 bg-blue-50 p-3 rounded">
+                    ✓ <strong>Close match!</strong> Our estimate aligns well with your actual score. The tips below should help you improve further.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Score Breakdown Bar */}
           <div className="mt-6">
@@ -126,11 +191,21 @@ const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => 
               <div className="absolute inset-y-0 left-[49.1%] w-[29.1%] bg-blue-500" />
               <div className="absolute inset-y-0 left-[78.2%] w-[21.8%] bg-green-500" />
               
-              {/* Score marker */}
+              {/* Estimated score marker */}
               <div 
                 className="absolute top-0 bottom-0 w-1 bg-black"
                 style={{ left: `${((estimatedScore - 300) / 550) * 100}%` }}
+                title={`Estimated: ${estimatedScore}`}
               />
+              
+              {/* Actual score marker */}
+              {actualScore !== null && (
+                <div 
+                  className="absolute top-0 bottom-0 w-1 bg-indigo-600 shadow-lg"
+                  style={{ left: `${((actualScore - 300) / 550) * 100}%` }}
+                  title={`Actual: ${actualScore}`}
+                />
+              )}
             </div>
             <div className="flex justify-between text-xs text-gray-600 mt-1">
               <span>300</span>
@@ -140,6 +215,12 @@ const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => 
               <span>Exceptional</span>
               <span>850</span>
             </div>
+            {actualScore !== null && (
+              <div className="flex gap-4 mt-2 text-xs">
+                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-black rounded-sm"></span> Estimated</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-indigo-600 rounded-sm"></span> Actual</span>
+              </div>
+            )}
           </div>
 
           <div className="mt-4 text-xs text-gray-600 bg-white/50 p-3 rounded">

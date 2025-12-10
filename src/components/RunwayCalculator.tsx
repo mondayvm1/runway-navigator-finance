@@ -23,6 +23,7 @@ import CreditScoreEstimator from "./CreditScoreEstimator";
 import FinancialQuestJourney from "./FinancialQuestJourney";
 import DatabaseCleanupTool from "./DatabaseCleanupTool";
 import FinancialArchetype from "./FinancialArchetype";
+import MonthlyExpensesManager from "./MonthlyExpensesManager";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles, TrendingUp, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { v4 as uuidv4 } from 'uuid';
@@ -454,34 +455,10 @@ const RunwayCalculator = () => {
           
           <CreditScoreEstimator creditAccounts={accountData.credit} />
           
-          <Card className="p-6">
-            <div className="space-y-4">
-              <label htmlFor="monthlyExpenses" className="block text-lg font-medium text-gray-700">
-                Monthly Expenses
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <DollarSign className="h-5 w-5 text-gray-400" />
-                </div>
-                <Input
-                  id="monthlyExpenses"
-                  name="monthlyExpenses"
-                  type="number"
-                  min="0"
-                  className="pl-10"
-                  placeholder="Enter your monthly expenses"
-                  value={monthlyExpenses || ""}
-                  onChange={(e) => {
-                    const value = e.target.value === '' ? 0 : Number(e.target.value);
-                    updateMonthlyExpenses(value);
-                  }}
-                />
-              </div>
-              <Button onClick={handleCalculate} className="w-full bg-blue-600 hover:bg-blue-700">
-                Update Overview
-              </Button>
-            </div>
-          </Card>
+          <MonthlyExpensesManager 
+            monthlyExpenses={monthlyExpenses}
+            onUpdateMonthlyExpenses={updateMonthlyExpenses}
+          />
 
           <div className="space-y-4">
             <AccountSection 
@@ -642,7 +619,7 @@ const RunwayCalculator = () => {
       {/* Financial Archetype - Collapsible at bottom */}
       <div className="mt-6">
         <Card className="overflow-hidden">
-          <Collapsible defaultOpen={false}>
+          <Collapsible defaultOpen={true}>
             <CollapsibleTrigger className="w-full p-4 hover:bg-muted/50 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">

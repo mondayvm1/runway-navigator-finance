@@ -1,4 +1,4 @@
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart } from 'recharts';
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart, Bar, ComposedChart } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 import { IncomeEvent } from './IncomeManager';
 
@@ -68,6 +68,9 @@ const EnhancedRunwayChart = ({
         }, 0);
       }
       
+      // Calculate net cashflow for this month (income - expenses)
+      const netCashflow = incomeThisMonth - monthlyExpenses;
+      
       // First: add income for this month to the "with income" balance
       balanceWithIncome += incomeThisMonth;
       
@@ -82,6 +85,9 @@ const EnhancedRunwayChart = ({
         balanceWithIncome: Math.max(0, balanceWithIncome),
         balanceWithoutIncome: Math.max(0, balanceWithoutIncome),
         income: incomeThisMonth,
+        expenses: monthlyExpenses,
+        netCashflow: netCashflow,
+        projectedFunds: balanceWithIncome, // Can go negative to show deficit
         monthLabel: projectionDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
         incomeEnabled: incomeEnabled
       });
@@ -104,21 +110,24 @@ const EnhancedRunwayChart = ({
         <div className="bg-background p-4 border border-border shadow-lg rounded-lg">
           <p className="font-medium text-foreground">{data.monthLabel}</p>
           <div className="space-y-1 mt-2">
-            <p className={`${incomeEnabled ? 'text-primary' : 'text-muted-foreground'}`}>
-              {incomeEnabled ? 'Balance with Income' : 'Balance'}: {formatCurrency(data.balance)}
+            <p className="text-primary font-semibold">
+              Projected Funds: {formatCurrency(data.projectedFunds)}
             </p>
-            {incomeEnabled && data.income > 0 && (
-              <p className="text-green-600">
-                Monthly Income: +{formatCurrency(data.income)}
-              </p>
-            )}
             {incomeEnabled && (
-              <p className="text-muted-foreground text-sm">
-                Without income: {formatCurrency(data.balanceWithoutIncome)}
-              </p>
+              <>
+                <p className="text-green-600">
+                  Income: +{formatCurrency(data.income)}
+                </p>
+                <p className="text-destructive">
+                  Expenses: -{formatCurrency(data.expenses)}
+                </p>
+                <p className={`font-medium ${data.netCashflow >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                  Net: {data.netCashflow >= 0 ? '+' : ''}{formatCurrency(data.netCashflow)}
+                </p>
+              </>
             )}
-            {!incomeEnabled && incomeEvents.length > 0 && (
-              <p className="text-muted-foreground text-xs">
+            {!incomeEnabled && (
+              <p className="text-muted-foreground text-sm">
                 Income planning disabled
               </p>
             )}
@@ -129,17 +138,23 @@ const EnhancedRunwayChart = ({
     return null;
   };
 
+  // Find min/max for y-axis to handle negative values
+  const minProjectedFunds = Math.min(...chartData.map(d => d.projectedFunds));
+  const maxProjectedFunds = Math.max(...chartData.map(d => d.projectedFunds));
+  const yAxisMin = Math.min(0, minProjectedFunds * 1.1);
+  const yAxisMax = maxProjectedFunds * 1.1;
+
   return (
     <div className="w-full h-80 mt-4">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+        <ComposedChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
           <defs>
-            <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={incomeEnabled ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))"} stopOpacity={0.3}/>
-              <stop offset="95%" stopColor={incomeEnabled ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))"} stopOpacity={0.05}/>
+            <linearGradient id="projectedFundsGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
+              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
             </linearGradient>
-            <linearGradient id="noIncomeGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.2}/>
+            <linearGradient id="negativeGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.3}/>
               <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0.05}/>
             </linearGradient>
           </defs>
@@ -151,44 +166,32 @@ const EnhancedRunwayChart = ({
           <YAxis 
             tickFormatter={(value) => formatCurrency(value).replace('.00', '')}
             tick={{ fontSize: 12 }}
+            domain={[yAxisMin, yAxisMax]}
           />
           <Tooltip content={customTooltip} />
           
-          {/* Show baseline without income only if income is enabled */}
-          {incomeEnabled && (
-            <Area
-              type="monotone"
-              dataKey="balanceWithoutIncome"
-              stroke="hsl(var(--destructive))"
-              strokeWidth={1}
-              fill="url(#noIncomeGradient)"
-              strokeDasharray="5,5"
-            />
-          )}
-          
-          {/* Main balance area */}
+          {/* Projected funds area */}
           <Area
             type="monotone"
-            dataKey="balance"
-            stroke={incomeEnabled ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))"}
+            dataKey="projectedFunds"
+            stroke="hsl(var(--primary))"
             strokeWidth={2}
-            fill="url(#balanceGradient)"
+            fill="url(#projectedFundsGradient)"
           />
           
           {/* Zero line */}
-          <ReferenceLine y={0} stroke="hsl(var(--destructive))" strokeDasharray="3,3" />
-        </AreaChart>
+          <ReferenceLine y={0} stroke="hsl(var(--destructive))" strokeDasharray="3,3" strokeWidth={2} />
+        </ComposedChart>
       </ResponsiveContainer>
       
       <div className="flex items-center justify-center gap-6 mt-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className={`w-3 h-3 rounded ${incomeEnabled ? 'bg-primary' : 'bg-muted-foreground'}`}></div>
-          <span>{incomeEnabled ? 'With Planned Income' : 'Current Balance'}</span>
+          <div className="w-3 h-3 rounded bg-primary"></div>
+          <span>Projected Funds</span>
         </div>
         {incomeEnabled && (
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 border-2 border-destructive border-dashed rounded"></div>
-            <span>Without Income</span>
+          <div className="flex items-center gap-2 text-muted-foreground text-xs">
+            <span>Based on income - expenses each month</span>
           </div>
         )}
         {!incomeEnabled && incomeEvents.length > 0 && (

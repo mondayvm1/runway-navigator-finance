@@ -58,6 +58,27 @@ const RunwayChart = ({
 
   const [visibleMonths, setVisibleMonths] = useState(12);
 
+  // Track which income events are enabled for the chart
+  const [enabledIncomeEvents, setEnabledIncomeEvents] = useState<Set<string>>(() => {
+    return new Set(incomeEvents.map(e => e.id));
+  });
+
+  // Update enabled events when incomeEvents change (new events added)
+  const toggleIncomeEvent = (eventId: string) => {
+    setEnabledIncomeEvents(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(eventId)) {
+        newSet.delete(eventId);
+      } else {
+        newSet.add(eventId);
+      }
+      return newSet;
+    });
+  };
+
+  // Filter income events based on enabled state
+  const filteredIncomeEvents = incomeEvents.filter(e => enabledIncomeEvents.has(e.id));
+
   // Calculate savings based on selected categories
   const getSavingsAmount = () => {
     let total = 0;
@@ -147,12 +168,32 @@ const RunwayChart = ({
           </div>
         </div>
 
+        {/* Income Events Toggle Section */}
+        {incomeEnabled && incomeEvents.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
+            <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mr-2">📈 Income:</span>
+            {incomeEvents.map(event => (
+              <Button
+                key={event.id}
+                variant={enabledIncomeEvents.has(event.id) ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => toggleIncomeEvent(event.id)}
+                className={enabledIncomeEvents.has(event.id) 
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white' 
+                  : 'border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10'}
+              >
+                {event.name} ({formatCurrency(event.amount)}/{event.frequency === 'monthly' ? 'mo' : event.frequency === 'yearly' ? 'yr' : '1x'})
+              </Button>
+            ))}
+          </div>
+        )}
+
         {/* Chart with controlled months */}
         <EnhancedRunwayChart 
           savings={savingsAmount} 
           monthlyExpenses={monthlyExpenses} 
           months={displayRunwayMonths}
-          incomeEvents={incomeEvents}
+          incomeEvents={filteredIncomeEvents}
           incomeEnabled={incomeEnabled}
           visibleMonths={visibleMonths}
         />
@@ -226,11 +267,11 @@ const RunwayChart = ({
                 projectedFunds -= monthlyExpenses;
                 
                 // Add income if enabled
-                if (incomeEnabled && incomeEvents.length > 0) {
+                if (incomeEnabled && filteredIncomeEvents.length > 0) {
                   const currentDate = new Date();
                   currentDate.setMonth(currentDate.getMonth() + month);
                   
-                  incomeEvents.forEach(event => {
+                  filteredIncomeEvents.forEach(event => {
                     const eventStart = new Date(event.date);
                     const eventEnd = event.endDate ? new Date(event.endDate) : null;
                     

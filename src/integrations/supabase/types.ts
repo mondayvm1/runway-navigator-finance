@@ -480,6 +480,10 @@ export type Database = {
           is_paid_off: boolean | null
           minimum_payment: number | null
           name: string
+          reporting_day: number | null
+          reports_to_equifax: boolean | null
+          reports_to_experian: boolean | null
+          reports_to_transunion: boolean | null
           snapshot_id: string | null
           statement_date: number | null
           updated_at: string
@@ -502,6 +506,10 @@ export type Database = {
           is_paid_off?: boolean | null
           minimum_payment?: number | null
           name: string
+          reporting_day?: number | null
+          reports_to_equifax?: boolean | null
+          reports_to_experian?: boolean | null
+          reports_to_transunion?: boolean | null
           snapshot_id?: string | null
           statement_date?: number | null
           updated_at?: string
@@ -524,6 +532,10 @@ export type Database = {
           is_paid_off?: boolean | null
           minimum_payment?: number | null
           name?: string
+          reporting_day?: number | null
+          reports_to_equifax?: boolean | null
+          reports_to_experian?: boolean | null
+          reports_to_transunion?: boolean | null
           snapshot_id?: string | null
           statement_date?: number | null
           updated_at?: string

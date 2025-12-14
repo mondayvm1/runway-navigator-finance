@@ -19,6 +19,10 @@ export interface AccountItem {
   autopayAmountType?: 'MINIMUM' | 'FULL_BALANCE' | 'CUSTOM';
   autopayCustomAmount?: number;
   isPaidOff?: boolean;
+  reportsToExperian?: boolean;
+  reportsToTransunion?: boolean;
+  reportsToEquifax?: boolean;
+  reportingDay?: number;
 }
 
 export interface AccountData {
@@ -119,6 +123,10 @@ export const useFinancialData = () => {
           autopayAmountType: (account.autopay_amount_type as 'MINIMUM' | 'FULL_BALANCE' | 'CUSTOM') || 'MINIMUM',
           autopayCustomAmount: account.autopay_custom_amount ? Number(account.autopay_custom_amount) : undefined,
           isPaidOff: account.is_paid_off ?? false,
+          reportsToExperian: account.reports_to_experian ?? true,
+          reportsToTransunion: account.reports_to_transunion ?? true,
+          reportsToEquifax: account.reports_to_equifax ?? true,
+          reportingDay: account.reporting_day ?? undefined,
         };
 
         if (account.category in groupedAccounts) {
@@ -361,6 +369,10 @@ export const useFinancialData = () => {
     if (updates.autopayAmountType !== undefined) dbUpdates.autopay_amount_type = updates.autopayAmountType;
     if (updates.autopayCustomAmount !== undefined) dbUpdates.autopay_custom_amount = updates.autopayCustomAmount;
     if (updates.isPaidOff !== undefined) dbUpdates.is_paid_off = updates.isPaidOff;
+    if (updates.reportsToExperian !== undefined) dbUpdates.reports_to_experian = updates.reportsToExperian;
+    if (updates.reportsToTransunion !== undefined) dbUpdates.reports_to_transunion = updates.reportsToTransunion;
+    if (updates.reportsToEquifax !== undefined) dbUpdates.reports_to_equifax = updates.reportsToEquifax;
+    if (updates.reportingDay !== undefined) dbUpdates.reporting_day = updates.reportingDay;
     
     // Debug logging
     console.log('Updating account:', { dbUpdates, id, userId: user.id });

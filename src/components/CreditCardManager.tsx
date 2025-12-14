@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreditCard, Calendar, Calculator, AlertTriangle, CheckCircle2, Shield } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CreditCard, Calendar, Calculator, AlertTriangle, CheckCircle2, Shield, FileText } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { AccountItem } from '@/hooks/useFinancialData';
 
@@ -358,7 +359,64 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
           )}
         </div>
 
-        {/* Utilization Rate */}
+        {/* Credit Bureau Reporting */}
+        <div className="bg-white p-3 rounded border space-y-3">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-blue-600" />
+            <Label className="text-sm font-medium">Credit Bureau Reporting</Label>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id={`experian-${account.id}`}
+                checked={account.reportsToExperian ?? true}
+                onCheckedChange={(checked) => 
+                  onUpdateAccount(account.id, { reportsToExperian: checked === true })
+                }
+              />
+              <Label htmlFor={`experian-${account.id}`} className="text-xs">Experian</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id={`transunion-${account.id}`}
+                checked={account.reportsToTransunion ?? true}
+                onCheckedChange={(checked) => 
+                  onUpdateAccount(account.id, { reportsToTransunion: checked === true })
+                }
+              />
+              <Label htmlFor={`transunion-${account.id}`} className="text-xs">TransUnion</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id={`equifax-${account.id}`}
+                checked={account.reportsToEquifax ?? true}
+                onCheckedChange={(checked) => 
+                  onUpdateAccount(account.id, { reportsToEquifax: checked === true })
+                }
+              />
+              <Label htmlFor={`equifax-${account.id}`} className="text-xs">Equifax</Label>
+            </div>
+          </div>
+
+          <div className="mt-2">
+            <Label className="text-xs text-gray-600">Reporting Day (1-31)</Label>
+            <Input
+              type="number"
+              min={1}
+              max={31}
+              placeholder="Day of month"
+              value={account.reportingDay || ""}
+              onChange={(e) => {
+                const value = e.target.value === '' ? undefined : Math.min(31, Math.max(1, Number(e.target.value)));
+                onUpdateAccount(account.id, { reportingDay: value });
+              }}
+              className="h-8 text-sm w-24"
+            />
+          </div>
+        </div>
         {account.creditLimit && !account.isPaidOff && (
           <div>
             <div className="flex justify-between text-xs text-gray-600 mb-1">

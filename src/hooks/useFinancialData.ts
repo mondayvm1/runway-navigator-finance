@@ -199,7 +199,7 @@ export const useFinancialData = () => {
             interest_rate: account.interestRate,
             credit_limit: account.creditLimit || null,
             due_date: account.dueDate || null,
-            minimum_payment: account.minimumPayment || null,
+            min_payment: account.minimumPayment || null,
             is_hidden: hiddenCategories[category as keyof HiddenCategories],
             statement_date: account.statementDate || null,
             autopay_enabled: account.autopayEnabled ?? false,
@@ -302,7 +302,7 @@ export const useFinancialData = () => {
             interest_rate: account.interestRate,
             credit_limit: account.creditLimit || null,
             due_date: account.dueDate || null,
-            minimum_payment: account.minimumPayment || null,
+            min_payment: account.minimumPayment || null,
             snapshot_id: snapshot?.id,
             is_hidden: hiddenCategories[category as keyof HiddenCategories]
           });

@@ -273,7 +273,7 @@ export const useFinancialData = () => {
     }
   };
 
-  const createSnapshot = async (name: string) => {
+  const createSnapshot = async (name: string, creditScoreCallback?: (snapshotId: string) => Promise<void>) => {
     if (!user) return;
 
     try {
@@ -327,6 +327,11 @@ export const useFinancialData = () => {
         } as any);
 
       if (expensesError) throw expensesError;
+
+      // Save credit score snapshot via callback if provided
+      if (creditScoreCallback && snapshot?.id) {
+        await creditScoreCallback(snapshot.id);
+      }
 
       toast.success(`Snapshot "${name}" created successfully!`);
       return snapshot.id;

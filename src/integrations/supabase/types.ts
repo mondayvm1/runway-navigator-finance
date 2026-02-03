@@ -38,6 +38,41 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_scores: {
+        Row: {
+          actual_score: number | null
+          created_at: string
+          id: string
+          snapshot_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actual_score?: number | null
+          created_at?: string
+          id?: string
+          snapshot_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actual_score?: number | null
+          created_at?: string
+          id?: string
+          snapshot_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_scores_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "financial_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       financial_snapshots: {
         Row: {
           accounts_data: Json | null

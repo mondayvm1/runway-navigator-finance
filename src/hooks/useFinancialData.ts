@@ -187,7 +187,7 @@ export const useFinancialData = () => {
     try {
       console.log('Saving financial data...');
       
-      const accountsToSave = [];
+      const accountsToSave: any[] = [];
       Object.entries(accountData).forEach(([category, accounts]) => {
         accounts.forEach(account => {
           accountsToSave.push({
@@ -212,18 +212,20 @@ export const useFinancialData = () => {
 
       console.log('Accounts to save:', accountsToSave);
 
-      const { error: deleteError } = await supabase
-        .from('user_accounts')
-        .delete()
-        .eq('user_id', user.id)
-        .is('snapshot_id', null);
-
-      if (deleteError) {
-        console.error('Error deleting existing accounts:', deleteError);
-        throw deleteError;
-      }
-
+      // SAFETY CHECK: Only delete if we have data to save, otherwise just skip
+      // This prevents accidental data loss when React state is empty
       if (accountsToSave.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('user_accounts')
+          .delete()
+          .eq('user_id', user.id)
+          .is('snapshot_id', null);
+
+        if (deleteError) {
+          console.error('Error deleting existing accounts:', deleteError);
+          throw deleteError;
+        }
+
         const { error: accountsError } = await supabase
           .from('user_accounts')
           .insert(accountsToSave);
@@ -232,30 +234,35 @@ export const useFinancialData = () => {
           console.error('Error inserting accounts:', accountsError);
           throw accountsError;
         }
+      } else {
+        console.log('No accounts in state to save - skipping to prevent data loss');
       }
 
-      const { error: deleteExpensesError } = await supabase
-        .from('monthly_expenses')
-        .delete()
-        .eq('user_id', user.id)
-        .is('snapshot_id', null);
+      // Only update expenses if we have a value set
+      if (monthlyExpenses > 0) {
+        const { error: deleteExpensesError } = await supabase
+          .from('monthly_expenses')
+          .delete()
+          .eq('user_id', user.id)
+          .is('snapshot_id', null);
 
-      if (deleteExpensesError) {
-        console.error('Error deleting existing expenses:', deleteExpensesError);
-        throw deleteExpensesError;
-      }
+        if (deleteExpensesError) {
+          console.error('Error deleting existing expenses:', deleteExpensesError);
+          throw deleteExpensesError;
+        }
 
-      const { error: expensesError } = await supabase
-        .from('monthly_expenses')
-        .insert({
-          user_id: user.id,
-          amount: monthlyExpenses,
-          name: 'Monthly Expenses'
-        } as any);
+        const { error: expensesError } = await supabase
+          .from('monthly_expenses')
+          .insert({
+            user_id: user.id,
+            amount: monthlyExpenses,
+            name: 'Monthly Expenses'
+          } as any);
 
-      if (expensesError) {
-        console.error('Error inserting expenses:', expensesError);
-        throw expensesError;
+        if (expensesError) {
+          console.error('Error inserting expenses:', expensesError);
+          throw expensesError;
+        }
       }
 
       console.log('Data saved successfully');

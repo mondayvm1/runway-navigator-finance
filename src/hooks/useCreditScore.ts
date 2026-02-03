@@ -46,12 +46,18 @@ export const useCreditScore = () => {
 
     try {
       // Check if a record exists
-      const { data: existing } = await supabase
+      const { data: existing, error: fetchError } = await supabase
         .from('credit_scores')
         .select('id')
         .eq('user_id', user.id)
         .is('snapshot_id', null)
         .maybeSingle();
+
+      if (fetchError) {
+        console.error('Error fetching credit score:', fetchError);
+        toast.error('Failed to save credit score');
+        return;
+      }
 
       if (existing) {
         // Update existing record
@@ -63,7 +69,11 @@ export const useCreditScore = () => {
           })
           .eq('id', existing.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error updating credit score:', error);
+          toast.error('Failed to save credit score');
+          return;
+        }
       } else {
         // Insert new record
         const { error } = await supabase
@@ -73,7 +83,11 @@ export const useCreditScore = () => {
             actual_score: score
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error inserting credit score:', error);
+          toast.error('Failed to save credit score');
+          return;
+        }
       }
 
       setActualScore(score);
@@ -96,7 +110,9 @@ export const useCreditScore = () => {
           snapshot_id: snapshotId
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving credit score snapshot:', error);
+      }
     } catch (error) {
       console.error('Error saving credit score snapshot:', error);
     }

@@ -21,7 +21,7 @@ import PaymentTracker from "./PaymentTracker";
 import CreditCardDebtAnalyzer from "./CreditCardDebtAnalyzer";
 import CreditScoreEstimator from "./CreditScoreEstimator";
 import FinancialQuestJourney from "./FinancialQuestJourney";
-import DatabaseCleanupTool from "./DatabaseCleanupTool";
+import FloatingSupportMenu from "./FloatingSupportMenu";
 import FinancialArchetype from "./FinancialArchetype";
 import MonthlyExpensesManager from "./MonthlyExpensesManager";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles, TrendingUp, ChevronDown } from "lucide-react";
@@ -438,7 +438,7 @@ const RunwayCalculator = () => {
 
           <EnhancedSnapshotManager onCreateSnapshot={handleCreateSnapshot} onSaveData={saveData} />
           
-          <DatabaseCleanupTool />
+          <FloatingSupportMenu />
           
           <NetWorthSummary
             assets={getTotalAssets()} 

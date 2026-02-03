@@ -129,6 +129,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          income_enabled: boolean | null
           settings: Json | null
           updated_at: string
           user_id: string
@@ -136,6 +137,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          income_enabled?: boolean | null
           settings?: Json | null
           updated_at?: string
           user_id: string
@@ -143,6 +145,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          income_enabled?: boolean | null
           settings?: Json | null
           updated_at?: string
           user_id?: string
@@ -159,6 +162,7 @@ export type Database = {
           is_active: boolean
           is_essential: boolean
           name: string
+          snapshot_id: string | null
           updated_at: string
           user_id: string
         }
@@ -171,6 +175,7 @@ export type Database = {
           is_active?: boolean
           is_essential?: boolean
           name: string
+          snapshot_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -183,10 +188,19 @@ export type Database = {
           is_active?: boolean
           is_essential?: boolean
           name?: string
+          snapshot_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "monthly_expenses_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "financial_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_accounts: {
         Row: {
@@ -201,6 +215,7 @@ export type Database = {
           due_date: number | null
           id: string
           interest_rate: number | null
+          is_hidden: boolean | null
           is_paid_off: boolean | null
           min_payment: number | null
           name: string
@@ -208,6 +223,7 @@ export type Database = {
           reports_to_equifax: boolean | null
           reports_to_experian: boolean | null
           reports_to_transunion: boolean | null
+          snapshot_id: string | null
           statement_date: number | null
           type: string
           updated_at: string
@@ -225,6 +241,7 @@ export type Database = {
           due_date?: number | null
           id?: string
           interest_rate?: number | null
+          is_hidden?: boolean | null
           is_paid_off?: boolean | null
           min_payment?: number | null
           name: string
@@ -232,6 +249,7 @@ export type Database = {
           reports_to_equifax?: boolean | null
           reports_to_experian?: boolean | null
           reports_to_transunion?: boolean | null
+          snapshot_id?: string | null
           statement_date?: number | null
           type?: string
           updated_at?: string
@@ -249,6 +267,7 @@ export type Database = {
           due_date?: number | null
           id?: string
           interest_rate?: number | null
+          is_hidden?: boolean | null
           is_paid_off?: boolean | null
           min_payment?: number | null
           name?: string
@@ -256,12 +275,21 @@ export type Database = {
           reports_to_equifax?: boolean | null
           reports_to_experian?: boolean | null
           reports_to_transunion?: boolean | null
+          snapshot_id?: string | null
           statement_date?: number | null
           type?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_accounts_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "financial_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

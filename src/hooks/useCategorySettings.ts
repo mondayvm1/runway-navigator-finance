@@ -26,7 +26,7 @@ export const useCategorySettings = () => {
 
     try {
       const { data, error } = await supabase
-        .from('category_settings')
+        .from('category_settings' as any)
         .select('hidden_categories')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -36,9 +36,9 @@ export const useCategorySettings = () => {
         return;
       }
 
-      if (data && data.hidden_categories) {
+      if (data && (data as any).hidden_categories) {
         // Ensure the data is properly typed as Record<string, boolean>
-        const hiddenCategories = data.hidden_categories as Record<string, boolean>;
+        const hiddenCategories = (data as any).hidden_categories as Record<string, boolean>;
         setSettings({ hiddenCategories });
       }
     } catch (error) {
@@ -63,12 +63,12 @@ export const useCategorySettings = () => {
 
     try {
       const { error } = await supabase
-        .from('category_settings')
+        .from('category_settings' as any)
         .upsert({
           user_id: user.id,
           hidden_categories: newSettings.hiddenCategories,
           updated_at: new Date().toISOString()
-        });
+        } as any);
 
       if (error) throw error;
     } catch (error) {

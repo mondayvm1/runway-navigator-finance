@@ -91,9 +91,10 @@ const SnapshotChart = () => {
         let credit = 0;
         let loans = 0;
 
-        accounts?.forEach(account => {
+        accounts?.forEach((account: any) => {
           const balance = Number(account.balance) || 0;
-          switch (account.category) {
+          const category = account.category || account.type || 'cash';
+          switch (category) {
             case 'cash':
               cash += balance;
               break;
@@ -120,7 +121,7 @@ const SnapshotChart = () => {
 
         enrichedSnapshots.push({
           id: snapshot.id,
-          name: snapshot.name,
+          name: (snapshot as any).name || `Snapshot ${new Date(snapshot.created_at).toLocaleDateString()}`,
           created_at: snapshot.created_at,
           netWorth,
           totalAssets,

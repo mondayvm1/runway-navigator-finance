@@ -109,15 +109,15 @@ export const useFinancialData = () => {
       let totalAccounts = 0;
       // Ensure accounts is an array
       const accountsArray = Array.isArray(accounts) ? accounts : [];
-      accountsArray.forEach(account => {
+      accountsArray.forEach((account: any) => {
         const accountItem: AccountItem = {
-          id: account.account_id,
+          id: account.account_id || account.id,
           name: account.name,
           balance: Number(account.balance),
           interestRate: Number(account.interest_rate || 0),
           creditLimit: account.credit_limit ? Number(account.credit_limit) : undefined,
-          dueDate: account.due_date || undefined,
-          minimumPayment: account.minimum_payment ? Number(account.minimum_payment) : undefined,
+          dueDate: account.due_date?.toString() || undefined,
+          minimumPayment: account.min_payment ? Number(account.min_payment) : undefined,
           statementDate: account.statement_date ?? undefined,
           autopayEnabled: account.autopay_enabled ?? false,
           autopayAmountType: (account.autopay_amount_type as 'MINIMUM' | 'FULL_BALANCE' | 'CUSTOM') || 'MINIMUM',
@@ -129,8 +129,9 @@ export const useFinancialData = () => {
           reportingDay: account.reporting_day ?? undefined,
         };
 
-        if (account.category in groupedAccounts) {
-          groupedAccounts[account.category as keyof AccountData].push(accountItem);
+        const category = account.category || account.type;
+        if (category in groupedAccounts) {
+          groupedAccounts[category as keyof AccountData].push(accountItem);
           totalAccounts++;
         }
       });

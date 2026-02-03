@@ -1,5 +1,6 @@
 import RunwayCalculator from "../components/RunwayCalculator";
 import AuthForm from "../components/AuthForm";
+import InfoCard from "../components/InfoCard";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -45,12 +46,34 @@ const Index = () => {
               <Button asChild variant="outline" size="lg">
                 <Link to="/demo">See Demo</Link>
               </Button>
+              <Button asChild size="lg">
+                <Link to="#auth">Get Started</Link>
+              </Button>
             </div>
           </header>
 
           {/* Auth Form */}
           <div id="auth" className="max-w-md mx-auto">
             <AuthForm />
+          </div>
+
+          {/* Info Cards */}
+          <div className="max-w-5xl mx-auto mt-12 grid md:grid-cols-3 gap-8">
+            <InfoCard 
+              title="Net Worth"
+              content="Your net worth is the difference between your assets and liabilities. It's a key indicator of your overall financial health."
+              icon="Calculator"
+            />
+            <InfoCard 
+              title="Financial Runway"
+              content="Your runway shows how long your cash would last at your current expense rate, helping you plan for emergencies."
+              icon="Clock"
+            />
+            <InfoCard 
+              title="Save Your Data"
+              content="Your financial data is securely saved in the cloud. Access it from anywhere and track your progress over time!"
+              icon="Save"
+            />
           </div>
         </div>
       </div>

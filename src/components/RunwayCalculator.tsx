@@ -375,25 +375,35 @@ const RunwayCalculator = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto relative">
+      {/* Floating background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-10 left-[5%] w-64 h-64 bg-blue-400/5 rounded-full blur-3xl animate-float" />
+        <div className="absolute top-40 right-[10%] w-80 h-80 bg-indigo-400/5 rounded-full blur-3xl animate-float-delayed" />
+        <div className="absolute bottom-40 left-[15%] w-72 h-72 bg-purple-400/5 rounded-full blur-3xl animate-float-delayed" />
+      </div>
+
       <div className="grid lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 space-y-6">
-          <Card className="p-6 shadow-lg bg-gradient-to-r from-blue-50 to-green-50">
+          {/* Premium Dashboard Header */}
+          <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-200/50 border border-white/80 p-6 animate-fade-up">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold text-blue-700 flex items-center">
-                <Sparkles className="mr-2 text-yellow-500" /> 
-                Financial Dashboard v1
-              </h2>
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-600">Welcome, {user?.email}</span>
-                <Button onClick={handleSignOut} variant="outline" size="sm" className="flex items-center gap-2">
-                  <LogOut size={16} />
-                  Sign Out
-                </Button>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-800">Financial Dashboard</h2>
+                  <p className="text-sm text-slate-500">{user?.email}</p>
+                </div>
               </div>
+              <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+                <LogOut size={16} className="mr-2" />
+                Sign Out
+              </Button>
             </div>
             
-            <div className="flex flex-wrap gap-3 mb-6">
+            <div className="flex flex-wrap gap-2">
               <DataRecoveryButton 
                 onRefreshData={loadData}
                 loading={loading}
@@ -403,24 +413,24 @@ const RunwayCalculator = () => {
               <MassImportDialog onImport={handleMassImport} />
               <Button 
                 onClick={handleMassDelete}
-                variant="destructive"
+                variant="ghost"
                 size="sm"
-                className="flex items-center gap-2"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
-                <Trash2 size={16} />
-                Clear All Data
+                <Trash2 size={16} className="mr-2" />
+                Clear All
               </Button>
               <Button 
                 onClick={() => setShowSnapshotViewer(true)}
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="flex items-center gap-2"
+                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100"
               >
-                <Camera size={16} />
-                View Snapshots
+                <Camera size={16} className="mr-2" />
+                Snapshots
               </Button>
             </div>
-          </Card>
+          </div>
 
           <EnhancedSnapshotManager onCreateSnapshot={handleCreateSnapshot} onSaveData={saveData} />
           
@@ -594,10 +604,12 @@ const RunwayCalculator = () => {
 
       {/* Quest Journey - Always Open */}
       <div className="mt-6">
-        <Card className="p-6">
+        <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80 p-6">
           <div className="flex items-center gap-3 mb-6">
-            <Sparkles className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold">Financial Quest Journey</h3>
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Financial Quest Journey</h3>
           </div>
           <FinancialQuestJourney
                   netWorth={getTotalAssets() - getTotalLiabilities()}
@@ -615,27 +627,29 @@ const RunwayCalculator = () => {
                     accountData.loans.filter(acc => acc.balance > 0).length
                   }
                 />
-        </Card>
+        </div>
       </div>
 
       {/* Financial Archetype - Collapsible at bottom */}
       <div className="mt-6">
-        <Card className="overflow-hidden">
+        <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80 overflow-hidden">
           <Collapsible defaultOpen={true}>
-            <CollapsibleTrigger className="w-full p-4 hover:bg-muted/50 transition-colors">
+            <CollapsibleTrigger className="w-full p-5 hover:bg-slate-50/50 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <TrendingUp className="w-5 h-5 text-primary animate-pulse" />
-                  <h3 className="text-lg font-semibold">Financial Personality Traits</h3>
-                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full animate-pulse">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                    <TrendingUp className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-800">Financial Personality Traits</h3>
+                  <span className="text-xs bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-3 py-1 rounded-full shadow-sm">
                     Discover your archetype
                   </span>
                 </div>
-                <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform" />
+                <ChevronDown className="w-5 h-5 text-slate-400 transition-transform" />
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="p-6 pt-0 animate-fade-in">
+              <div className="p-6 pt-0">
                 <FinancialArchetype
                   totalAssets={getTotalAssets()}
                   totalLiabilities={getTotalLiabilities()}
@@ -649,7 +663,7 @@ const RunwayCalculator = () => {
               </div>
             </CollapsibleContent>
           </Collapsible>
-        </Card>
+        </div>
       </div>
 
       {showSnapshotViewer && (

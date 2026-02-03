@@ -52,20 +52,22 @@ const NetWorthSummary = ({
   const projectedIncome = calculateProjectedIncome();
 
   return (
-    <Card className="p-6">
+    <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80 p-6 animate-fade-up">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-green-50 p-4 rounded-lg text-center">
-          <div className="flex justify-center mb-2">
-            <TrendingUp className="h-6 w-6 text-green-600" />
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-5 rounded-xl border border-emerald-100 text-center transition-all hover:shadow-md hover:-translate-y-0.5">
+          <div className="flex justify-center mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/25">
+              <TrendingUp className="h-5 w-5 text-white" />
+            </div>
           </div>
-          <div className="text-sm text-gray-500">Total Assets</div>
-          <div className="text-2xl font-bold text-green-700">{formatCurrency(assets)}</div>
+          <div className="text-sm text-slate-600 font-medium mb-1">Total Assets</div>
+          <div className="text-2xl font-bold text-emerald-600">{formatCurrency(assets)}</div>
         </div>
         
-        <div className="bg-red-50 p-4 rounded-lg text-center relative">
+        <div className="bg-gradient-to-br from-red-50 to-red-100/50 p-5 rounded-xl border border-red-100 text-center relative transition-all hover:shadow-md hover:-translate-y-0.5">
           <button
             onClick={() => setShowCreditOnly(!showCreditOnly)}
-            className="absolute top-2 right-2 p-1 rounded-full hover:bg-red-100 transition-colors"
+            className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-red-200/50 transition-colors"
             title={showCreditOnly ? "Show all liabilities" : "Show credit cards only"}
           >
             {showCreditOnly ? (
@@ -74,44 +76,50 @@ const NetWorthSummary = ({
               <ToggleLeft className="h-4 w-4 text-red-400" />
             )}
           </button>
-          <div className="flex justify-center mb-2">
-            <TrendingDown className="h-6 w-6 text-red-600" />
+          <div className="flex justify-center mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/25">
+              <TrendingDown className="h-5 w-5 text-white" />
+            </div>
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-slate-600 font-medium mb-1">
             {showCreditOnly ? '🐉 Credit Card Debt' : 'Total Liabilities'}
           </div>
-          <div className="text-2xl font-bold text-red-700">{formatCurrency(displayedLiabilities)}</div>
+          <div className="text-2xl font-bold text-red-600">{formatCurrency(displayedLiabilities)}</div>
           {showCreditOnly && liabilities > creditCardDebt && (
-            <div className="text-xs text-gray-400 mt-1">
+            <div className="text-xs text-slate-500 mt-1">
               +{formatCurrency(liabilities - creditCardDebt)} slow debt
             </div>
           )}
         </div>
         
-        <div className={`p-4 rounded-lg text-center ${isPositive ? 'bg-blue-50' : 'bg-yellow-50'}`}>
-          <div className="flex justify-center mb-2">
-            <DollarSign className={`h-6 w-6 ${isPositive ? 'text-blue-600' : 'text-yellow-600'}`} />
+        <div className={`p-5 rounded-xl text-center transition-all hover:shadow-md hover:-translate-y-0.5 ${isPositive ? 'bg-gradient-to-br from-blue-50 to-indigo-100/50 border border-blue-100' : 'bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-100'}`}>
+          <div className="flex justify-center mb-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg ${isPositive ? 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-500/25' : 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-amber-500/25'}`}>
+              <DollarSign className="h-5 w-5 text-white" />
+            </div>
           </div>
-          <div className="text-sm text-gray-500">Net Worth</div>
-          <div className={`text-2xl font-bold ${isPositive ? 'text-blue-700' : 'text-yellow-700'}`}>
+          <div className="text-sm text-slate-600 font-medium mb-1">Net Worth</div>
+          <div className={`text-2xl font-bold ${isPositive ? 'text-blue-600' : 'text-amber-600'}`}>
             {formatCurrency(netWorth)}
           </div>
         </div>
 
-        <div className={`p-4 rounded-lg text-center transition-all ${
-          incomeEnabled ? 'bg-purple-50' : 'bg-gray-50'
+        <div className={`p-5 rounded-xl text-center transition-all hover:shadow-md hover:-translate-y-0.5 ${
+          incomeEnabled ? 'bg-gradient-to-br from-purple-50 to-purple-100/50 border border-purple-100' : 'bg-gradient-to-br from-slate-50 to-slate-100/50 border border-slate-100'
         }`}>
-          <div className="flex justify-center mb-2">
-            <Sparkles className={`h-6 w-6 ${incomeEnabled ? 'text-purple-600' : 'text-gray-400'}`} />
+          <div className="flex justify-center mb-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg ${incomeEnabled ? 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-purple-500/25' : 'bg-gradient-to-br from-slate-400 to-slate-500 shadow-slate-500/25'}`}>
+              <Sparkles className="h-5 w-5 text-white" />
+            </div>
           </div>
-          <div className={`text-sm ${incomeEnabled ? 'text-gray-500' : 'text-gray-400'}`}>
+          <div className={`text-sm font-medium mb-1 ${incomeEnabled ? 'text-slate-600' : 'text-slate-400'}`}>
             Projected Income (12mo)
           </div>
-          <div className={`text-2xl font-bold ${incomeEnabled ? 'text-purple-700' : 'text-gray-500'}`}>
+          <div className={`text-2xl font-bold ${incomeEnabled ? 'text-purple-600' : 'text-slate-400'}`}>
             {incomeEnabled ? formatCurrency(projectedIncome) : formatCurrency(0)}
           </div>
           {!incomeEnabled && incomeEvents.length > 0 && (
-            <div className="text-xs text-gray-400 mt-1">
+            <div className="text-xs text-slate-400 mt-1">
               Planning disabled
             </div>
           )}
@@ -119,11 +127,11 @@ const NetWorthSummary = ({
       </div>
       
       {incomeEnabled && projectedIncome > 0 && (
-        <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
+        <div className="mt-5 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-purple-600" />
-              <span className="text-sm font-medium text-purple-800">
+              <span className="text-sm font-semibold text-purple-800">
                 Potential Net Worth Impact
               </span>
             </div>
@@ -131,12 +139,12 @@ const NetWorthSummary = ({
               {formatCurrency(netWorth + projectedIncome)}
             </span>
           </div>
-          <p className="text-xs text-purple-600 mt-1">
+          <p className="text-xs text-purple-600 mt-1.5">
             Including planned income events over the next 12 months
           </p>
         </div>
       )}
-    </Card>
+    </div>
   );
 };
 

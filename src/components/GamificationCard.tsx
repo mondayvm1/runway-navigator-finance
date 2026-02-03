@@ -79,36 +79,38 @@ const GamificationCard = ({ netWorth, runway, snapshotCount, totalAssets }: Gami
   };
 
   return (
-    <Card className="p-6 bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-yellow-500" />
-          <h3 className="text-lg font-semibold text-gray-800">Financial Mastery</h3>
+    <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80 p-6 animate-fade-up">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
+            <Trophy className="h-5 w-5 text-white" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-800">Financial Mastery</h3>
         </div>
-        <Badge variant="secondary" className="bg-blue-600 text-white">
+        <Badge variant="secondary" className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-md">
           Level {level}
         </Badge>
       </div>
       
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="text-center">
+      <div className="grid grid-cols-2 gap-4 mb-5">
+        <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
           <div className="text-2xl font-bold text-blue-600">{points}</div>
-          <div className="text-sm text-gray-600">Points</div>
+          <div className="text-sm text-slate-600">Points</div>
         </div>
-        <div className="text-center">
+        <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-100">
           <div className="text-lg font-semibold text-purple-600">{rank}</div>
-          <div className="text-sm text-gray-600">Rank</div>
+          <div className="text-sm text-slate-600">Rank</div>
         </div>
       </div>
       
-      <div className="mb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Zap className="h-4 w-4 text-yellow-500" />
-          <span className="text-sm font-medium">Achievements</span>
+      <div className="mb-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Zap className="h-4 w-4 text-amber-500" />
+          <span className="text-sm font-semibold text-slate-700">Achievements</span>
         </div>
         <div className="flex flex-wrap gap-2">
           {getAchievements().map((achievement, index) => (
-            <Badge key={index} variant="secondary" className={`${achievement.color} text-white text-xs`}>
+            <Badge key={index} variant="secondary" className={`${achievement.color} text-white text-xs border-0 shadow-sm`}>
               <achievement.icon className="h-3 w-3 mr-1" />
               {achievement.text}
             </Badge>
@@ -116,15 +118,15 @@ const GamificationCard = ({ netWorth, runway, snapshotCount, totalAssets }: Gami
         </div>
       </div>
       
-      <div className="p-3 bg-white rounded-lg border border-blue-200">
-        <div className="text-sm font-medium text-gray-800 mb-1">💡 Daily Motivation</div>
-        <div className="text-sm text-gray-600">{getMotivationalQuote()}</div>
+      <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border border-slate-100">
+        <div className="text-sm font-semibold text-slate-700 mb-1">💡 Daily Motivation</div>
+        <div className="text-sm text-slate-600">{getMotivationalQuote()}</div>
       </div>
       
-      <div className="mt-4 text-xs text-gray-500">
+      <div className="mt-4 text-xs text-slate-500 text-center">
         Next level at {Math.ceil(level * 100)} points • Keep tracking to earn more!
       </div>
-    </Card>
+    </div>
   );
 };
 

@@ -30,11 +30,11 @@ export const useIncomeEvents = () => {
 
       if (error) throw error;
 
-      const events: IncomeEvent[] = data?.map(event => ({
+      const events: IncomeEvent[] = data?.map((event: any) => ({
         id: event.id,
         name: event.name,
         amount: Number(event.amount),
-        date: event.date,
+        date: event.date || event.next_date,
         frequency: event.frequency as 'one-time' | 'monthly' | 'yearly',
         endDate: event.end_date || undefined
       })) || [];
@@ -70,9 +70,9 @@ export const useIncomeEvents = () => {
         id: data.id,
         name: data.name,
         amount: Number(data.amount),
-        date: data.date,
+        date: (data as any).date || data.next_date,
         frequency: data.frequency as 'one-time' | 'monthly' | 'yearly',
-        endDate: data.end_date || undefined
+        endDate: (data as any).end_date || undefined
       };
 
       setIncomeEvents(prev => [...prev, newEvent].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));

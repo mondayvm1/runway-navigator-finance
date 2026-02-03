@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      category_settings: {
+        Row: {
+          created_at: string
+          hidden_categories: string[] | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hidden_categories?: string[] | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hidden_categories?: string[] | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       financial_snapshots: {
         Row: {
           accounts_data: Json | null
@@ -21,6 +45,7 @@ export type Database = {
           id: string
           monthly_expenses: number | null
           monthly_income: number | null
+          name: string | null
           net_worth: number
           notes: string | null
           savings_rate: number | null
@@ -35,6 +60,7 @@ export type Database = {
           id?: string
           monthly_expenses?: number | null
           monthly_income?: number | null
+          name?: string | null
           net_worth?: number
           notes?: string | null
           savings_rate?: number | null
@@ -49,6 +75,7 @@ export type Database = {
           id?: string
           monthly_expenses?: number | null
           monthly_income?: number | null
+          name?: string | null
           net_worth?: number
           notes?: string | null
           savings_rate?: number | null
@@ -98,6 +125,30 @@ export type Database = {
         }
         Relationships: []
       }
+      income_settings: {
+        Row: {
+          created_at: string
+          id: string
+          settings: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          settings?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          settings?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       monthly_expenses: {
         Row: {
           amount: number
@@ -139,40 +190,73 @@ export type Database = {
       }
       user_accounts: {
         Row: {
+          account_id: string | null
+          autopay_amount_type: string | null
+          autopay_custom_amount: number | null
+          autopay_enabled: boolean | null
           balance: number
+          category: string | null
           created_at: string
           credit_limit: number | null
           due_date: number | null
           id: string
           interest_rate: number | null
+          is_paid_off: boolean | null
           min_payment: number | null
           name: string
+          reporting_day: number | null
+          reports_to_equifax: boolean | null
+          reports_to_experian: boolean | null
+          reports_to_transunion: boolean | null
+          statement_date: number | null
           type: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          account_id?: string | null
+          autopay_amount_type?: string | null
+          autopay_custom_amount?: number | null
+          autopay_enabled?: boolean | null
           balance?: number
+          category?: string | null
           created_at?: string
           credit_limit?: number | null
           due_date?: number | null
           id?: string
           interest_rate?: number | null
+          is_paid_off?: boolean | null
           min_payment?: number | null
           name: string
+          reporting_day?: number | null
+          reports_to_equifax?: boolean | null
+          reports_to_experian?: boolean | null
+          reports_to_transunion?: boolean | null
+          statement_date?: number | null
           type?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          account_id?: string | null
+          autopay_amount_type?: string | null
+          autopay_custom_amount?: number | null
+          autopay_enabled?: boolean | null
           balance?: number
+          category?: string | null
           created_at?: string
           credit_limit?: number | null
           due_date?: number | null
           id?: string
           interest_rate?: number | null
+          is_paid_off?: boolean | null
           min_payment?: number | null
           name?: string
+          reporting_day?: number | null
+          reports_to_equifax?: boolean | null
+          reports_to_experian?: boolean | null
+          reports_to_transunion?: boolean | null
+          statement_date?: number | null
           type?: string
           updated_at?: string
           user_id?: string

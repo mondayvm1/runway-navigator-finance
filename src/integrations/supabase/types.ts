@@ -14,7 +14,171 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      financial_snapshots: {
+        Row: {
+          accounts_data: Json | null
+          created_at: string
+          id: string
+          monthly_expenses: number | null
+          monthly_income: number | null
+          net_worth: number
+          notes: string | null
+          savings_rate: number | null
+          snapshot_date: string
+          total_assets: number
+          total_liabilities: number
+          user_id: string
+        }
+        Insert: {
+          accounts_data?: Json | null
+          created_at?: string
+          id?: string
+          monthly_expenses?: number | null
+          monthly_income?: number | null
+          net_worth?: number
+          notes?: string | null
+          savings_rate?: number | null
+          snapshot_date?: string
+          total_assets?: number
+          total_liabilities?: number
+          user_id: string
+        }
+        Update: {
+          accounts_data?: Json | null
+          created_at?: string
+          id?: string
+          monthly_expenses?: number | null
+          monthly_income?: number | null
+          net_worth?: number
+          notes?: string | null
+          savings_rate?: number | null
+          snapshot_date?: string
+          total_assets?: number
+          total_liabilities?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      income_events: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          frequency: string
+          id: string
+          is_active: boolean
+          name: string
+          next_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          next_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          next_date?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      monthly_expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          due_date: number | null
+          id: string
+          is_active: boolean
+          is_essential: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          created_at?: string
+          due_date?: number | null
+          id?: string
+          is_active?: boolean
+          is_essential?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          due_date?: number | null
+          id?: string
+          is_active?: boolean
+          is_essential?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_accounts: {
+        Row: {
+          balance: number
+          created_at: string
+          credit_limit: number | null
+          due_date: number | null
+          id: string
+          interest_rate: number | null
+          min_payment: number | null
+          name: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          credit_limit?: number | null
+          due_date?: number | null
+          id?: string
+          interest_rate?: number | null
+          min_payment?: number | null
+          name: string
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          credit_limit?: number | null
+          due_date?: number | null
+          id?: string
+          interest_rate?: number | null
+          min_payment?: number | null
+          name?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -100,9 +100,10 @@ const SnapshotViewer = ({ onClose, onRestoreSnapshot }: SnapshotViewerProps) => 
         let credit = 0;
         let loans = 0;
 
-        accounts?.forEach(account => {
+        accounts?.forEach((account: any) => {
           const balance = Number(account.balance);
-          switch (account.category) {
+          const category = account.category || account.type || 'cash';
+          switch (category) {
             case 'cash':
               cash += balance;
               break;
@@ -127,7 +128,7 @@ const SnapshotViewer = ({ onClose, onRestoreSnapshot }: SnapshotViewerProps) => 
 
         enrichedSnapshots.push({
           id: snapshot.id,
-          name: snapshot.name,
+          name: (snapshot as any).name || `Snapshot ${new Date(snapshot.created_at).toLocaleDateString()}`,
           created_at: snapshot.created_at,
           netWorth,
           totalAssets,
@@ -186,19 +187,20 @@ const SnapshotViewer = ({ onClose, onRestoreSnapshot }: SnapshotViewerProps) => 
         otherAssets: [] as AccountItem[]
       };
 
-      accounts?.forEach(account => {
+      accounts?.forEach((account: any) => {
         const accountItem: AccountItem = {
-          id: account.account_id,
+          id: account.account_id || account.id,
           name: account.name,
           balance: Number(account.balance),
-          interestRate: 0, // Default, can be enhanced later
+          interestRate: Number(account.interest_rate || 0),
           creditLimit: account.credit_limit ? Number(account.credit_limit) : undefined,
-          dueDate: account.due_date || undefined,
-          minimumPayment: account.minimum_payment ? Number(account.minimum_payment) : undefined
+          dueDate: account.due_date?.toString() || undefined,
+          minimumPayment: account.min_payment ? Number(account.min_payment) : undefined
         };
 
-        if (account.category in groupedAccounts) {
-          groupedAccounts[account.category as keyof typeof groupedAccounts].push(accountItem);
+        const category = account.category || account.type || 'cash';
+        if (category in groupedAccounts) {
+          groupedAccounts[category as keyof typeof groupedAccounts].push(accountItem);
         }
       });
 

@@ -22,7 +22,7 @@ export const useIncomeSettings = () => {
 
     try {
       const { data, error } = await supabase
-        .from('income_settings')
+        .from('income_settings' as any)
         .select('income_enabled')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -33,7 +33,7 @@ export const useIncomeSettings = () => {
       }
 
       if (data) {
-        setIncomeEnabled(data.income_enabled);
+        setIncomeEnabled((data as any).income_enabled);
       }
     } catch (error) {
       console.error('Error loading income settings:', error);
@@ -49,12 +49,12 @@ export const useIncomeSettings = () => {
 
     try {
       const { error } = await supabase
-        .from('income_settings')
+        .from('income_settings' as any)
         .upsert({
           user_id: user.id,
           income_enabled: enabled,
           updated_at: new Date().toISOString()
-        });
+        } as any);
 
       if (error) throw error;
     } catch (error) {

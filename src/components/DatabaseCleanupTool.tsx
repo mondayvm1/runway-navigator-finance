@@ -46,8 +46,9 @@ const DatabaseCleanupTool = () => {
 
       // Group by category + name + balance to find duplicates
       const grouped = new Map<string, any[]>();
-      accounts?.forEach(account => {
-        const key = `${account.category}|${account.name}|${account.balance}`;
+      accounts?.forEach((account: any) => {
+        const category = account.category || account.type || 'unknown';
+        const key = `${category}|${account.name}|${account.balance}`;
         if (!grouped.has(key)) {
           grouped.set(key, []);
         }
@@ -94,8 +95,9 @@ const DatabaseCleanupTool = () => {
 
       // Group by category + name + balance + all fields to find exact duplicates
       const grouped = new Map<string, any[]>();
-      accounts?.forEach(account => {
-        const key = `${account.category}|${account.name}|${account.balance}|${account.interest_rate}|${account.credit_limit}|${account.due_date}|${account.minimum_payment}`;
+      accounts?.forEach((account: any) => {
+        const category = account.category || account.type || 'unknown';
+        const key = `${category}|${account.name}|${account.balance}|${account.interest_rate}|${account.credit_limit}|${account.due_date}|${account.min_payment}`;
         if (!grouped.has(key)) {
           grouped.set(key, []);
         }

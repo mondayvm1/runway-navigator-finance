@@ -144,75 +144,75 @@ const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => 
       icon={<Award className="h-5 w-5 text-blue-500" />}
       defaultOpen={true}
     >
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Estimated Score with Actual Comparison */}
-        <Card className={`p-6 ${scoreCategory.bg} border-2 ${scoreCategory.border}`}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className={`p-4 sm:p-6 ${scoreCategory.bg} border-2 ${scoreCategory.border}`}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {/* Estimated Score */}
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-2">Estimated Score</p>
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Award className={`h-6 w-6 ${scoreCategory.color}`} />
-                <p className={`text-5xl font-bold ${scoreCategory.color}`}>{estimatedScore}</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Estimated Score</p>
+              <div className="flex items-center justify-center gap-2 mb-1 sm:mb-2">
+                <Award className={`h-5 w-5 sm:h-6 sm:w-6 ${scoreCategory.color}`} />
+                <p className={`text-4xl sm:text-5xl font-bold ${scoreCategory.color}`}>{estimatedScore}</p>
               </div>
-              <p className={`text-lg font-semibold ${scoreCategory.color}`}>{scoreCategory.label}</p>
+              <p className={`text-sm sm:text-lg font-semibold ${scoreCategory.color}`}>{scoreCategory.label}</p>
             </div>
 
             {/* Actual Score Input */}
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-2">Your Actual Score</p>
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Target className="h-6 w-6 text-indigo-500" />
+              <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Your Actual Score</p>
+              <div className="flex items-center justify-center gap-2 mb-1 sm:mb-2">
+                <Target className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500" />
                 <Input
                   type="number"
                   min={300}
                   max={850}
                   value={inputValue}
                   onChange={handleScoreChange}
-                  placeholder="Enter score"
-                  className="w-32 text-center text-2xl font-bold h-14 border-2 border-indigo-300 focus:border-indigo-500"
+                  placeholder="Enter"
+                  className="w-24 sm:w-32 text-center text-xl sm:text-2xl font-bold h-12 sm:h-14 border-2 border-indigo-300 focus:border-indigo-500"
                 />
               </div>
-              <p className="text-xs text-gray-500">From Credit Karma, Experian, etc.</p>
+              <p className="text-[10px] sm:text-xs text-gray-500">From Credit Karma, etc.</p>
             </div>
           </div>
 
           {/* Score Comparison */}
           {actualScore !== null && (
-            <div className="mt-4 p-4 bg-white rounded-lg border-2 border-indigo-200">
-              <div className="flex items-center justify-center gap-4">
+            <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-white rounded-lg border-2 border-indigo-200">
+              <div className="flex items-center justify-center gap-2 sm:gap-4 flex-wrap">
                 <div className="text-center">
-                  <p className="text-xs text-gray-500">Estimated</p>
-                  <p className="text-2xl font-bold text-gray-700">{estimatedScore}</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500">Estimated</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-700">{estimatedScore}</p>
                 </div>
-                <ArrowRight className="h-5 w-5 text-gray-400" />
+                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                 <div className="text-center">
-                  <p className="text-xs text-gray-500">Actual</p>
-                  <p className="text-2xl font-bold text-indigo-600">{actualScore}</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500">Actual</p>
+                  <p className="text-lg sm:text-2xl font-bold text-indigo-600">{actualScore}</p>
                 </div>
-                <div className="text-center ml-4 pl-4 border-l-2 border-gray-200">
-                  <p className="text-xs text-gray-500">Difference</p>
-                  <p className={`text-2xl font-bold ${actualScore > estimatedScore ? 'text-green-600' : actualScore < estimatedScore ? 'text-red-600' : 'text-gray-600'}`}>
+                <div className="text-center ml-2 sm:ml-4 pl-2 sm:pl-4 border-l-2 border-gray-200">
+                  <p className="text-[10px] sm:text-xs text-gray-500">Diff</p>
+                  <p className={`text-lg sm:text-2xl font-bold ${actualScore > estimatedScore ? 'text-green-600' : actualScore < estimatedScore ? 'text-red-600' : 'text-gray-600'}`}>
                     {actualScore > estimatedScore ? '+' : ''}{actualScore - estimatedScore}
                   </p>
                 </div>
               </div>
               
               {/* Analysis */}
-              <div className="mt-4 text-sm">
+              <div className="mt-3 sm:mt-4 text-xs sm:text-sm">
                 {actualScore > estimatedScore + 30 && (
-                  <p className="text-green-700 bg-green-50 p-3 rounded">
-                    🎉 <strong>Great news!</strong> Your actual score is higher than estimated. This suggests you have strong payment history or longer credit history than our model assumes.
+                  <p className="text-green-700 bg-green-50 p-2 sm:p-3 rounded">
+                    🎉 <strong>Great!</strong> Your score is higher than estimated.
                   </p>
                 )}
                 {actualScore < estimatedScore - 30 && (
-                  <p className="text-amber-700 bg-amber-50 p-3 rounded">
-                    ⚠️ <strong>Score below estimate.</strong> This could indicate late payments, recent hard inquiries, or shorter credit history. Focus on on-time payments and reducing utilization.
+                  <p className="text-amber-700 bg-amber-50 p-2 sm:p-3 rounded">
+                    ⚠️ <strong>Below estimate.</strong> Focus on payments & utilization.
                   </p>
                 )}
                 {Math.abs(actualScore - estimatedScore) <= 30 && (
-                  <p className="text-blue-700 bg-blue-50 p-3 rounded">
-                    ✓ <strong>Close match!</strong> Our estimate aligns well with your actual score. The tips below should help you improve further.
+                  <p className="text-blue-700 bg-blue-50 p-2 sm:p-3 rounded">
+                    ✓ <strong>Close match!</strong> Tips below can help improve further.
                   </p>
                 )}
               </div>
@@ -220,8 +220,8 @@ const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => 
           )}
 
           {/* Score Breakdown Bar */}
-          <div className="mt-6">
-            <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
+          <div className="mt-4 sm:mt-6">
+            <div className="relative h-2 sm:h-3 bg-gray-200 rounded-full overflow-hidden">
               <div className="absolute inset-y-0 left-0 w-[20%] bg-red-500" />
               <div className="absolute inset-y-0 left-[20%] w-[16.4%] bg-orange-500" />
               <div className="absolute inset-y-0 left-[36.4%] w-[12.7%] bg-yellow-500" />
@@ -230,7 +230,7 @@ const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => 
               
               {/* Estimated score marker */}
               <div 
-                className="absolute top-0 bottom-0 w-1 bg-black"
+                className="absolute top-0 bottom-0 w-0.5 sm:w-1 bg-black"
                 style={{ left: `${((estimatedScore - 300) / 550) * 100}%` }}
                 title={`Estimated: ${estimatedScore}`}
               />
@@ -238,67 +238,67 @@ const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => 
               {/* Actual score marker */}
               {actualScore !== null && (
                 <div 
-                  className="absolute top-0 bottom-0 w-1 bg-indigo-600 shadow-lg"
+                  className="absolute top-0 bottom-0 w-0.5 sm:w-1 bg-indigo-600 shadow-lg"
                   style={{ left: `${((actualScore - 300) / 550) * 100}%` }}
                   title={`Actual: ${actualScore}`}
                 />
               )}
             </div>
-            <div className="flex justify-between text-xs text-gray-600 mt-1">
+            <div className="flex justify-between text-[10px] sm:text-xs text-gray-600 mt-1">
               <span>300</span>
-              <span>Poor</span>
-              <span>Fair</span>
-              <span>Good</span>
-              <span>Exceptional</span>
+              <span className="hidden sm:inline">Poor</span>
+              <span className="hidden sm:inline">Fair</span>
+              <span className="hidden sm:inline">Good</span>
+              <span className="hidden sm:inline">Exceptional</span>
               <span>850</span>
             </div>
             {actualScore !== null && (
-              <div className="flex gap-4 mt-2 text-xs">
-                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-black rounded-sm"></span> Estimated</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-indigo-600 rounded-sm"></span> Actual</span>
+              <div className="flex gap-3 sm:gap-4 mt-2 text-[10px] sm:text-xs">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 sm:w-3 sm:h-3 bg-black rounded-sm"></span> Estimated</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 sm:w-3 sm:h-3 bg-indigo-600 rounded-sm"></span> Actual</span>
               </div>
             )}
           </div>
 
-          <div className="mt-4 text-xs text-gray-600 bg-white/50 p-3 rounded">
-            <AlertCircle className="h-4 w-4 inline mr-1" />
-            This is an estimate based on your credit utilization. Actual scores consider payment history, credit age, credit mix, and recent inquiries.
+          <div className="mt-3 sm:mt-4 text-[10px] sm:text-xs text-gray-600 bg-white/50 p-2 sm:p-3 rounded">
+            <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
+            Estimate based on utilization. Actual scores include payment history, credit age, and more.
           </div>
         </Card>
 
         {/* Score Factors */}
-        <Card className="p-6">
-          <h4 className="font-semibold text-gray-900 mb-4">What Affects Your Score</h4>
+        <Card className="p-4 sm:p-6">
+          <h4 className="font-semibold text-sm sm:text-base text-gray-900 mb-3 sm:mb-4">What Affects Your Score</h4>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {/* Payment History */}
-            <div className="flex items-start justify-between pb-3 border-b">
+            <div className="flex items-start justify-between pb-2 sm:pb-3 border-b">
               <div>
-                <p className="font-medium text-gray-800">Payment History</p>
-                <p className="text-sm text-gray-600">Most important factor (35%)</p>
+                <p className="font-medium text-xs sm:text-base text-gray-800">Payment History</p>
+                <p className="text-[10px] sm:text-sm text-gray-600">Most important (35%)</p>
               </div>
-              <div className="text-right">
-                <Minus className="h-5 w-5 text-gray-400 ml-auto mb-1" />
-                <p className="text-xs text-gray-500">No data</p>
+              <div className="text-right flex-shrink-0">
+                <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 ml-auto mb-0.5 sm:mb-1" />
+                <p className="text-[10px] sm:text-xs text-gray-500">No data</p>
               </div>
             </div>
 
             {/* Credit Utilization */}
-            <div className="flex items-start justify-between pb-3 border-b">
+            <div className="flex items-start justify-between pb-2 sm:pb-3 border-b">
               <div>
-                <p className="font-medium text-gray-800">Credit Utilization</p>
-                <p className="text-sm text-gray-600">Very important (30%)</p>
-                <p className="text-xs text-gray-500 mt-1">Current: {overallUtilization.toFixed(1)}%</p>
+                <p className="font-medium text-xs sm:text-base text-gray-800">Credit Utilization</p>
+                <p className="text-[10px] sm:text-sm text-gray-600">Very important (30%)</p>
+                <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">{overallUtilization.toFixed(1)}%</p>
               </div>
-              <div className="text-right">
+              <div className="text-right flex-shrink-0">
                 {overallUtilization <= 10 ? (
-                  <TrendingUp className="h-5 w-5 text-green-500 ml-auto mb-1" />
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 ml-auto mb-0.5 sm:mb-1" />
                 ) : overallUtilization <= 30 ? (
-                  <Minus className="h-5 w-5 text-blue-500 ml-auto mb-1" />
+                  <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 ml-auto mb-0.5 sm:mb-1" />
                 ) : (
-                  <TrendingDown className="h-5 w-5 text-red-500 ml-auto mb-1" />
+                  <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 ml-auto mb-0.5 sm:mb-1" />
                 )}
-                <p className={`text-xs font-semibold ${
+                <p className={`text-[10px] sm:text-xs font-semibold ${
                   overallUtilization <= 10 ? 'text-green-600' : 
                   overallUtilization <= 30 ? 'text-blue-600' : 'text-red-600'
                 }`}>
@@ -309,33 +309,33 @@ const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => 
             </div>
 
             {/* Credit History Length */}
-            <div className="flex items-start justify-between pb-3 border-b">
+            <div className="flex items-start justify-between pb-2 sm:pb-3 border-b">
               <div>
-                <p className="font-medium text-gray-800">Length of Credit History</p>
-                <p className="text-sm text-gray-600">Important (15%)</p>
+                <p className="font-medium text-xs sm:text-base text-gray-800">Credit History</p>
+                <p className="text-[10px] sm:text-sm text-gray-600">Important (15%)</p>
               </div>
-              <div className="text-right">
-                <Minus className="h-5 w-5 text-gray-400 ml-auto mb-1" />
-                <p className="text-xs text-gray-500">No data</p>
+              <div className="text-right flex-shrink-0">
+                <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 ml-auto mb-0.5 sm:mb-1" />
+                <p className="text-[10px] sm:text-xs text-gray-500">No data</p>
               </div>
             </div>
 
             {/* Credit Mix */}
-            <div className="flex items-start justify-between pb-3 border-b">
+            <div className="flex items-start justify-between pb-2 sm:pb-3 border-b">
               <div>
-                <p className="font-medium text-gray-800">Credit Mix</p>
-                <p className="text-sm text-gray-600">Moderate impact (10%)</p>
-                <p className="text-xs text-gray-500 mt-1">{totalAccounts} credit account{totalAccounts !== 1 ? 's' : ''}</p>
+                <p className="font-medium text-xs sm:text-base text-gray-800">Credit Mix</p>
+                <p className="text-[10px] sm:text-sm text-gray-600">Moderate (10%)</p>
+                <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">{totalAccounts} account{totalAccounts !== 1 ? 's' : ''}</p>
               </div>
-              <div className="text-right">
+              <div className="text-right flex-shrink-0">
                 {totalAccounts >= 3 ? (
-                  <TrendingUp className="h-5 w-5 text-green-500 ml-auto mb-1" />
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 ml-auto mb-0.5 sm:mb-1" />
                 ) : totalAccounts >= 1 ? (
-                  <Minus className="h-5 w-5 text-blue-500 ml-auto mb-1" />
+                  <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 ml-auto mb-0.5 sm:mb-1" />
                 ) : (
-                  <TrendingDown className="h-5 w-5 text-gray-400 ml-auto mb-1" />
+                  <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 ml-auto mb-0.5 sm:mb-1" />
                 )}
-                <p className="text-xs text-gray-500">
+                <p className="text-[10px] sm:text-xs text-gray-500">
                   {totalAccounts >= 3 ? 'Good' : totalAccounts >= 1 ? 'Fair' : 'None'}
                 </p>
               </div>
@@ -344,12 +344,12 @@ const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => 
             {/* New Credit */}
             <div className="flex items-start justify-between">
               <div>
-                <p className="font-medium text-gray-800">New Credit Inquiries</p>
-                <p className="text-sm text-gray-600">Small impact (10%)</p>
+                <p className="font-medium text-xs sm:text-base text-gray-800">New Credit</p>
+                <p className="text-[10px] sm:text-sm text-gray-600">Small impact (10%)</p>
               </div>
-              <div className="text-right">
-                <Minus className="h-5 w-5 text-gray-400 ml-auto mb-1" />
-                <p className="text-xs text-gray-500">No data</p>
+              <div className="text-right flex-shrink-0">
+                <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 ml-auto mb-0.5 sm:mb-1" />
+                <p className="text-[10px] sm:text-xs text-gray-500">No data</p>
               </div>
             </div>
           </div>
@@ -357,35 +357,33 @@ const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => 
 
         {/* Improvement Tips */}
         {utilizationImpact && (
-          <Card className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200">
-            <h4 className="font-semibold text-emerald-900 mb-3 flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
+          <Card className="p-4 sm:p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200">
+            <h4 className="font-semibold text-sm sm:text-base text-emerald-900 mb-2 sm:mb-3 flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
               Quick Score Boost
             </h4>
-            <p className="text-sm text-emerald-800 mb-3">
-              Pay down {formatCurrency(utilizationImpact.payoffAmount)} to reduce your utilization to {utilizationImpact.targetUtilization.toFixed(1)}%
+            <p className="text-xs sm:text-sm text-emerald-800 mb-2 sm:mb-3">
+              Pay down {formatCurrency(utilizationImpact.payoffAmount)} to reduce utilization to {utilizationImpact.targetUtilization.toFixed(1)}%
             </p>
-            <div className="bg-white/70 p-4 rounded border border-emerald-200">
-              <p className="text-lg font-bold text-emerald-700">
-                Potential Score Increase: +{utilizationImpact.scoreIncrease} points
+            <div className="bg-white/70 p-3 sm:p-4 rounded border border-emerald-200">
+              <p className="text-base sm:text-lg font-bold text-emerald-700">
+                +{utilizationImpact.scoreIncrease} points potential
               </p>
-              <p className="text-xs text-gray-600 mt-1">
-                Lower utilization = higher score. Keep it under 30%, ideally under 10%.
+              <p className="text-[10px] sm:text-xs text-gray-600 mt-1">
+                Keep utilization under 30%, ideally under 10%.
               </p>
             </div>
           </Card>
         )}
 
         {/* Additional Tips */}
-        <Card className="p-4 bg-blue-50 border border-blue-200">
-          <h4 className="font-semibold text-blue-900 mb-2 text-sm">Tips to Improve Your Score</h4>
-          <ul className="text-xs text-blue-800 space-y-1 list-disc list-inside">
-            <li>Pay all bills on time, every time</li>
-            <li>Keep credit utilization below 30% (ideally under 10%)</li>
-            <li>Don't close old credit cards (length of history matters)</li>
+        <Card className="p-3 sm:p-4 bg-blue-50 border border-blue-200">
+          <h4 className="font-semibold text-xs sm:text-sm text-blue-900 mb-1.5 sm:mb-2">Tips to Improve</h4>
+          <ul className="text-[10px] sm:text-xs text-blue-800 space-y-0.5 sm:space-y-1 list-disc list-inside">
+            <li>Pay all bills on time</li>
+            <li>Keep utilization below 30%</li>
+            <li>Don't close old credit cards</li>
             <li>Limit new credit applications</li>
-            <li>Check your credit report for errors annually</li>
-            <li>Consider becoming an authorized user on a good account</li>
           </ul>
         </Card>
       </div>

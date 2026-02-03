@@ -49,54 +49,59 @@ const EnhancedSnapshotManager = ({ onCreateSnapshot, onSaveData }: EnhancedSnaps
   };
 
   return (
-    <Card className="p-4 mb-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex gap-2">
-          <Button onClick={onSaveData} className="flex items-center gap-2">
-            <Save size={16} />
-            Save Current Data
+    <Card className="p-3 sm:p-4 mb-4 sm:mb-6">
+      <div className="flex flex-col gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:flex gap-2">
+          <Button onClick={onSaveData} className="flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm h-9 sm:h-10">
+            <Save size={14} className="sm:hidden" />
+            <Save size={16} className="hidden sm:block" />
+            <span className="hidden sm:inline">Save Current Data</span>
+            <span className="sm:hidden">Save Data</span>
           </Button>
           
           <Button 
             onClick={handleShowForm}
             variant="outline"
-            className="flex items-center gap-2"
+            className="flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm h-9 sm:h-10"
           >
-            <Camera size={16} />
-            Take Snapshot
+            <Camera size={14} className="sm:hidden" />
+            <Camera size={16} className="hidden sm:block" />
+            <span className="hidden sm:inline">Take Snapshot</span>
+            <span className="sm:hidden">Snapshot</span>
           </Button>
         </div>
         
         {showSnapshotInput && (
-          <div className="space-y-3 bg-blue-50 p-4 rounded-lg">
+          <div className="space-y-3 bg-blue-50 p-3 sm:p-4 rounded-lg">
             <div>
-              <Label className="text-sm font-medium text-gray-700">Snapshot Name</Label>
+              <Label className="text-xs sm:text-sm font-medium text-gray-700">Snapshot Name</Label>
               <Input
-                placeholder="e.g., 'Before salary increase' or 'Q1 2024 baseline'"
+                placeholder="e.g., 'Before salary increase'"
                 value={snapshotName}
                 onChange={(e) => setSnapshotName(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleCreateSnapshot()}
-                className="mt-1"
+                className="mt-1 text-sm h-9 sm:h-10"
               />
             </div>
             
             <div>
-              <Label className="text-sm font-medium text-gray-700">Description (Optional)</Label>
+              <Label className="text-xs sm:text-sm font-medium text-gray-700">Description (Optional)</Label>
               <Textarea
-                placeholder="Add notes about this financial snapshot..."
+                placeholder="Add notes about this snapshot..."
                 value={snapshotDescription}
                 onChange={(e) => setSnapshotDescription(e.target.value)}
-                className="mt-1 h-20"
+                className="mt-1 h-16 sm:h-20 text-sm"
               />
             </div>
             
             <div className="flex gap-2">
-              <Button onClick={handleCreateSnapshot} disabled={!snapshotName.trim()}>
+              <Button onClick={handleCreateSnapshot} disabled={!snapshotName.trim()} className="text-xs sm:text-sm h-9 sm:h-10">
                 Create Snapshot
               </Button>
               <Button 
                 onClick={() => setShowSnapshotInput(false)} 
                 variant="outline"
+                className="text-xs sm:text-sm h-9 sm:h-10"
               >
                 Cancel
               </Button>

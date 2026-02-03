@@ -125,27 +125,27 @@ const FinancialAllocationCharts = ({
       icon={<PieChartIcon className="h-5 w-5" style={{ color: palette.primary }} />}
       defaultOpen={false}
     >
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Financial Health Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
           <Card 
-            className="p-4 border-2" 
+            className="p-3 sm:p-4 border-2" 
             style={{ 
               backgroundColor: palette.primary, 
               borderColor: palette.border,
             }}
           >
-            <div className="flex items-center gap-3 mb-2">
-              <Shield className="h-5 w-5" style={{ color: palette.text }} />
-              <span className="font-medium" style={{ color: palette.text }}>Emergency Buffer</span>
+            <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+              <Shield className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: palette.text }} />
+              <span className="font-medium text-xs sm:text-sm" style={{ color: palette.text }}>Emergency</span>
             </div>
-            <div className="text-2xl font-bold mb-1" style={{ color: palette.text }}>
+            <div className="text-lg sm:text-2xl font-bold mb-0.5 sm:mb-1 truncate" style={{ color: palette.text }}>
               {formatCurrency(totalCash)}
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span style={{ color: palette.text }}>Target: {formatCurrency(emergencyFundTarget)}</span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-[10px] sm:text-sm gap-1">
+              <span className="hidden sm:inline" style={{ color: palette.text }}>Target: {formatCurrency(emergencyFundTarget)}</span>
               <span 
-                className="px-2 py-1 rounded-full text-xs font-medium"
+                className="px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium self-start"
                 style={{ 
                   color: palette.text,
                   backgroundColor: bufferStatus === 'Excellent' ? palette.secondary : 
@@ -158,58 +158,58 @@ const FinancialAllocationCharts = ({
           </Card>
 
           <Card 
-            className="p-4 border-2" 
+            className="p-3 sm:p-4 border-2" 
             style={{ 
               backgroundColor: palette.secondary, 
               borderColor: palette.border,
             }}
           >
-            <div className="flex items-center gap-3 mb-2">
-              <TrendingUp className="h-5 w-5" style={{ color: palette.text }} />
-              <span className="font-medium" style={{ color: palette.text }}>Runway</span>
+            <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: palette.text }} />
+              <span className="font-medium text-xs sm:text-sm" style={{ color: palette.text }}>Runway</span>
             </div>
-            <div className="text-2xl font-bold mb-1" style={{ color: palette.text }}>
-              {runwayMonths.toFixed(1)} months
+            <div className="text-lg sm:text-2xl font-bold mb-0.5 sm:mb-1" style={{ color: palette.text }}>
+              {runwayMonths.toFixed(1)}mo
             </div>
-            <div className="text-sm" style={{ color: palette.text }}>
-              Based on current cash & expenses
+            <div className="text-[10px] sm:text-sm hidden sm:block" style={{ color: palette.text }}>
+              Based on current cash
             </div>
           </Card>
 
           <Card 
-            className="p-4 border-2" 
+            className="p-3 sm:p-4 border-2" 
             style={{ 
               backgroundColor: palette.tertiary, 
               borderColor: palette.border,
             }}
           >
-            <div className="flex items-center gap-3 mb-2">
-              <Wallet className="h-5 w-5" style={{ color: palette.text }} />
-              <span className="font-medium" style={{ color: palette.text }}>Net Worth</span>
+            <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+              <Wallet className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: palette.text }} />
+              <span className="font-medium text-xs sm:text-sm" style={{ color: palette.text }}>Net Worth</span>
             </div>
-            <div className="text-2xl font-bold mb-1" style={{ color: palette.text }}>
+            <div className="text-lg sm:text-2xl font-bold mb-0.5 sm:mb-1 truncate" style={{ color: palette.text }}>
               {formatCurrency(netWorth)}
             </div>
-            <div className="text-sm" style={{ color: palette.text }}>
+            <div className="text-[10px] sm:text-sm hidden sm:block" style={{ color: palette.text }}>
               Assets - Liabilities
             </div>
           </Card>
 
           <Card 
-            className="p-4 border-2" 
+            className="p-3 sm:p-4 border-2" 
             style={{ 
               backgroundColor: annualCashFlow >= 0 ? palette.primary : '#fecaca',
               borderColor: palette.border,
             }}
           >
-            <div className="flex items-center gap-3 mb-2">
-              <CalendarDays className="h-5 w-5" style={{ color: palette.text }} />
-              <span className="font-medium" style={{ color: palette.text }}>Annual Cashflow</span>
+            <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+              <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: palette.text }} />
+              <span className="font-medium text-xs sm:text-sm" style={{ color: palette.text }}>Cashflow</span>
             </div>
-            <div className="text-2xl font-bold mb-1" style={{ color: palette.text }}>
+            <div className="text-lg sm:text-2xl font-bold mb-0.5 sm:mb-1 truncate" style={{ color: palette.text }}>
               {formatCurrency(annualCashFlow)}
             </div>
-            <div className="text-sm" style={{ color: palette.text }}>
+            <div className="text-[10px] sm:text-sm" style={{ color: palette.text }}>
               {annualCashFlow >= 0 ? 'Surplus' : 'Deficit'}
             </div>
           </Card>

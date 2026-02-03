@@ -378,34 +378,35 @@ const RunwayCalculator = () => {
 
   return (
     <div className="max-w-7xl mx-auto relative">
-      {/* Floating background elements */}
+      {/* Floating background elements - smaller on mobile */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-10 left-[5%] w-64 h-64 bg-blue-400/5 rounded-full blur-3xl animate-float" />
-        <div className="absolute top-40 right-[10%] w-80 h-80 bg-indigo-400/5 rounded-full blur-3xl animate-float-delayed" />
-        <div className="absolute bottom-40 left-[15%] w-72 h-72 bg-purple-400/5 rounded-full blur-3xl animate-float-delayed" />
+        <div className="absolute top-10 left-[5%] w-32 sm:w-64 h-32 sm:h-64 bg-blue-400/5 rounded-full blur-3xl animate-float" />
+        <div className="absolute top-40 right-[10%] w-40 sm:w-80 h-40 sm:h-80 bg-indigo-400/5 rounded-full blur-3xl animate-float-delayed" />
+        <div className="absolute bottom-40 left-[15%] w-36 sm:w-72 h-36 sm:h-72 bg-purple-400/5 rounded-full blur-3xl animate-float-delayed" />
       </div>
 
-      <div className="grid lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3 space-y-6">
+      <div className="grid lg:grid-cols-5 gap-4 sm:gap-6">
+        <div className="lg:col-span-3 space-y-4 sm:space-y-6">
           {/* Premium Dashboard Header */}
-          <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-200/50 border border-white/80 p-6 animate-fade-up">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
-                  <Sparkles className="w-5 h-5 text-white" />
+          <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-200/50 border border-white/80 p-4 sm:p-6 animate-fade-up">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-800">Financial Dashboard</h2>
-                  <p className="text-sm text-slate-500">{user?.email}</p>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-base sm:text-xl font-semibold text-slate-800">Financial Dashboard</h2>
+                  <p className="text-xs sm:text-sm text-slate-500 truncate">{user?.email}</p>
                 </div>
               </div>
-              <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100">
-                <LogOut size={16} className="mr-2" />
-                Sign Out
+              <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 self-end sm:self-auto">
+                <LogOut size={14} className="mr-1.5 sm:mr-2 sm:hidden" />
+                <LogOut size={16} className="mr-2 hidden sm:block" />
+                <span className="text-sm">Sign Out</span>
               </Button>
             </div>
             
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
               <DataRecoveryButton 
                 onRefreshData={loadData}
                 loading={loading}
@@ -417,18 +418,19 @@ const RunwayCalculator = () => {
                 onClick={handleMassDelete}
                 variant="ghost"
                 size="sm"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs sm:text-sm"
               >
-                <Trash2 size={16} className="mr-2" />
-                Clear All
+                <Trash2 size={14} className="mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Clear All</span>
+                <span className="sm:hidden">Clear</span>
               </Button>
               <Button 
                 onClick={() => setShowSnapshotViewer(true)}
                 variant="ghost"
                 size="sm"
-                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs sm:text-sm"
               >
-                <Camera size={16} className="mr-2" />
+                <Camera size={14} className="mr-1 sm:mr-2" />
                 Snapshots
               </Button>
             </div>

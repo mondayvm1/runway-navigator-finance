@@ -7,6 +7,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { toast } from "sonner";
 import Index from "./pages/Index";
 import Demo from "./pages/Demo";
+import Contact from "./pages/Contact";
+import Donate from "./pages/Donate";
+import BuildApp from "./pages/BuildApp";
+import Partners from "./pages/Partners";
+import VIP from "./pages/VIP";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +48,11 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/demo" element={<Demo />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/donate" element={<Donate />} />
+            <Route path="/build" element={<BuildApp />} />
+            <Route path="/partners" element={<Partners />} />
+            <Route path="/vip" element={<VIP />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

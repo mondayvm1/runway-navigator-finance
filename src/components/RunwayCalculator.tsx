@@ -29,9 +29,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/hooks/useAuth';
 import { useFinancialData, AccountItem } from '@/hooks/useFinancialData';
+import { useCreditScore } from '@/hooks/useCreditScore';
 
 const RunwayCalculator = () => {
   const { user, signOut } = useAuth();
+  const { saveCreditScoreSnapshot } = useCreditScore();
   const {
     accountData,
     setAccountData,
@@ -347,7 +349,7 @@ const RunwayCalculator = () => {
 
   const handleCreateSnapshot = async (name: string, description?: string) => {
     console.log('Creating snapshot with name:', name, 'and description:', description);
-    return await createSnapshot(name);
+    return await createSnapshot(name, saveCreditScoreSnapshot);
   };
 
   const handleRestoreFromSnapshot = (snapshotData: {

@@ -1,17 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { TrendingUp, TrendingDown, Minus, Award, AlertCircle, Target, ArrowRight } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { AccountItem } from '@/hooks/useFinancialData';
 import CollapsibleSection from './CollapsibleSection';
+import { useCreditScore } from '@/hooks/useCreditScore';
 
 interface CreditScoreEstimatorProps {
   creditAccounts: AccountItem[];
 }
 
 const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => {
-  const [actualScore, setActualScore] = useState<number | null>(null);
+  const { actualScore, setActualScore } = useCreditScore();
+  const [inputValue, setInputValue] = useState<string>('');
+
+  // Sync input value with loaded actual score
+  useEffect(() => {
+    if (actualScore !== null) {
+      setInputValue(actualScore.toString());
+    }
+  }, [actualScore]);
+
+  // Debounced save handler
+  const debouncedSave = useMemo(
+    () => {
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+      return (value: number | null) => {
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          setActualScore(value);
+        }, 1000);
+      };
+    },
+    [setActualScore]
+  );
+
+  const handleScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+    
+    if (value === '') {
+      debouncedSave(null);
+    } else {
+      const numValue = Number(value);
+      if (numValue >= 300 && numValue <= 850) {
+        debouncedSave(numValue);
+      }
+    }
+  };
   // Calculate credit utilization
   const totalBalance = creditAccounts.reduce((sum, acc) => sum + acc.balance, 0);
   const totalLimit = creditAccounts.reduce((sum, acc) => sum + (acc.creditLimit || 0), 0);
@@ -130,8 +167,8 @@ const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => 
                   type="number"
                   min={300}
                   max={850}
-                  value={actualScore ?? ''}
-                  onChange={(e) => setActualScore(e.target.value ? Number(e.target.value) : null)}
+                  value={inputValue}
+                  onChange={handleScoreChange}
                   placeholder="Enter score"
                   className="w-32 text-center text-2xl font-bold h-14 border-2 border-indigo-300 focus:border-indigo-500"
                 />

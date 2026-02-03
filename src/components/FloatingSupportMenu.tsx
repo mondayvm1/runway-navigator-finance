@@ -8,9 +8,10 @@ import {
   Heart, 
   Rocket, 
   Handshake,
-  ExternalLink
+  Crown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,14 @@ const FloatingSupportMenu = () => {
   const [showCleanupTool, setShowCleanupTool] = useState(false);
 
   const menuItems = [
+    {
+      id: 'vip',
+      icon: Crown,
+      label: 'Go VIP',
+      description: 'Unlock premium features',
+      color: 'from-amber-500 to-orange-500',
+      href: '/vip'
+    },
     {
       id: 'troubleshoot',
       icon: Wrench,
@@ -42,7 +51,7 @@ const FloatingSupportMenu = () => {
       label: 'Send Message',
       description: 'Get in touch',
       color: 'from-blue-500 to-indigo-500',
-      onClick: () => window.open('mailto:hello@pathline.app', '_blank')
+      href: '/contact'
     },
     {
       id: 'donate',
@@ -50,7 +59,7 @@ const FloatingSupportMenu = () => {
       label: 'Support Development',
       description: 'Buy me a coffee',
       color: 'from-pink-500 to-rose-500',
-      onClick: () => window.open('https://buymeacoffee.com/pathline', '_blank')
+      href: '/donate'
     },
     {
       id: 'cta',
@@ -58,7 +67,7 @@ const FloatingSupportMenu = () => {
       label: 'Build Your App',
       description: 'Cross-platform development',
       color: 'from-purple-500 to-violet-500',
-      onClick: () => window.open('https://pathline.app/build', '_blank')
+      href: '/build'
     },
     {
       id: 'sponsor',
@@ -66,7 +75,7 @@ const FloatingSupportMenu = () => {
       label: 'Sponsorship & Affiliate',
       description: 'Partner with us',
       color: 'from-emerald-500 to-teal-500',
-      onClick: () => window.open('https://pathline.app/partners', '_blank')
+      href: '/partners'
     }
   ];
 
@@ -81,35 +90,60 @@ const FloatingSupportMenu = () => {
             ? "opacity-100 scale-100 translate-y-0" 
             : "opacity-0 scale-95 translate-y-4 pointer-events-none"
         )}>
-          {menuItems.map((item, index) => (
-            <button
-              key={item.id}
-              onClick={item.onClick}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl",
-                "bg-white/90 backdrop-blur-xl border border-white/50 shadow-lg shadow-slate-200/50",
-                "hover:bg-white hover:shadow-xl hover:scale-[1.02]",
-                "transition-all duration-200 text-left min-w-[220px]",
-                "animate-fade-up"
-              )}
-              style={{ 
-                animationDelay: `${index * 50}ms`,
-                animationFillMode: 'backwards'
-              }}
-            >
-              <div className={cn(
-                "w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center flex-shrink-0",
-                item.color
-              )}>
-                <item.icon className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-slate-800 text-sm">{item.label}</p>
-                <p className="text-xs text-slate-500 truncate">{item.description}</p>
-              </div>
-              <ExternalLink className="w-4 h-4 text-slate-400 flex-shrink-0" />
-            </button>
-          ))}
+          {menuItems.map((item, index) => {
+            const content = (
+              <>
+                <div className={cn(
+                  "w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center flex-shrink-0",
+                  item.color
+                )}>
+                  <item.icon className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-slate-800 text-sm">{item.label}</p>
+                  <p className="text-xs text-slate-500 truncate">{item.description}</p>
+                </div>
+              </>
+            );
+
+            const className = cn(
+              "flex items-center gap-3 px-4 py-3 rounded-xl",
+              "bg-white/90 backdrop-blur-xl border border-white/50 shadow-lg shadow-slate-200/50",
+              "hover:bg-white hover:shadow-xl hover:scale-[1.02]",
+              "transition-all duration-200 text-left min-w-[220px]",
+              "animate-fade-up"
+            );
+
+            const style = { 
+              animationDelay: `${index * 50}ms`,
+              animationFillMode: 'backwards' as const
+            };
+
+            if (item.href) {
+              return (
+                <Link
+                  key={item.id}
+                  to={item.href}
+                  className={className}
+                  style={style}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {content}
+                </Link>
+              );
+            }
+
+            return (
+              <button
+                key={item.id}
+                onClick={item.onClick}
+                className={className}
+                style={style}
+              >
+                {content}
+              </button>
+            );
+          })}
         </div>
 
         {/* Main Toggle Button */}

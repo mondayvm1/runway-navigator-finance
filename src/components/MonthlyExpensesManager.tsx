@@ -138,16 +138,16 @@ const MonthlyExpensesManager = ({
   const detailedTotal = calculateDetailedTotal();
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
-          <DollarSign className="h-5 w-5 text-primary" />
+    <Card className="p-4 sm:p-6 overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <h3 className="text-base sm:text-lg font-medium text-foreground flex items-center gap-2">
+          <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           Monthly Expenses
         </h3>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Calculator className={`h-4 w-4 ${!isDetailedMode ? 'text-primary' : 'text-muted-foreground'}`} />
-            <span className={`text-sm ${!isDetailedMode ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Calculator className={`h-3 w-3 sm:h-4 sm:w-4 ${!isDetailedMode ? 'text-primary' : 'text-muted-foreground'}`} />
+            <span className={`text-xs sm:text-sm ${!isDetailedMode ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
               Simple
             </span>
           </div>
@@ -155,9 +155,9 @@ const MonthlyExpensesManager = ({
             checked={isDetailedMode}
             onCheckedChange={handleModeToggle}
           />
-          <div className="flex items-center gap-2">
-            <List className={`h-4 w-4 ${isDetailedMode ? 'text-primary' : 'text-muted-foreground'}`} />
-            <span className={`text-sm ${isDetailedMode ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <List className={`h-3 w-3 sm:h-4 sm:w-4 ${isDetailedMode ? 'text-primary' : 'text-muted-foreground'}`} />
+            <span className={`text-xs sm:text-sm ${isDetailedMode ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
               Detailed
             </span>
           </div>
@@ -166,60 +166,68 @@ const MonthlyExpensesManager = ({
 
       {!isDetailedMode ? (
         // Simple mode - single input
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <DollarSign className="h-5 w-5 text-muted-foreground" />
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
             </div>
             <Input
               type="number"
               min="0"
-              className="pl-10 text-lg"
-              placeholder="Enter your total monthly expenses"
+              className="pl-9 sm:pl-10 text-base sm:text-lg h-10 sm:h-11"
+              placeholder="Total monthly expenses"
               value={simpleAmount || ""}
               onChange={(e) => handleSimpleAmountChange(Number(e.target.value) || 0)}
             />
           </div>
-          <p className="text-sm text-muted-foreground">
-            Switch to Detailed mode to itemize expenses like rent, utilities, subscriptions, etc.
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Switch to Detailed mode to itemize expenses.
           </p>
         </div>
       ) : (
         // Detailed mode - itemized list
-        <div className="space-y-4">
-          <div className="space-y-3 max-h-80 overflow-y-auto">
+        <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-2 sm:space-y-3 max-h-60 sm:max-h-80 overflow-y-auto overflow-x-hidden">
             {expenseItems.map((item) => (
-              <div key={item.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-muted/30 rounded-lg">
-                <div className="col-span-4">
+              <div key={item.id} className="p-2 sm:p-3 bg-muted/30 rounded-lg space-y-2">
+                {/* Mobile: Stack layout */}
+                <div className="flex gap-2">
                   <Input
                     placeholder="Expense name"
                     value={item.name}
                     onChange={(e) => updateExpenseItem(item.id, { name: e.target.value })}
+                    className="flex-1 h-9 text-sm"
                   />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 text-destructive hover:text-destructive flex-shrink-0"
+                    onClick={() => removeExpenseItem(item.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <div className="col-span-2">
+                <div className="grid grid-cols-3 gap-2">
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                     </div>
                     <Input
                       type="number"
                       min="0"
-                      className="pl-7"
+                      className="pl-6 sm:pl-7 h-9 text-sm"
                       placeholder="0"
                       value={item.amount || ""}
                       onChange={(e) => updateExpenseItem(item.id, { amount: Number(e.target.value) || 0 })}
                     />
                   </div>
-                </div>
-                <div className="col-span-2">
                   <Select
                     value={item.frequency}
                     onValueChange={(value: 'monthly' | 'yearly' | 'weekly') => 
                       updateExpenseItem(item.id, { frequency: value })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-9 text-xs sm:text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -228,13 +236,11 @@ const MonthlyExpensesManager = ({
                       <SelectItem value="yearly">Yearly</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="col-span-3">
                   <Select
                     value={item.category}
                     onValueChange={(value) => updateExpenseItem(item.id, { category: value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-9 text-xs sm:text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -244,23 +250,13 @@ const MonthlyExpensesManager = ({
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="col-span-1 flex justify-end">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={() => removeExpenseItem(item.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
               </div>
             ))}
           </div>
 
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full h-9 sm:h-10 text-sm"
             onClick={addExpenseItem}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -268,16 +264,16 @@ const MonthlyExpensesManager = ({
           </Button>
 
           {/* Summary */}
-          <div className="pt-4 border-t border-border">
+          <div className="pt-3 sm:pt-4 border-t border-border">
             <div className="flex items-center justify-between">
-              <span className="text-lg font-medium">Total Monthly Expenses:</span>
-              <span className="text-2xl font-bold text-primary">
+              <span className="text-sm sm:text-lg font-medium">Total Monthly:</span>
+              <span className="text-xl sm:text-2xl font-bold text-primary">
                 {formatCurrency(detailedTotal)}
               </span>
             </div>
             {expenseItems.some(item => item.frequency !== 'monthly') && (
-              <p className="text-xs text-muted-foreground mt-1">
-                * Weekly and yearly expenses are converted to monthly equivalents
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                * Converted to monthly equivalents
               </p>
             )}
           </div>

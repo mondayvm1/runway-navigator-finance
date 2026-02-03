@@ -188,37 +188,37 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
       icon={<CreditCard className="h-5 w-5 text-primary" />}
       defaultOpen={true}
     >
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-4 bg-blue-50 border-blue-200">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4">
+          <Card className="p-3 sm:p-4 bg-blue-50 border-blue-200">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-blue-600 font-medium">Paid This Month</p>
-                <p className="text-2xl font-bold text-blue-700">{formatCurrency(totalPaid)}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-blue-600 font-medium">Paid</p>
+                <p className="text-lg sm:text-2xl font-bold text-blue-700 truncate">{formatCurrency(totalPaid)}</p>
               </div>
-              <CheckCircle2 className="h-8 w-8 text-blue-600" />
+              <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0 ml-2" />
             </div>
           </Card>
           
-          <Card className="p-4 bg-blue-50 border-blue-200">
+          <Card className="p-3 sm:p-4 bg-blue-50 border-blue-200">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-blue-600 font-medium">Remaining</p>
-                <p className="text-2xl font-bold text-blue-700">{formatCurrency(totalRemaining)}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-blue-600 font-medium">Remaining</p>
+                <p className="text-lg sm:text-2xl font-bold text-blue-700 truncate">{formatCurrency(totalRemaining)}</p>
               </div>
-              <XCircle className="h-8 w-8 text-blue-600" />
+              <XCircle className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0 ml-2" />
             </div>
           </Card>
         </div>
 
         {/* Payment Tiles */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {payments.map((payment) => (
             <div
               key={payment.id}
               className="payment-tile-container"
-              style={{ perspective: '1000px', minHeight: '180px' }}
+              style={{ perspective: '1000px', minHeight: '160px' }}
             >
               <div
                 className={`payment-tile ${flippingIds.has(payment.id) ? 'flipping' : ''} ${payment.isPaid ? 'paid' : 'unpaid'}`}
@@ -235,7 +235,7 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
               >
                 {/* Front Face - Unpaid */}
                 <Card
-                  className="absolute w-full h-full backface-hidden p-5 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 hover:border-blue-400 transition-colors"
+                  className="absolute w-full h-full backface-hidden p-3 sm:p-5 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 hover:border-blue-400 transition-colors"
                   style={{
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden'
@@ -243,41 +243,41 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
                 >
                   <div className="flex flex-col h-full justify-between">
                     <div>
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="p-2 bg-blue-100 rounded-lg">
+                        <div className="flex items-start justify-between mb-2 sm:mb-3">
+                          <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg">
                             {payment.category === 'credit' ? (
-                              <CreditCard className="h-5 w-5 text-blue-600" />
+                              <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                             ) : (
-                              <DollarSign className="h-5 w-5 text-blue-600" />
+                              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                             )}
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); openEdit(payment); }}>
-                              <Pencil className="h-4 w-4" />
+                          <div className="flex items-center gap-0.5 sm:gap-1">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0" onClick={(e) => { e.stopPropagation(); openEdit(payment); }}>
+                              <Pencil className="h-3 w-3 sm:h-4 sm:w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:text-destructive" onClick={(e) => { e.stopPropagation(); deletePayment(payment.id); }}>
-                              <Trash2 className="h-4 w-4" />
+                            <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:text-destructive" onClick={(e) => { e.stopPropagation(); deletePayment(payment.id); }}>
+                              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                             </Button>
-                            <XCircle className="h-5 w-5 text-blue-400" />
+                            <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />
                           </div>
                         </div>
-                      <h4 className="font-semibold text-slate-800 mb-2">{payment.name}</h4>
-                      <p className="text-2xl font-bold text-blue-600">{formatCurrency(payment.amount)}</p>
+                      <h4 className="font-semibold text-sm sm:text-base text-slate-800 mb-1 sm:mb-2 truncate">{payment.name}</h4>
+                      <p className="text-xl sm:text-2xl font-bold text-blue-600">{formatCurrency(payment.amount)}</p>
                     </div>
-                    <div className="text-xs text-slate-600 mt-2">
+                    <div className="text-[10px] sm:text-xs text-slate-600 mt-2">
                       {payment.dueDate ? (
-                        <p className="font-semibold">📅 Due: {payment.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        <p className="font-semibold">📅 {payment.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
                       ) : (
-                        <p className="text-slate-400">No due date set</p>
+                        <p className="text-slate-400">No due date</p>
                       )}
-                      <p className="font-medium text-blue-600 mt-1">Click to mark paid</p>
+                      <p className="font-medium text-blue-600 mt-1">Tap to mark paid</p>
                     </div>
                   </div>
                 </Card>
 
                 {/* Back Face - Paid */}
                 <Card
-                  className="absolute w-full h-full backface-hidden p-5 bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-300 hover:border-green-400 transition-colors"
+                  className="absolute w-full h-full backface-hidden p-3 sm:p-5 bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-300 hover:border-green-400 transition-colors"
                   style={{
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
@@ -286,34 +286,34 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
                 >
                   <div className="flex flex-col h-full justify-between">
                     <div>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
+                      <div className="flex items-start justify-between mb-2 sm:mb-3">
+                        <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg">
                           {payment.category === 'credit' ? (
-                            <CreditCard className="h-5 w-5 text-green-600" />
+                            <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                           ) : (
-                            <DollarSign className="h-5 w-5 text-green-600" />
+                            <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                           )}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); openEdit(payment); }}>
-                            <Pencil className="h-4 w-4" />
+                        <div className="flex items-center gap-0.5 sm:gap-1">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0" onClick={(e) => { e.stopPropagation(); openEdit(payment); }}>
+                            <Pencil className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:text-destructive" onClick={(e) => { e.stopPropagation(); deletePayment(payment.id); }}>
-                            <Trash2 className="h-4 w-4" />
+                          <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:text-destructive" onClick={(e) => { e.stopPropagation(); deletePayment(payment.id); }}>
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
-                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                          <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                         </div>
                       </div>
-                      <h4 className="font-semibold text-slate-800 mb-2">{payment.name}</h4>
-                      <p className="text-2xl font-bold text-green-600">{formatCurrency(payment.amount)}</p>
+                      <h4 className="font-semibold text-sm sm:text-base text-slate-800 mb-1 sm:mb-2 truncate">{payment.name}</h4>
+                      <p className="text-xl sm:text-2xl font-bold text-green-600">{formatCurrency(payment.amount)}</p>
                     </div>
-                    <div className="text-xs text-slate-600 mt-2">
+                    <div className="text-[10px] sm:text-xs text-slate-600 mt-2">
                       {payment.dueDate ? (
-                        <p className="font-semibold text-slate-500">📅 Due: {payment.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        <p className="font-semibold text-slate-500">📅 {payment.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
                       ) : (
-                        <p className="text-slate-400">No due date set</p>
+                        <p className="text-slate-400">No due date</p>
                       )}
-                      <p className="font-medium text-green-600 mt-1">✓ Paid - Click to undo</p>
+                      <p className="font-medium text-green-600 mt-1">✓ Paid</p>
                     </div>
                   </div>
                 </Card>
@@ -323,35 +323,35 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
         </div>
 
         {/* Survivability Goals */}
-        <Card className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200">
-          <h3 className="text-lg font-bold text-emerald-900 mb-4 flex items-center gap-2">
+        <Card className="p-4 sm:p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200">
+          <h3 className="text-base sm:text-lg font-bold text-emerald-900 mb-3 sm:mb-4 flex items-center gap-2">
             <span>💪</span> Survivability Goals
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <p className="text-sm text-emerald-700 font-medium">Monthly Obligation</p>
-              <p className="text-2xl font-bold text-emerald-900">{formatCurrency(totalRemaining)}</p>
-              <p className="text-xs text-emerald-600">Keep this low to maximize runway</p>
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="space-y-1 sm:space-y-2">
+              <p className="text-[10px] sm:text-sm text-emerald-700 font-medium">Monthly</p>
+              <p className="text-base sm:text-2xl font-bold text-emerald-900 truncate">{formatCurrency(totalRemaining)}</p>
+              <p className="text-[10px] sm:text-xs text-emerald-600 hidden sm:block">Keep low</p>
             </div>
-            <div className="space-y-2">
-              <p className="text-sm text-emerald-700 font-medium">Survival Impact</p>
-              <p className="text-2xl font-bold text-emerald-900">
-                {totalRemaining > 0 ? `${Math.max(1, Math.round(totalRemaining / 100))} mo` : '∞'}
+            <div className="space-y-1 sm:space-y-2">
+              <p className="text-[10px] sm:text-sm text-emerald-700 font-medium">Impact</p>
+              <p className="text-base sm:text-2xl font-bold text-emerald-900">
+                {totalRemaining > 0 ? `${Math.max(1, Math.round(totalRemaining / 100))}mo` : '∞'}
               </p>
-              <p className="text-xs text-emerald-600">Months of runway consumed</p>
+              <p className="text-[10px] sm:text-xs text-emerald-600 hidden sm:block">Runway used</p>
             </div>
-            <div className="space-y-2">
-              <p className="text-sm text-emerald-700 font-medium">Freedom Score</p>
-              <p className="text-2xl font-bold text-emerald-900">
+            <div className="space-y-1 sm:space-y-2">
+              <p className="text-[10px] sm:text-sm text-emerald-700 font-medium">Freedom</p>
+              <p className="text-base sm:text-2xl font-bold text-emerald-900">
                 {payments.filter(p => p.isPaid).length}/{payments.length}
               </p>
-              <p className="text-xs text-emerald-600">Payments cleared this cycle</p>
+              <p className="text-[10px] sm:text-xs text-emerald-600 hidden sm:block">Cleared</p>
             </div>
           </div>
         </Card>
 
-        <p className="text-xs text-slate-500 text-center">
-          Click any tile to toggle payment status • Click edit icon to adjust payment details
+        <p className="text-[10px] sm:text-xs text-slate-500 text-center">
+          Tap tiles to toggle • Edit icon to adjust
         </p>
       </div>
 

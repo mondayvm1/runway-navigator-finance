@@ -52,27 +52,29 @@ const AccountSection = ({
   const total = accounts.reduce((sum, account) => sum + account.balance, 0);
 
   return (
-    <Card className="p-6">
+    <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80 p-6 transition-all duration-300 hover:shadow-xl">
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setIsCollapsed((prev) => !prev)}
-            className="mr-2 p-1 rounded hover:bg-gray-100 transition-colors"
+            className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center hover:from-slate-100 hover:to-slate-200 transition-all"
             aria-label={isCollapsed ? 'Expand section' : 'Collapse section'}
           >
-            {isCollapsed ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
+            {isCollapsed ? <ChevronRight size={16} className="text-slate-600" /> : <ChevronDown size={16} className="text-slate-600" />}
           </button>
-          {icon}
-          <h3 className="text-lg font-medium text-gray-700 ml-2">{title}</h3>
+          <div className="w-9 h-9 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-xl flex items-center justify-center">
+            {icon}
+          </div>
+          <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <div className="text-right">
-            <div className="text-xs text-muted-foreground">Total</div>
-            <span className={`text-xl font-bold ${isNegative ? 'text-red-600' : 'text-green-600'}`}>
+            <div className="text-xs text-slate-500 mb-0.5">Total</div>
+            <span className={`text-xl font-bold ${isNegative ? 'text-red-600' : 'text-emerald-600'}`}>
               {isNegative ? '-' : ''}${Math.abs(total).toLocaleString()}
             </span>
             {title === 'Credit' && accounts.length > 0 && (
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="text-xs text-slate-500 mt-0.5">
                 Available: ${accounts.reduce((sum, acc) => sum + (acc.creditLimit || 0) - acc.balance, 0).toLocaleString()}
               </div>
             )}
@@ -81,7 +83,7 @@ const AccountSection = ({
             onClick={onToggleHidden}
             variant="ghost"
             size="sm"
-            className="p-1"
+            className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
           >
             {isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
           </Button>
@@ -96,7 +98,7 @@ const AccountSection = ({
       {!isHidden && !isCollapsed && (
         <div className="space-y-3">
           {accounts.map((account) => (
-            <div key={account.id} className="p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-border transition-colors">
+            <div key={account.id} className="p-4 rounded-xl bg-slate-50/80 border border-slate-100 hover:bg-slate-100/80 hover:border-slate-200 transition-all duration-200">
               <div className="flex items-center justify-between mb-3">
                 {editingNames[account.id] ? (
                   <Input
@@ -189,13 +191,13 @@ const AccountSection = ({
             </div>
           ))}
           
-          <Button onClick={onAddAccount} variant="outline" className="w-full h-10 mt-2">
+          <Button onClick={onAddAccount} variant="ghost" className="w-full h-10 mt-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-dashed border-slate-200">
             <Plus size={16} className="mr-2" />
             Add {title} Account
           </Button>
         </div>
       )}
-    </Card>
+    </div>
   );
 };
 

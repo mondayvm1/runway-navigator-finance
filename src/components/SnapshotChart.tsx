@@ -270,54 +270,59 @@ const SnapshotChart = () => {
 
   if (loading) {
     return (
-      <Card className="p-6 mb-6">
-        <div className="text-center text-gray-500">Loading snapshot data...</div>
-      </Card>
+      <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80 p-6 mb-6">
+        <div className="text-center text-slate-500">Loading snapshot data...</div>
+      </div>
     );
   }
 
   if (snapshotData.length < 2) {
     return (
-      <Card className="p-6 mb-6">
+      <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80 p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-800">Financial Progress</h3>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <TrendingUp className="h-5 w-5 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Financial Progress</h3>
           </div>
           <div className="flex gap-2">
             <Button
               onClick={handleRefresh}
-              variant="outline"
+              variant="ghost"
               size="sm"
               disabled={refreshing}
-              className="flex items-center gap-1"
+              className="text-slate-600 hover:text-slate-900 hover:bg-slate-100"
             >
               <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
             </Button>
           </div>
         </div>
-        <div className="text-center text-gray-500 py-8">
-          <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-          <p className="text-lg font-medium mb-2">Create snapshots to track your progress</p>
-          <p>Take at least 2 snapshots to see your financial journey over time.</p>
+        <div className="text-center text-slate-500 py-8">
+          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Calendar className="h-8 w-8 text-slate-400" />
+          </div>
+          <p className="text-lg font-medium text-slate-700 mb-2">Create snapshots to track your progress</p>
+          <p className="text-slate-500">Take at least 2 snapshots to see your financial journey over time.</p>
           {snapshotData.length === 1 && (
-            <p className="text-sm mt-2 text-blue-600">You have 1 snapshot. Create one more to see the chart!</p>
+            <p className="text-sm mt-3 text-blue-600 font-medium">You have 1 snapshot. Create one more to see the chart!</p>
           )}
         </div>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <Card className="p-6 mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-800">Financial Progress</h3>
+    <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80 p-6 mb-6">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+            <TrendingUp className="h-5 w-5 text-white" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-800">Financial Progress</h3>
           {growthRate && (
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-              growthRate >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+            <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
+              growthRate >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
             }`}>
               <Target className="h-3 w-3" />
               {growthRate >= 0 ? '+' : ''}{growthRate.toFixed(1)}%/month
@@ -327,36 +332,34 @@ const SnapshotChart = () => {
         <div className="flex gap-2">
           <Button
             onClick={handleRefresh}
-            variant="outline"
+            variant="ghost"
             size="sm"
             disabled={refreshing}
-            className="flex items-center gap-1"
+            className="text-slate-600 hover:text-slate-900 hover:bg-slate-100"
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
           </Button>
           <Button
             onClick={handleClearAllSnapshots}
-            variant="outline"
+            variant="ghost"
             size="sm"
-            className="flex items-center gap-1 text-red-600 hover:text-red-700"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
           >
             <Trash2 className="h-4 w-4" />
-            Clear All
           </Button>
         </div>
       </div>
 
       {/* Metric Toggle Buttons */}
-      <div className="flex flex-wrap gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
-        <span className="text-sm font-medium text-gray-700 mr-2">Show:</span>
+      <div className="flex flex-wrap gap-2 mb-5 p-3 bg-slate-50/80 rounded-xl border border-slate-100">
+        <span className="text-sm font-medium text-slate-600 mr-2 self-center">Show:</span>
         {Object.entries(selectedMetrics).map(([key, value]) => (
           <Button
             key={key}
             onClick={() => toggleMetric(key as keyof typeof selectedMetrics)}
-            variant={value ? "default" : "outline"}
+            variant={value ? "default" : "ghost"}
             size="sm"
-            className="text-xs"
+            className={`text-xs ${value ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
           >
             {key === 'netWorth' ? 'Net Worth' : 
              key === 'totalAssets' ? 'Assets' :
@@ -441,29 +444,29 @@ const SnapshotChart = () => {
         </ResponsiveContainer>
       </div>
       
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-        <div className="bg-blue-50 p-3 rounded-lg">
+      <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
           <div className="font-semibold text-blue-900">Latest Net Worth</div>
           <div className="text-xl font-bold text-blue-700">
             {formatCurrency(snapshotData[snapshotData.length - 1]?.netWorth || 0)}
           </div>
           {snapshotData.length > 1 && (
-            <div className={`text-sm ${(snapshotData[snapshotData.length - 1]?.changeFromPrevious?.netWorth || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-sm ${(snapshotData[snapshotData.length - 1]?.changeFromPrevious?.netWorth || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               {(snapshotData[snapshotData.length - 1]?.changeFromPrevious?.netWorth || 0) >= 0 ? '+' : ''}
               {formatCurrency(snapshotData[snapshotData.length - 1]?.changeFromPrevious?.netWorth || 0)} from previous
             </div>
           )}
         </div>
         
-        <div className="bg-green-50 p-3 rounded-lg">
-          <div className="font-semibold text-green-900">Total Snapshots</div>
-          <div className="text-xl font-bold text-green-700">{snapshotData.length}</div>
-          <div className="text-sm text-green-600">
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-4 rounded-xl border border-emerald-100">
+          <div className="font-semibold text-emerald-900">Total Snapshots</div>
+          <div className="text-xl font-bold text-emerald-700">{snapshotData.length}</div>
+          <div className="text-sm text-emerald-600">
             Tracking since {formatDate(snapshotData[0]?.created_at || '')}
           </div>
         </div>
         
-        <div className="bg-purple-50 p-3 rounded-lg">
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 p-4 rounded-xl border border-purple-100">
           <div className="font-semibold text-purple-900">Current Runway</div>
           <div className="text-xl font-bold text-purple-700">
             {snapshotData[snapshotData.length - 1]?.runwayMonths || 0} months
@@ -474,11 +477,10 @@ const SnapshotChart = () => {
         </div>
       </div>
       
-      <div className="mt-4 text-sm text-gray-600">
+      <div className="mt-4 text-sm text-slate-500">
         <p>Track your financial progress across different snapshots. Use metric toggles to focus on specific areas.</p>
-        <p className="mt-1 text-xs">Growth rate shows monthly net worth change. Use "Refresh" to update or "Clear All" to reset historical data.</p>
       </div>
-    </Card>
+    </div>
   );
 };
 

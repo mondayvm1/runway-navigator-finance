@@ -111,16 +111,24 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/50">
-      <div className="container mx-auto px-4 py-8">
-        <header className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/50 relative overflow-hidden">
+      {/* Floating background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-[5%] w-96 h-96 bg-blue-400/5 rounded-full blur-3xl animate-float" />
+        <div className="absolute top-60 right-[10%] w-[500px] h-[500px] bg-indigo-400/5 rounded-full blur-3xl animate-float-delayed" />
+        <div className="absolute bottom-40 left-[15%] w-80 h-80 bg-purple-400/5 rounded-full blur-3xl animate-float-delayed" />
+        <div className="absolute bottom-20 right-[25%] w-72 h-72 bg-blue-400/5 rounded-full blur-3xl animate-float" />
+      </div>
+
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        <header className="text-center mb-8 animate-fade-up">
+          <div className="inline-flex items-center gap-2 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
               <TrendingUp className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-semibold text-slate-800">Pathline</span>
           </div>
-          <p className="text-slate-600">Track your complete financial picture</p>
+          <p className="text-slate-500">See your financial future clearly</p>
         </header>
 
         <RunwayCalculator />

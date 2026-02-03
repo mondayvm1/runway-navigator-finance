@@ -94,21 +94,32 @@ const FinancialInsights = ({
   ];
 
   return (
-    <Card className="p-6">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">Financial Insights</h3>
+    <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80 p-6">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+          <TrendingUp className="h-5 w-5 text-white" />
+        </div>
+        <h3 className="text-lg font-semibold text-slate-800">Financial Insights</h3>
+      </div>
       
-      <div className="space-y-4">
+      <div className="space-y-3">
         {insights.map((insight, index) => {
           const Icon = insight.icon;
           return (
-            <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-              <Icon className={`h-5 w-5 mt-0.5 ${insight.color}`} />
+            <div key={index} className="flex items-start gap-3 p-4 bg-slate-50/80 rounded-xl border border-slate-100 hover:bg-slate-100/80 transition-colors">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                insight.color.includes('green') ? 'bg-emerald-100' :
+                insight.color.includes('blue') ? 'bg-blue-100' :
+                insight.color.includes('yellow') ? 'bg-amber-100' : 'bg-red-100'
+              }`}>
+                <Icon className={`h-4 w-4 ${insight.color.replace('text-green', 'text-emerald').replace('text-yellow', 'text-amber')}`} />
+              </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
-                  <h4 className="font-medium text-gray-800 text-sm">{insight.title}</h4>
-                  <span className="font-semibold text-gray-900">{insight.value}</span>
+                  <h4 className="font-medium text-slate-700 text-sm">{insight.title}</h4>
+                  <span className="font-semibold text-slate-900">{insight.value}</span>
                 </div>
-                <p className="text-xs text-gray-600">{insight.description}</p>
+                <p className="text-xs text-slate-500">{insight.description}</p>
               </div>
             </div>
           );
@@ -117,14 +128,14 @@ const FinancialInsights = ({
 
       {/* Additional Income Impact Summary */}
       {incomeEnabled && runway.additionalMonthsFromIncome > 0 && (
-        <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+        <div className="mt-4 p-4 bg-gradient-to-r from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-100">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="h-4 w-4 text-green-600" />
-            <span className="font-medium text-green-800 text-sm">Income Impact</span>
+            <TrendingUp className="h-4 w-4 text-emerald-600" />
+            <span className="font-semibold text-emerald-800 text-sm">Income Impact</span>
           </div>
-          <p className="text-xs text-green-700">
+          <p className="text-xs text-emerald-700">
             Your planned income events extend your financial runway by{' '}
-            <span className="font-semibold">
+            <span className="font-bold">
               {runway.additionalMonthsFromIncome >= 60 ? '60+' : runway.additionalMonthsFromIncome.toFixed(1)} months
             </span>
             , providing significant additional financial security.
@@ -133,17 +144,17 @@ const FinancialInsights = ({
       )}
 
       {!incomeEnabled && (
-        <div className="mt-4 p-3 bg-gray-100 rounded-lg border border-gray-200">
+        <div className="mt-4 p-4 bg-slate-50/80 rounded-xl border border-slate-100">
           <div className="flex items-center gap-2 mb-2">
-            <Calendar className="h-4 w-4 text-gray-600" />
-            <span className="font-medium text-gray-800 text-sm">Income Planning Disabled</span>
+            <Calendar className="h-4 w-4 text-slate-500" />
+            <span className="font-semibold text-slate-700 text-sm">Income Planning Disabled</span>
           </div>
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-slate-500">
             Enable income planning in the Income Manager to see how future income affects your financial runway.
           </p>
         </div>
       )}
-    </Card>
+    </div>
   );
 };
 

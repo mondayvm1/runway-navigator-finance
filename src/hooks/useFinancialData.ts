@@ -249,8 +249,9 @@ export const useFinancialData = () => {
         .from('monthly_expenses')
         .insert({
           user_id: user.id,
-          amount: monthlyExpenses
-        });
+          amount: monthlyExpenses,
+          name: 'Monthly Expenses'
+        } as any);
 
       if (expensesError) {
         console.error('Error inserting expenses:', expensesError);
@@ -314,8 +315,9 @@ export const useFinancialData = () => {
         .insert({
           user_id: user.id,
           amount: monthlyExpenses,
-          snapshot_id: snapshot.id
-        });
+          snapshot_id: snapshot.id,
+          name: 'Monthly Expenses'
+        } as any);
 
       if (expensesError) throw expensesError;
 
@@ -412,8 +414,9 @@ export const useFinancialData = () => {
         .upsert({
           user_id: user.id,
           amount,
+          name: 'Monthly Expenses',
           updated_at: new Date().toISOString(),
-        });
+        } as any);
       if (error) throw error;
       setMonthlyExpenses(amount);
       toast.success('Monthly expenses updated!');

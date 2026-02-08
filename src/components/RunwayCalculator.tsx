@@ -24,6 +24,7 @@ import FinancialQuestJourney from "./FinancialQuestJourney";
 import FloatingSupportMenu from "./FloatingSupportMenu";
 import FinancialArchetype from "./FinancialArchetype";
 import MonthlyExpensesManager from "./MonthlyExpensesManager";
+import OnboardingWelcome from "./OnboardingWelcome";
 import { Clock, DollarSign, CalendarDays, Landmark, Wallet, CreditCard, Coins, BadgeEuro, ChartPie, LogOut, Trash2, Camera, Sparkles, TrendingUp, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { v4 as uuidv4 } from 'uuid';
@@ -64,6 +65,46 @@ const RunwayCalculator = () => {
   });
 
   const [showSnapshotViewer, setShowSnapshotViewer] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Check if user is new (no data) and show onboarding
+  useEffect(() => {
+    if (!loading && user && !dataFound) {
+      // Check localStorage to see if user has dismissed onboarding before
+      const onboardingDismissed = localStorage.getItem(`pathline_onboarding_${user.id}`);
+      if (!onboardingDismissed) {
+        setShowOnboarding(true);
+      }
+    }
+  }, [loading, user, dataFound]);
+
+  const handleCloseOnboarding = () => {
+    setShowOnboarding(false);
+    if (user) {
+      localStorage.setItem(`pathline_onboarding_${user.id}`, 'true');
+    }
+  };
+
+  const handleStartGuided = () => {
+    // Just close the dialog - user will see empty dashboard ready to fill
+    handleCloseOnboarding();
+    toast.success("Let's build your financial picture! Start by adding your accounts below.");
+  };
+
+  const handleImportDemoData = (demoData: {
+    accounts: {
+      cash: AccountItem[];
+      investments: AccountItem[];
+      credit: AccountItem[];
+      loans: AccountItem[];
+      otherAssets: AccountItem[];
+    };
+    monthlyExpenses: number;
+  }) => {
+    handleMassImport(demoData);
+    handleCloseOnboarding();
+    toast.success("Demo data loaded! Feel free to edit any values to match your real finances.");
+  };
 
   // Calculate runway whenever relevant data changes
   useEffect(() => {
@@ -377,6 +418,14 @@ const RunwayCalculator = () => {
   };
 
   return (
+    <>
+      <OnboardingWelcome
+        open={showOnboarding}
+        onClose={handleCloseOnboarding}
+        onStartGuided={handleStartGuided}
+        onImportDemo={handleImportDemoData}
+      />
+      
     <div className="max-w-7xl mx-auto relative">
       {/* Floating background elements - smaller on mobile */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
@@ -677,6 +726,7 @@ const RunwayCalculator = () => {
         />
       )}
     </div>
+    </>
   );
 };
 

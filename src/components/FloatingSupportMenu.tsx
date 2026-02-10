@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   TrendingUp, 
@@ -9,7 +9,8 @@ import {
   Rocket, 
   Handshake,
   Crown,
-  Download
+  Download,
+  Upload
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -21,46 +22,47 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import DatabaseCleanupTool from './DatabaseCleanupTool';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { exportAllData, importFromZip } from '@/utils/dataPortability';
 
 const FloatingSupportMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showCleanupTool, setShowCleanupTool] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleExportBackup = async () => {
+  const handleExport = () => {
     setIsOpen(false);
-    toast.info('Preparing backup...');
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error('Please sign in to export your data');
-        return;
-      }
-      const res = await supabase.functions.invoke('export-backup');
-      if (res.error) throw res.error;
-      const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `pathline-backup-${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success('Backup downloaded!');
-    } catch (err: any) {
-      console.error('Export error:', err);
-      toast.error('Failed to export backup');
-    }
+    exportAllData();
+  };
+
+  const handleImportClick = () => {
+    setIsOpen(false);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await importFromZip(file);
+    e.target.value = '';
+    window.location.reload();
   };
 
   const menuItems = [
     {
       id: 'export',
       icon: Download,
-      label: 'Export Backup',
-      description: 'Download all your data as JSON',
+      label: 'Export Data',
+      description: 'ZIP with CSVs + JSON backup',
       color: 'from-cyan-500 to-blue-500',
-      onClick: handleExportBackup
+      onClick: handleExport,
+    },
+    {
+      id: 'import',
+      icon: Upload,
+      label: 'Import Backup',
+      description: 'Restore from a Pathline ZIP',
+      color: 'from-teal-500 to-cyan-500',
+      onClick: handleImportClick,
     },
     {
       id: 'vip',
@@ -225,6 +227,15 @@ const FloatingSupportMenu = () => {
           <DatabaseCleanupTool />
         </DialogContent>
       </Dialog>
+
+      {/* Hidden file input for import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".zip"
+        className="hidden"
+        onChange={handleFileChange}
+      />
     </>
   );
 };

@@ -23,20 +23,23 @@ const AuthForm = () => {
       if (isSignUp) {
         const { error } = await signUp(email, password);
         if (error) {
-          toast.error(error.message);
+          console.error('Sign up error:', error);
+          toast.error(error.message || 'Failed to create account. Please check your connection and try again.');
         } else {
           toast.success('Check your email for the confirmation link!');
         }
       } else {
         const { error } = await signIn(email, password);
         if (error) {
-          toast.error(error.message);
+          console.error('Sign in error:', error);
+          toast.error(error.message || 'Failed to sign in. Please check your credentials.');
         } else {
           toast.success('Welcome back!');
         }
       }
     } catch (error) {
-      toast.error('Something went wrong');
+      console.error('Unexpected error:', error);
+      toast.error(error instanceof Error ? error.message : 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -48,10 +51,12 @@ const AuthForm = () => {
       const { error } = await signInWithGoogle();
       
       if (error) {
-        toast.error(error.message);
+        console.error('Google sign in error:', error);
+        toast.error(error.message || 'Failed to sign in with Google. Please try again.');
       }
     } catch (error) {
-      toast.error('Something went wrong with social login');
+      console.error('Unexpected Google login error:', error);
+      toast.error(error instanceof Error ? error.message : 'Something went wrong with social login');
     } finally {
       setSocialLoading(false);
     }

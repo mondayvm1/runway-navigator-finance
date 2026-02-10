@@ -5,6 +5,33 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+// Validate environment variables
+if (!SUPABASE_URL) {
+  throw new Error('Missing VITE_SUPABASE_URL environment variable');
+}
+
+if (!SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error('Missing VITE_SUPABASE_PUBLISHABLE_KEY environment variable');
+}
+
+// Validate URL format
+if (!SUPABASE_URL.startsWith('http://') && !SUPABASE_URL.startsWith('https://')) {
+  throw new Error('VITE_SUPABASE_URL must start with http:// or https://');
+}
+
+// Validate key format
+if (!SUPABASE_PUBLISHABLE_KEY.startsWith('sb_publishable_') && !SUPABASE_PUBLISHABLE_KEY.startsWith('eyJ')) {
+  console.warn('VITE_SUPABASE_PUBLISHABLE_KEY format may be incorrect. Expected format: sb_publishable_... or eyJ... (legacy anon key)');
+}
+
+// Debug logging (only in development)
+if (import.meta.env.DEV) {
+  console.log('🔧 Supabase Configuration:');
+  console.log('  URL:', SUPABASE_URL);
+  console.log('  Key (first 20 chars):', SUPABASE_PUBLISHABLE_KEY.substring(0, 20) + '...');
+  console.log('  Key format:', SUPABASE_PUBLISHABLE_KEY.startsWith('sb_publishable_') ? '✅ New format' : SUPABASE_PUBLISHABLE_KEY.startsWith('eyJ') ? '✅ Legacy format' : '❌ Unknown format');
+}
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
@@ -15,3 +42,16 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   }
 });
+
+// Test connection on initialization (development only)
+if (import.meta.env.DEV) {
+  supabase.auth.getSession().then(({ error }) => {
+    if (error) {
+      console.error('❌ Supabase connection error:', error.message);
+    } else {
+      console.log('✅ Supabase client initialized successfully');
+    }
+  }).catch((err) => {
+    console.error('❌ Failed to initialize Supabase:', err);
+  });
+}

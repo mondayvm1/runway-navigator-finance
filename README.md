@@ -47,3 +47,7 @@ Create a local `.env` with:
 Deploy the production build to your preferred hosting provider and configure
 your custom domain (for example, `pathline.vip`) in that provider's DNS and
 domain settings.
+
+For Vercel + standalone Supabase migration steps, use:
+
+- `docs/vercel-supabase-migration.md`

@@ -8,7 +8,8 @@ import {
   Heart, 
   Rocket, 
   Handshake,
-  Crown
+  Crown,
+  Download
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -20,12 +21,47 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import DatabaseCleanupTool from './DatabaseCleanupTool';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const FloatingSupportMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showCleanupTool, setShowCleanupTool] = useState(false);
 
+  const handleExportBackup = async () => {
+    setIsOpen(false);
+    toast.info('Preparing backup...');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Please sign in to export your data');
+        return;
+      }
+      const res = await supabase.functions.invoke('export-backup');
+      if (res.error) throw res.error;
+      const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pathline-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Backup downloaded!');
+    } catch (err: any) {
+      console.error('Export error:', err);
+      toast.error('Failed to export backup');
+    }
+  };
+
   const menuItems = [
+    {
+      id: 'export',
+      icon: Download,
+      label: 'Export Backup',
+      description: 'Download all your data as JSON',
+      color: 'from-cyan-500 to-blue-500',
+      onClick: handleExportBackup
+    },
     {
       id: 'vip',
       icon: Crown,

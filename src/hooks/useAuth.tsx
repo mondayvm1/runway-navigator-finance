@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable/index';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -55,14 +56,11 @@ export const useAuth = () => {
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/`,
-      },
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
     });
 
-    return { error };
+    return { error: result.error };
   };
 
 

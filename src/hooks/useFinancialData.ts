@@ -200,11 +200,30 @@ export const useFinancialData = () => {
       
       // Find the most recent expense with snapshot_id IS NULL
       // Check for null, undefined, or empty string (some databases might store empty string)
-      const currentExpense = allExpenses?.find(exp => 
+      // Also try using Supabase's .is() filter as a fallback
+      let currentExpense = allExpenses?.find(exp => 
         exp.snapshot_id === null || 
         exp.snapshot_id === undefined || 
         exp.snapshot_id === ''
       );
+      
+      // If not found with find, try a direct query with .is('snapshot_id', null)
+      if (!currentExpense) {
+        console.log('💰 Trying direct query with .is() filter...');
+        const { data: directQueryExpense, error: directError } = await supabase
+          .from('monthly_expenses')
+          .select('id, amount, snapshot_id, name, created_at')
+          .eq('user_id', user.id)
+          .is('snapshot_id', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (!directError && directQueryExpense) {
+          currentExpense = directQueryExpense;
+          console.log('✅ Found expense with direct query:', directQueryExpense);
+        }
+      }
       
       console.log('📊 Current expense (snapshot_id IS NULL):', JSON.stringify(currentExpense, null, 2));
       
@@ -220,6 +239,7 @@ export const useFinancialData = () => {
             amount: e.amount, 
             snapshot_id: e.snapshot_id, 
             snapshot_id_type: typeof e.snapshot_id,
+            snapshot_id_value: String(e.snapshot_id),
             name: e.name 
           })));
         } else {

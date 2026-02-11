@@ -182,9 +182,11 @@ export async function exportAllData(): Promise<void> {
 
     const rows = (data || []) as Record<string, unknown>[];
 
-    // Strip internal ids that would conflict on re-import
+    // For export: Keep snapshot_id in accounts/expenses so relationships are preserved
+    // Strip only id, user_id, created_at, updated_at (these will be regenerated on import)
     const cleanRows = rows.map(row => {
       const { id, user_id, created_at, updated_at, ...rest } = row;
+      // Keep snapshot_id - it will be mapped to new IDs during import
       return rest;
     });
 
@@ -271,6 +273,9 @@ export async function importFromZip(file: File): Promise<void> {
     const zip = await JSZip.loadAsync(file);
     let imported = 0;
     let skipped = 0;
+    
+    // Map old snapshot IDs to new snapshot IDs to preserve relationships
+    const snapshotIdMap = new Map<string, string>();
 
     // Import in a safe order so that snapshot foreign keys are valid.
     for (const table of IMPORT_TABLES_IN_ORDER) {
@@ -317,35 +322,86 @@ export async function importFromZip(file: File): Promise<void> {
       const rows = JSON.parse(jsonContent) as Record<string, unknown>[];
       if (rows.length === 0) continue;
 
-      // For monthly_expenses, only import current expenses (snapshot_id IS NULL)
-      // Snapshot-linked expenses will be restored when restoring snapshots
-      let rowsToImport = rows;
-      if (table === 'monthly_expenses') {
-        rowsToImport = rows.filter(row => !row.snapshot_id || row.snapshot_id === null);
+      // Special handling for financial_snapshots: create mapping from old IDs to new IDs
+      if (table === 'financial_snapshots') {
+        console.log('📸 Importing snapshots and creating ID mapping...');
+        for (const snapshot of rows) {
+          const oldId = snapshot.id as string;
+          if (!oldId) continue;
+
+          // Create new snapshot (without the old ID)
+          const { id, user_id, created_at, updated_at, ...snapshotData } = snapshot;
+          const { data: newSnapshot, error: snapshotError } = await supabase
+            .from('financial_snapshots')
+            .insert({
+              ...snapshotData,
+              user_id: userId,
+            } as any)
+            .select('id')
+            .single();
+
+          if (snapshotError) {
+            console.error(`Error importing snapshot ${oldId}:`, snapshotError);
+            skipped++;
+            continue;
+          }
+
+          // Map old ID to new ID
+          if (newSnapshot?.id) {
+            snapshotIdMap.set(oldId, newSnapshot.id);
+            console.log(`📸 Mapped snapshot ${oldId} -> ${newSnapshot.id}`);
+            imported++;
+          }
+        }
+        continue;
       }
 
-      // Re-assign user_id to current user while preserving snapshot_id
-      // and any other relational fields present in the backup.
-      const insertRowsRaw = rowsToImport.map(row => ({
-        ...row,
-        user_id: userId,
-        // For monthly_expenses, explicitly set snapshot_id to null for current expenses
-        ...(table === 'monthly_expenses' && (!row.snapshot_id || row.snapshot_id === null) 
-          ? { snapshot_id: null } 
-          : {}),
-      }));
+      // For user_accounts and monthly_expenses, import ALL rows (including snapshot-linked ones)
+      // and update snapshot_id references using our mapping
+      let rowsToImport = rows;
+      
+      // Re-assign user_id and update snapshot_id references
+      const insertRowsRaw = rowsToImport.map(row => {
+        const { id, user_id, created_at, updated_at, snapshot_id, ...rest } = row;
+        const newRow: any = {
+          ...rest,
+          user_id: userId,
+        };
+
+        // Update snapshot_id if it exists and we have a mapping
+        if (snapshot_id && typeof snapshot_id === 'string' && snapshotIdMap.has(snapshot_id)) {
+          newRow.snapshot_id = snapshotIdMap.get(snapshot_id);
+          console.log(`🔄 Updated snapshot_id reference: ${snapshot_id} -> ${newRow.snapshot_id}`);
+        } else if (table === 'monthly_expenses' && (!snapshot_id || snapshot_id === null)) {
+          // For monthly_expenses, explicitly set snapshot_id to null for current expenses
+          newRow.snapshot_id = null;
+        } else if (snapshot_id && !snapshotIdMap.has(snapshot_id)) {
+          // If snapshot_id exists but we don't have a mapping, it means the snapshot wasn't imported
+          // Skip this row or set to null
+          console.warn(`⚠️ Snapshot ${snapshot_id} not found in mapping, skipping snapshot-linked ${table} row`);
+          return null;
+        } else {
+          // Preserve snapshot_id if it's null/undefined (current data)
+          newRow.snapshot_id = snapshot_id || null;
+        }
+
+        return newRow;
+      }).filter(row => row !== null);
 
       const insertRows = dedupeRows(table, insertRowsRaw as any);
 
-      const { error } = await supabase
-        .from(table)
-        .upsert(insertRows as any, { onConflict: 'id', ignoreDuplicates: true });
+      if (insertRows.length > 0) {
+        const { error } = await supabase
+          .from(table)
+          .insert(insertRows as any);
 
-      if (error) {
-        console.error(`Error importing ${table}:`, error.message);
-        skipped += rows.length;
-      } else {
-        imported += rows.length;
+        if (error) {
+          console.error(`Error importing ${table}:`, error.message);
+          skipped += insertRows.length;
+        } else {
+          imported += insertRows.length;
+          console.log(`✅ Imported ${insertRows.length} ${table} records`);
+        }
       }
     }
 

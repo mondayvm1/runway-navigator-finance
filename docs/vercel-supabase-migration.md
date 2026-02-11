@@ -37,7 +37,7 @@ In Supabase Auth settings:
 In Google Cloud OAuth client:
 1. Add Supabase callback URL provided in Supabase provider settings.
 2. Ensure same authorized domains/origins align with production and local testing.
-
+69696969696969696969
 ## 4) App environment variables
 
 Set these values locally and in Vercel:

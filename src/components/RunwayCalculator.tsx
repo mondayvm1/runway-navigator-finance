@@ -349,7 +349,7 @@ const RunwayCalculator = () => {
     };
     monthlyExpenses: number;
   }) => {
-    // Assign new unique IDs to imported accounts to prevent duplicates
+    // Assign new unique IDs to imported accounts to prevent ID collisions
     const assignNewIds = (accounts: AccountItem[]): AccountItem[] => {
       return accounts.map(account => ({
         ...account,
@@ -357,13 +357,16 @@ const RunwayCalculator = () => {
       }));
     };
 
-    setAccountData(prev => ({
-      cash: [...prev.cash, ...assignNewIds(importedData.accounts.cash)],
-      investments: [...prev.investments, ...assignNewIds(importedData.accounts.investments)],
-      credit: [...prev.credit, ...assignNewIds(importedData.accounts.credit)],
-      loans: [...prev.loans, ...assignNewIds(importedData.accounts.loans)],
-      otherAssets: [...prev.otherAssets, ...assignNewIds(importedData.accounts.otherAssets)]
-    }));
+    // Replace the current state with the imported data instead of appending.
+    // This keeps the dashboard in sync with the backup file and avoids
+    // creating duplicates each time the user imports.
+    setAccountData({
+      cash: assignNewIds(importedData.accounts.cash),
+      investments: assignNewIds(importedData.accounts.investments),
+      credit: assignNewIds(importedData.accounts.credit),
+      loans: assignNewIds(importedData.accounts.loans),
+      otherAssets: assignNewIds(importedData.accounts.otherAssets),
+    });
 
     if (importedData.monthlyExpenses > 0) {
       updateMonthlyExpenses(importedData.monthlyExpenses);

@@ -14,6 +14,30 @@ const EXPORT_TABLES = [
 
 type TableName = typeof EXPORT_TABLES[number];
 
+// Import order must respect foreign key constraints:
+// financial_snapshots must be created before any rows that reference snapshot_id.
+const IMPORT_TABLES_IN_ORDER: TableName[] = [
+  'financial_snapshots',
+  'user_accounts',
+  'monthly_expenses',
+  'income_events',
+  'income_settings',
+  'credit_scores',
+  'category_settings',
+];
+
+// When clearing data before an import, delete children before parents
+// so that ON DELETE CASCADE constraints work cleanly.
+const DELETE_TABLES_IN_ORDER: TableName[] = [
+  'user_accounts',
+  'monthly_expenses',
+  'income_events',
+  'income_settings',
+  'credit_scores',
+  'category_settings',
+  'financial_snapshots',
+];
+
 // ─── CSV helpers ────────────────────────────────────────────────
 
 function escapeCSV(value: unknown): string {
@@ -81,6 +105,53 @@ function parseCSVLine(line: string): string[] {
   }
   result.push(current);
   return result;
+}
+
+// ─── Deduplication helpers (import-time only) ─────────────────────
+
+function dedupeRows(table: TableName, rows: Record<string, unknown>[]): Record<string, unknown>[] {
+  // Only aggressively dedupe tables that show up directly in the UI.
+  if (table === 'user_accounts') {
+    const seen = new Map<string, Record<string, unknown>>();
+    for (const row of rows) {
+      const key = [
+        row.user_id,
+        row.snapshot_id ?? 'null',
+        row.category ?? row.type ?? '',
+        row.name ?? '',
+        row.balance ?? 0,
+        row.interest_rate ?? 0,
+        row.credit_limit ?? 0,
+        row.min_payment ?? 0,
+        row.due_date ?? 0,
+      ].join('|');
+      if (!seen.has(key)) {
+        seen.set(key, row);
+      }
+    }
+    return Array.from(seen.values());
+  }
+
+  if (table === 'monthly_expenses') {
+    const seen = new Map<string, Record<string, unknown>>();
+    for (const row of rows) {
+      const key = [
+        row.user_id,
+        row.snapshot_id ?? 'null',
+        row.name ?? '',
+        row.amount ?? 0,
+        row.category ?? '',
+        row.is_essential ?? false,
+      ].join('|');
+      if (!seen.has(key)) {
+        seen.set(key, row);
+      }
+    }
+    return Array.from(seen.values());
+  }
+
+  // For other tables, just return as-is.
+  return rows;
 }
 
 // ─── Export ──────────────────────────────────────────────────────
@@ -182,11 +253,27 @@ export async function importFromZip(file: File): Promise<void> {
   toast.info('Reading backup file…');
 
   try {
+    // First, clear existing data for this user so that the import
+    // fully REPLACES the current state instead of adding to it.
+    // We delete in dependency order so that foreign key constraints are respected.
+    for (const table of DELETE_TABLES_IN_ORDER) {
+      const { error: deleteError } = await supabase
+        .from(table)
+        .delete()
+        .eq('user_id', userId);
+
+      if (deleteError) {
+        console.error(`Error clearing existing data from ${table}:`, deleteError.message);
+        // We don't abort the whole import here; continue and let the user know via skipped count.
+      }
+    }
+
     const zip = await JSZip.loadAsync(file);
     let imported = 0;
     let skipped = 0;
 
-    for (const table of EXPORT_TABLES) {
+    // Import in a safe order so that snapshot foreign keys are valid.
+    for (const table of IMPORT_TABLES_IN_ORDER) {
       // Prefer the JSON file for lossless import
       const jsonFile = zip.file(`${table}.json`);
       if (!jsonFile) {
@@ -198,10 +285,20 @@ export async function importFromZip(file: File): Promise<void> {
         const rows = parseCSV(csvContent);
         if (rows.length === 0) continue;
 
-        const insertRows = rows.map(row => ({
+        // For monthly_expenses, only import current expenses (snapshot_id IS NULL)
+        let rowsToImport = rows;
+        if (table === 'monthly_expenses') {
+          rowsToImport = rows.filter(row => !row.snapshot_id || row.snapshot_id === null || row.snapshot_id === '');
+        }
+
+        const insertRowsRaw = rowsToImport.map(row => ({
           ...row,
           user_id: userId,
+          // For monthly_expenses, explicitly set snapshot_id to null for current expenses
+          ...(table === 'monthly_expenses' ? { snapshot_id: null } : {}),
         }));
+
+        const insertRows = dedupeRows(table, insertRowsRaw as any);
 
         const { error } = await supabase
           .from(table)
@@ -220,11 +317,25 @@ export async function importFromZip(file: File): Promise<void> {
       const rows = JSON.parse(jsonContent) as Record<string, unknown>[];
       if (rows.length === 0) continue;
 
-      // Re-assign user_id to current user
-      const insertRows = rows.map(row => ({
+      // For monthly_expenses, only import current expenses (snapshot_id IS NULL)
+      // Snapshot-linked expenses will be restored when restoring snapshots
+      let rowsToImport = rows;
+      if (table === 'monthly_expenses') {
+        rowsToImport = rows.filter(row => !row.snapshot_id || row.snapshot_id === null);
+      }
+
+      // Re-assign user_id to current user while preserving snapshot_id
+      // and any other relational fields present in the backup.
+      const insertRowsRaw = rowsToImport.map(row => ({
         ...row,
         user_id: userId,
+        // For monthly_expenses, explicitly set snapshot_id to null for current expenses
+        ...(table === 'monthly_expenses' && (!row.snapshot_id || row.snapshot_id === null) 
+          ? { snapshot_id: null } 
+          : {}),
       }));
+
+      const insertRows = dedupeRows(table, insertRowsRaw as any);
 
       const { error } = await supabase
         .from(table)

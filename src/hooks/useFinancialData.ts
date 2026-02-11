@@ -83,6 +83,7 @@ export const useFinancialData = () => {
     if (!user) return;
 
     setLoading(true);
+    console.log('🔄 ===== LOADING FINANCIAL DATA =====');
     console.log('Loading financial data for user:', user.id);
 
     try {
@@ -98,6 +99,8 @@ export const useFinancialData = () => {
         throw accountsError;
       }
 
+      console.log('📦 Loaded accounts from DB:', accounts?.length || 0);
+
       const groupedAccounts: AccountData = {
         cash: [],
         investments: [],
@@ -109,7 +112,48 @@ export const useFinancialData = () => {
       let totalAccounts = 0;
       // Ensure accounts is an array
       const accountsArray = Array.isArray(accounts) ? accounts : [];
-      accountsArray.forEach((account: any) => {
+      
+      // Deduplicate accounts by content (name + category + balance) to prevent duplicates
+      // This handles cases where account_id might be null or different but accounts are the same
+      const seenAccounts = new Map<string, any>();
+      const uniqueAccounts = accountsArray.filter((account: any) => {
+        const category = account.category || account.type || 'cash';
+        // Create a unique key based on account content, not just ID
+        const contentKey = `${category}|${account.name}|${account.balance}|${account.interest_rate || 0}|${account.credit_limit || 0}`;
+        
+        // If we've seen this exact account before, skip it (keep the first one)
+        if (seenAccounts.has(contentKey)) {
+          console.warn('⚠️ Duplicate account found (by content):', account.name, category, account.balance);
+          return false;
+        }
+        
+        seenAccounts.set(contentKey, account);
+        return true;
+      });
+      
+      console.log('✅ Unique accounts after deduplication:', uniqueAccounts.length, 'out of', accountsArray.length);
+      
+      // If we found duplicates, clean them up from the database
+      if (uniqueAccounts.length < accountsArray.length) {
+        const duplicateIds = accountsArray
+          .filter(acc => {
+            const category = acc.category || acc.type || 'cash';
+            const contentKey = `${category}|${acc.name}|${acc.balance}|${acc.interest_rate || 0}|${acc.credit_limit || 0}`;
+            return !seenAccounts.has(contentKey) || seenAccounts.get(contentKey)?.id !== acc.id;
+          })
+          .map(acc => acc.id);
+        
+        if (duplicateIds.length > 0) {
+          console.log('🧹 Cleaning up', duplicateIds.length, 'duplicate accounts from database...');
+          await supabase
+            .from('user_accounts')
+            .delete()
+            .in('id', duplicateIds);
+          console.log('✅ Duplicates cleaned up');
+        }
+      }
+      
+      uniqueAccounts.forEach((account: any) => {
         const accountItem: AccountItem = {
           id: account.account_id || account.id,
           name: account.name,
@@ -139,21 +183,51 @@ export const useFinancialData = () => {
       setAccountData(groupedAccounts);
 
       // Load monthly expenses
-      const { data: expenses, error: expensesError } = await supabase
+      console.log('💰 ===== LOADING MONTHLY EXPENSES =====');
+      
+      // Get all expenses first to debug
+      const { data: allExpenses, error: checkError } = await supabase
         .from('monthly_expenses')
-        .select('amount')
+        .select('id, amount, snapshot_id, name, created_at')
         .eq('user_id', user.id)
-        .is('snapshot_id', null)
-        .maybeSingle();
-
-      if (expensesError) {
-        console.error('Error loading expenses:', expensesError);
-        throw expensesError;
+        .order('created_at', { ascending: false });
+      
+      console.log('🔍 All monthly expenses in DB:', JSON.stringify(allExpenses, null, 2));
+      
+      if (checkError) {
+        console.error('❌ Error checking expenses:', checkError);
       }
-
-      if (expenses) {
-        setMonthlyExpenses(Number(expenses.amount));
+      
+      // Find the most recent expense with snapshot_id IS NULL
+      // Check for null, undefined, or empty string (some databases might store empty string)
+      const currentExpense = allExpenses?.find(exp => 
+        exp.snapshot_id === null || 
+        exp.snapshot_id === undefined || 
+        exp.snapshot_id === ''
+      );
+      
+      console.log('📊 Current expense (snapshot_id IS NULL):', JSON.stringify(currentExpense, null, 2));
+      
+      if (currentExpense) {
+        const amount = Number(currentExpense.amount);
+        console.log('✅ ===== SETTING MONTHLY EXPENSES TO:', amount, '=====');
+        setMonthlyExpenses(amount);
+      } else {
+        console.log('⚠️ ===== NO MONTHLY EXPENSES FOUND WITH snapshot_id IS NULL =====');
+        if (allExpenses && allExpenses.length > 0) {
+          console.log('Available expenses:', allExpenses.map(e => ({ 
+            id: e.id, 
+            amount: e.amount, 
+            snapshot_id: e.snapshot_id, 
+            snapshot_id_type: typeof e.snapshot_id,
+            name: e.name 
+          })));
+        } else {
+          console.log('No expenses found in database at all');
+        }
+        setMonthlyExpenses(0);
       }
+      console.log('💰 ===== FINISHED LOADING MONTHLY EXPENSES =====');
 
       setDataFound(totalAccounts > 0);
 
@@ -238,8 +312,26 @@ export const useFinancialData = () => {
         console.log('No accounts in state to save - skipping to prevent data loss');
       }
 
-      // Only update expenses if we have a value set
-      if (monthlyExpenses > 0) {
+      // Save monthly expenses - skip if updateMonthlyExpenses was just called
+      // (to avoid race conditions, we'll let updateMonthlyExpenses handle it)
+      // But we'll still save it here as a backup if it hasn't been saved recently
+      console.log('💰 saveData: Monthly expenses value is:', monthlyExpenses);
+      
+      // Check if monthly expenses already exist in DB
+      const { data: existingExpense } = await supabase
+        .from('monthly_expenses')
+        .select('amount')
+        .eq('user_id', user.id)
+        .is('snapshot_id', null)
+        .maybeSingle();
+      
+      const dbAmount = existingExpense ? Number(existingExpense.amount) : 0;
+      console.log('💰 saveData: Current DB value:', dbAmount, 'State value:', monthlyExpenses);
+      
+      // Only update if the state value is different from DB value
+      if (dbAmount !== monthlyExpenses) {
+        console.log('💰 saveData: Values differ, updating...');
+        
         const { error: deleteExpensesError } = await supabase
           .from('monthly_expenses')
           .delete()
@@ -247,22 +339,31 @@ export const useFinancialData = () => {
           .is('snapshot_id', null);
 
         if (deleteExpensesError) {
-          console.error('Error deleting existing expenses:', deleteExpensesError);
+          console.error('❌ Error deleting existing expenses:', deleteExpensesError);
           throw deleteExpensesError;
         }
 
-        const { error: expensesError } = await supabase
-          .from('monthly_expenses')
-          .insert({
-            user_id: user.id,
-            amount: monthlyExpenses,
-            name: 'Monthly Expenses'
-          } as any);
+        if (monthlyExpenses > 0) {
+          const { error: expensesError, data: insertedData } = await supabase
+            .from('monthly_expenses')
+            .insert({
+              user_id: user.id,
+              amount: monthlyExpenses,
+              name: 'Monthly Expenses',
+              snapshot_id: null,
+            } as any)
+            .select();
 
-        if (expensesError) {
-          console.error('Error inserting expenses:', expensesError);
-          throw expensesError;
+          if (expensesError) {
+            console.error('❌ Error inserting expenses:', expensesError);
+            throw expensesError;
+          }
+          console.log('✅ saveData: Monthly expenses saved:', monthlyExpenses, insertedData);
+        } else {
+          console.log('⚠️ saveData: Monthly expenses is 0, not inserting');
         }
+      } else {
+        console.log('💰 saveData: Values match, skipping update');
       }
 
       console.log('Data saved successfully');
@@ -419,22 +520,60 @@ export const useFinancialData = () => {
   };
 
   const updateMonthlyExpenses = async (amount: number) => {
-    if (!user) return;
+    console.log('💰💰💰 ===== updateMonthlyExpenses CALLED =====', amount);
+    
+    if (!user) {
+      console.error('❌ No user found!');
+      return;
+    }
+
     try {
-      const { error } = await supabase
+      console.log('💰 Step 1: Deleting existing monthly expenses...');
+      // Always clear the current (non-snapshot) monthly expenses first
+      const { error: deleteError, data: deleteData } = await supabase
         .from('monthly_expenses')
-        .upsert({
-          user_id: user.id,
-          amount,
-          name: 'Monthly Expenses',
-          updated_at: new Date().toISOString(),
-        } as any);
-      if (error) throw error;
+        .delete()
+        .eq('user_id', user.id)
+        .is('snapshot_id', null)
+        .select();
+
+      if (deleteError) {
+        console.error('❌ Error deleting existing monthly expenses:', deleteError);
+        throw deleteError;
+      }
+      console.log('✅ Deleted existing expenses. Rows deleted:', deleteData?.length || 0);
+
+      // Only insert a new row if the amount is greater than zero.
+      // This matches the behavior of saveData and avoids creating
+      // \"empty\" expenses rows when the user clears the value.
+      if (amount > 0) {
+        console.log('💰 Step 2: Inserting new monthly expenses:', amount);
+        const { error: insertError, data: insertData } = await supabase
+          .from('monthly_expenses')
+          .insert({
+            user_id: user.id,
+            amount,
+            name: 'Monthly Expenses',
+            snapshot_id: null, // Explicitly set to null for current expenses
+          } as any)
+          .select();
+
+        if (insertError) {
+          console.error('❌ Error inserting monthly expenses:', insertError);
+          throw insertError;
+        }
+        console.log('✅✅✅ ===== MONTHLY EXPENSES SAVED TO DB =====', amount);
+        console.log('Inserted row:', insertData);
+      } else {
+        console.log('⚠️ Monthly expenses set to 0, not saving (as per user preference)');
+      }
+
       setMonthlyExpenses(amount);
       toast.success('Monthly expenses updated!');
+      console.log('💰💰💰 ===== updateMonthlyExpenses COMPLETE =====');
     } catch (e) {
       toast.error('Failed to update expenses');
-      console.error(e);
+      console.error('❌❌❌ updateMonthlyExpenses ERROR:', e);
     }
   };
 

@@ -44,6 +44,19 @@ const MonthlyExpensesManager = ({
   const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>([]);
   const [simpleAmount, setSimpleAmount] = useState(monthlyExpenses);
 
+  // Sync simpleAmount with monthlyExpenses prop when it changes (e.g., on load from database)
+  // This ensures the input shows the correct value after data loads
+  useEffect(() => {
+    console.log('💰 MonthlyExpensesManager: monthlyExpenses prop =', monthlyExpenses, 'simpleAmount =', simpleAmount, 'isDetailedMode =', isDetailedMode);
+    if (!isDetailedMode) {
+      // Always sync in simple mode, even if values appear the same (handles 0 vs empty string)
+      if (monthlyExpenses !== simpleAmount) {
+        console.log('💰 MonthlyExpensesManager: Syncing simpleAmount from', simpleAmount, 'to', monthlyExpenses);
+        setSimpleAmount(monthlyExpenses);
+      }
+    }
+  }, [monthlyExpenses, isDetailedMode]);
+
   // Load from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('expenseItems');
@@ -176,7 +189,7 @@ const MonthlyExpensesManager = ({
               min="0"
               className="pl-9 sm:pl-10 text-base sm:text-lg h-10 sm:h-11"
               placeholder="Total monthly expenses"
-              value={simpleAmount || ""}
+              value={simpleAmount > 0 ? simpleAmount : ""}
               onChange={(e) => handleSimpleAmountChange(Number(e.target.value) || 0)}
             />
           </div>

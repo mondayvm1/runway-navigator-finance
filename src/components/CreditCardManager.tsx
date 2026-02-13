@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -107,6 +107,11 @@ const CreditSummary = ({ accounts }: CreditSummaryProps) => {
 
 const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps) => {
   const [customPayment, setCustomPayment] = useState(account.minimumPayment || 0);
+
+  // Sync customPayment when account.minimumPayment changes
+  useEffect(() => {
+    setCustomPayment(account.minimumPayment || 0);
+  }, [account.minimumPayment]);
 
   const effectiveBalance = account.isPaidOff ? 0 : account.balance;
 
@@ -228,12 +233,21 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
             <Label className="text-xs text-gray-600">Due Date</Label>
             <Input
               type="date"
-              value={account.dueDate || ""}
-              onChange={(e) => onUpdateAccount(account.id, { 
-                dueDate: e.target.value 
-              })}
+              value={account.dueDate ? (account.dueDate.includes('T') ? account.dueDate.split('T')[0] : account.dueDate) : ""}
+              onChange={(e) => {
+                const dateValue = e.target.value; // This will be YYYY-MM-DD format
+                console.log('📅 Due date changed:', dateValue, 'for account:', account.id);
+                onUpdateAccount(account.id, { 
+                  dueDate: dateValue || undefined
+                });
+              }}
               className="h-8 text-sm"
             />
+            {account.dueDate && (
+              <p className="text-xs text-gray-500 mt-1">
+                Current: {new Date(account.dueDate).toLocaleDateString()}
+              </p>
+            )}
           </div>
           
           <div>

@@ -158,8 +158,22 @@ export const useFinancialData = () => {
         let dueDate: string | undefined = undefined;
         if (account.due_date) {
           if (typeof account.due_date === 'string') {
-            // It's already a DATE string (YYYY-MM-DD)
-            dueDate = account.due_date;
+            // It's already a DATE string - ensure it's in YYYY-MM-DD format
+            // PostgreSQL DATE type returns as YYYY-MM-DD, but check for timezone suffixes
+            const dateStr = account.due_date.split('T')[0]; // Remove time if present
+            if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+              dueDate = dateStr;
+            } else {
+              // Try to parse and reformat
+              try {
+                const date = new Date(account.due_date);
+                if (!isNaN(date.getTime())) {
+                  dueDate = date.toISOString().split('T')[0];
+                }
+              } catch (e) {
+                console.warn('Invalid due_date format:', account.due_date);
+              }
+            }
           } else if (typeof account.due_date === 'number') {
             // It's stored as INTEGER (day of month) - convert to date string
             // Use current month/year for display
@@ -168,8 +182,19 @@ export const useFinancialData = () => {
             const month = today.getMonth() + 1;
             dueDate = `${year}-${String(month).padStart(2, '0')}-${String(account.due_date).padStart(2, '0')}`;
           } else {
-            dueDate = account.due_date.toString();
+            try {
+              const date = new Date(account.due_date);
+              if (!isNaN(date.getTime())) {
+                dueDate = date.toISOString().split('T')[0];
+              }
+            } catch (e) {
+              console.warn('Could not parse due_date:', account.due_date);
+            }
           }
+        }
+        
+        if (dueDate) {
+          console.log('📅 Loaded dueDate for', account.name, ':', account.due_date, '->', dueDate);
         }
         
         const accountItem: AccountItem = {
@@ -269,8 +294,8 @@ export const useFinancialData = () => {
 
       setDataFound(totalAccounts > 0);
 
-      if (totalAccounts > 0 || expenses) {
-        toast.success(`Data recovered! Found ${totalAccounts} accounts and ${expenses ? 'monthly expenses' : 'no monthly expenses'}`);
+      if (totalAccounts > 0 || currentExpense) {
+        toast.success(`Data recovered! Found ${totalAccounts} accounts and ${currentExpense ? 'monthly expenses' : 'no monthly expenses'}`);
       } else {
         const { data: snapshots } = await supabase
           .from('financial_snapshots')
@@ -329,7 +354,7 @@ export const useFinancialData = () => {
             balance: account.balance,
             interest_rate: account.interestRate,
             credit_limit: account.creditLimit || null,
-            due_date: dueDateValue,
+            due_date: dueDateValue as any, // Type assertion - database accepts DATE strings
             min_payment: account.minimumPayment || null,
             is_hidden: hiddenCategories[category as keyof HiddenCategories],
             statement_date: account.statementDate || null,
@@ -539,30 +564,40 @@ export const useFinancialData = () => {
     if (updates.creditLimit !== undefined) dbUpdates.credit_limit = updates.creditLimit;
     
     // Handle dueDate: convert date string to proper format for database
-    // The database expects a DATE type (YYYY-MM-DD format)
+    // The database column is DATE type, but TypeScript types might say number
+    // We'll send it as a string in YYYY-MM-DD format which PostgreSQL DATE accepts
     if (updates.dueDate !== undefined) {
-      if (updates.dueDate && typeof updates.dueDate === 'string') {
+      // Handle empty string, null, undefined as null
+      if (!updates.dueDate || updates.dueDate === '') {
+        dbUpdates.due_date = null;
+        console.log('💳 Clearing dueDate (setting to null)');
+      } else if (typeof updates.dueDate === 'string') {
         // Ensure it's in YYYY-MM-DD format
-        if (updates.dueDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          dbUpdates.due_date = updates.dueDate;
+        const dateStr = updates.dueDate.trim();
+        if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          // Send as string - PostgreSQL DATE type accepts YYYY-MM-DD strings
+          dbUpdates.due_date = dateStr as any; // Type assertion to bypass TypeScript type mismatch
+          console.log('💳 Updating dueDate (valid format):', dateStr);
         } else {
           // Try to parse and format
           try {
             const date = new Date(updates.dueDate);
             if (!isNaN(date.getTime())) {
-              dbUpdates.due_date = date.toISOString().split('T')[0];
+              dbUpdates.due_date = date.toISOString().split('T')[0] as any;
+              console.log('💳 Updating dueDate (parsed):', updates.dueDate, '->', dbUpdates.due_date);
             } else {
               dbUpdates.due_date = null;
+              console.warn('💳 Invalid dueDate format, setting to null:', updates.dueDate);
             }
           } catch (e) {
-            console.warn('Invalid dueDate format:', updates.dueDate);
+            console.warn('💳 Error parsing dueDate, setting to null:', updates.dueDate, e);
             dbUpdates.due_date = null;
           }
         }
       } else {
         dbUpdates.due_date = null;
+        console.log('💳 dueDate is not a string, setting to null');
       }
-      console.log('💳 Updating dueDate:', updates.dueDate, '->', dbUpdates.due_date);
     }
     
     if (updates.minimumPayment !== undefined) {
@@ -607,19 +642,53 @@ export const useFinancialData = () => {
         
       if (error) {
         console.error('❌ Error updating account:', error);
+        console.error('❌ Error details:', JSON.stringify(error, null, 2));
+        console.error('❌ Query params:', { 
+          user_id: user.id, 
+          account_id: id, 
+          category,
+          dbUpdates 
+        });
+        
+        // If it's a 400 error, it might be a data format issue
+        // Still update local state and trigger save
+        if (error.code === 'PGRST116' || error.message?.includes('400')) {
+          console.warn('⚠️ Update failed (400), updating local state and triggering save...');
+          setAccountData((prev) => ({
+            ...prev,
+            [category]: prev[category].map((a) =>
+              a.id === id ? { ...a, ...updates } : a
+            ),
+          }));
+          
+          // Trigger immediate save to ensure the account exists in DB
+          setTimeout(() => {
+            saveData();
+          }, 100);
+          
+          toast.success('Account updated (saving to database...)');
+          return;
+        }
+        
         throw error;
       }
       
       if (!data || data.length === 0) {
-        console.warn('⚠️ No rows updated. Account might not exist yet. It will be saved on next auto-save.');
-        // Still update local state so UI is responsive
+        console.warn('⚠️ No rows updated. Account might not exist yet. Triggering immediate save...');
+        // Update local state first
         setAccountData((prev) => ({
           ...prev,
           [category]: prev[category].map((a) =>
             a.id === id ? { ...a, ...updates } : a
           ),
         }));
-        toast.success('Account updated locally (will save on next sync)');
+        
+        // Trigger immediate save to ensure the account exists in DB
+        setTimeout(() => {
+          saveData();
+        }, 100);
+        
+        toast.success('Account updated (saving to database...)');
         return;
       }
       

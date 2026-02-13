@@ -340,6 +340,7 @@ export const useFinancialData = () => {
 
     try {
       console.log('Saving financial data...');
+      console.log('🔧 CODE VERSION: Date encoding v2.0 - YYYYMMDD integer encoding');
       
       const accountsToSave: any[] = [];
       Object.entries(accountData).forEach(([category, accounts]) => {
@@ -386,6 +387,76 @@ export const useFinancialData = () => {
           
           if (account.dueDate && dueDateValue === null) {
             console.warn('⚠️ DEBUG saveData: Failed to encode dueDate for account', account.name, 'dueDate =', account.dueDate, 'type =', typeof account.dueDate);
+            // Fallback: try to encode it one more time
+            if (typeof account.dueDate === 'string') {
+              const date = new Date(account.dueDate);
+              if (!isNaN(date.getTime())) {
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                dueDateValue = year * 10000 + month * 100 + day;
+                console.log('✅ DEBUG saveData: Fallback encoding worked:', account.dueDate, '->', dueDateValue);
+              }
+            }
+          }
+          
+          // Final safety check: ensure due_date is always a number or null, never a string
+          let finalDueDate: number | null = null;
+          if (typeof dueDateValue === 'number') {
+            finalDueDate = dueDateValue;
+          } else if (dueDateValue === null) {
+            finalDueDate = null;
+          } else {
+            // Emergency fallback: if somehow we have a string, try to encode it
+            console.error('❌ EMERGENCY: dueDateValue is not number or null!', dueDateValue, 'type:', typeof dueDateValue);
+            if (typeof account.dueDate === 'string') {
+              try {
+                const date = new Date(account.dueDate);
+                if (!isNaN(date.getTime())) {
+                  const year = date.getFullYear();
+                  const month = date.getMonth() + 1;
+                  const day = date.getDate();
+                  finalDueDate = year * 10000 + month * 100 + day;
+                  console.log('✅ EMERGENCY encoding worked:', account.dueDate, '->', finalDueDate);
+                }
+              } catch (e) {
+                console.error('❌ EMERGENCY encoding failed:', e);
+                finalDueDate = null;
+              }
+            } else {
+              finalDueDate = null;
+            }
+          }
+          
+          if (account.dueDate) {
+            console.log('🔍 FINAL CHECK saveData: account', account.name, 'dueDate =', account.dueDate, 'finalDueDate =', finalDueDate, 'type =', typeof finalDueDate);
+          }
+          
+          // CRITICAL: Final validation - if due_date is still a string, encode it NOW
+          let safeDueDate = finalDueDate;
+          if (account.dueDate && (typeof safeDueDate === 'string' || (safeDueDate === null && account.dueDate))) {
+            console.error('🚨 CRITICAL: due_date is string or null when it should be encoded!', safeDueDate, 'account.dueDate:', account.dueDate);
+            if (typeof account.dueDate === 'string') {
+              const dateStr = account.dueDate.trim();
+              if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const [year, month, day] = dateStr.split('-').map(Number);
+                safeDueDate = year * 10000 + month * 100 + day;
+                console.log('🚨 CRITICAL FIX: Encoded dueDate at last moment:', dateStr, '->', safeDueDate);
+              } else {
+                try {
+                  const date = new Date(account.dueDate);
+                  if (!isNaN(date.getTime())) {
+                    safeDueDate = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+                    console.log('🚨 CRITICAL FIX: Encoded dueDate at last moment (parsed):', account.dueDate, '->', safeDueDate);
+                  }
+                } catch (e) {
+                  console.error('🚨 CRITICAL: Failed to encode at last moment:', e);
+                  safeDueDate = null;
+                }
+              }
+            } else {
+              safeDueDate = null;
+            }
           }
           
           accountsToSave.push({
@@ -396,7 +467,7 @@ export const useFinancialData = () => {
             balance: account.balance,
             interest_rate: account.interestRate,
             credit_limit: account.creditLimit || null,
-            due_date: dueDateValue, // INTEGER (YYYYMMDD format)
+            due_date: safeDueDate, // INTEGER (YYYYMMDD format) - MUST be number or null
             min_payment: account.minimumPayment || null,
             is_hidden: hiddenCategories[category as keyof HiddenCategories],
             statement_date: account.statementDate || null,

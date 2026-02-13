@@ -233,13 +233,29 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
             <Label className="text-xs text-gray-600">Due Date</Label>
             <Input
               type="date"
-              value={account.dueDate ? (account.dueDate.includes('T') ? account.dueDate.split('T')[0] : account.dueDate) : ""}
+              value={account.dueDate && typeof account.dueDate === 'string' 
+                ? (account.dueDate.includes('T') ? account.dueDate.split('T')[0] : account.dueDate) 
+                : account.dueDate && typeof account.dueDate === 'number'
+                ? (() => {
+                    // Legacy: convert day-of-month to current month/year + day for display
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = today.getMonth() + 1;
+                    return `${year}-${String(month).padStart(2, '0')}-${String(account.dueDate).padStart(2, '0')}`;
+                  })()
+                : ""}
               onChange={(e) => {
                 const dateValue = e.target.value; // This will be YYYY-MM-DD format
-                console.log('📅 Due date changed:', dateValue, 'for account:', account.id);
-                onUpdateAccount(account.id, { 
-                  dueDate: dateValue || undefined
-                });
+                console.log('📅 Due date changed:', dateValue, 'type:', typeof dateValue, 'for account:', account.id);
+                if (dateValue) {
+                  onUpdateAccount(account.id, { 
+                    dueDate: dateValue // Always pass as string
+                  });
+                } else {
+                  onUpdateAccount(account.id, { 
+                    dueDate: undefined
+                  });
+                }
               }}
               className="h-8 text-sm"
             />

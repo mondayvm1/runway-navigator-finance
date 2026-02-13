@@ -175,17 +175,23 @@ export const useFinancialData = () => {
               }
             }
           } else if (typeof account.due_date === 'number') {
-            // It's stored as INTEGER (day of month) - convert to date string
+            // Legacy: It's stored as INTEGER (day of month) - convert to date string
             // Use current month/year for display
             const today = new Date();
             const year = today.getFullYear();
             const month = today.getMonth() + 1;
             dueDate = `${year}-${String(month).padStart(2, '0')}-${String(account.due_date).padStart(2, '0')}`;
+            console.log('📅 Converted legacy day-of-month to date:', account.due_date, '->', dueDate);
           } else {
+            // It's a DATE string (YYYY-MM-DD) - use it directly
             try {
               const date = new Date(account.due_date);
               if (!isNaN(date.getTime())) {
+                // Ensure it's in YYYY-MM-DD format
                 dueDate = date.toISOString().split('T')[0];
+              } else if (typeof account.due_date === 'string' && account.due_date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                // Already in correct format
+                dueDate = account.due_date;
               }
             } catch (e) {
               console.warn('Could not parse due_date:', account.due_date);
@@ -327,22 +333,32 @@ export const useFinancialData = () => {
       const accountsToSave: any[] = [];
       Object.entries(accountData).forEach(([category, accounts]) => {
         accounts.forEach(account => {
-          // Convert due_date from date string (YYYY-MM-DD) to day-of-month integer (1-31)
-          // The database column is INTEGER (day of month), not DATE
-          let dueDateValue: number | null = null;
+          // Store due_date as DATE string (YYYY-MM-DD) for database
+          // The database column is DATE type, which accepts YYYY-MM-DD strings
+          let dueDateValue: string | null = null;
           if (account.dueDate) {
             if (typeof account.dueDate === 'string') {
-              try {
-                const date = new Date(account.dueDate);
-                if (!isNaN(date.getTime())) {
-                  dueDateValue = date.getDate(); // Extract day of month (1-31)
+              // Ensure it's in YYYY-MM-DD format
+              const dateStr = account.dueDate.trim();
+              if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                dueDateValue = dateStr;
+              } else {
+                // Try to parse and format
+                try {
+                  const date = new Date(account.dueDate);
+                  if (!isNaN(date.getTime())) {
+                    dueDateValue = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+                  }
+                } catch (e) {
+                  console.warn('Invalid dueDate format:', account.dueDate);
                 }
-              } catch (e) {
-                console.warn('Invalid dueDate format:', account.dueDate);
               }
             } else if (typeof account.dueDate === 'number') {
-              // Already a number (day of month), use it directly
-              dueDateValue = account.dueDate;
+              // Legacy: convert day of month to current month/year + day
+              const today = new Date();
+              const year = today.getFullYear();
+              const month = today.getMonth() + 1;
+              dueDateValue = `${year}-${String(month).padStart(2, '0')}-${String(account.dueDate).padStart(2, '0')}`;
             }
           }
           
@@ -354,7 +370,7 @@ export const useFinancialData = () => {
             balance: account.balance,
             interest_rate: account.interestRate,
             credit_limit: account.creditLimit || null,
-            due_date: dueDateValue, // INTEGER (day of month 1-31)
+            due_date: dueDateValue as any, // DATE string (YYYY-MM-DD)
             min_payment: account.minimumPayment || null,
             is_hidden: hiddenCategories[category as keyof HiddenCategories],
             statement_date: account.statementDate || null,
@@ -488,20 +504,30 @@ export const useFinancialData = () => {
       accountEntries.forEach(([category, accounts]) => {
         const accountsArr = Array.isArray(accounts) ? accounts : [];
         accountsArr.forEach(account => {
-          // Convert due_date from date string to day-of-month integer (1-31)
-          let dueDateValue: number | null = null;
+          // Store due_date as DATE string (YYYY-MM-DD) for database
+          let dueDateValue: string | null = null;
           if (account.dueDate) {
             if (typeof account.dueDate === 'string') {
-              try {
-                const date = new Date(account.dueDate);
-                if (!isNaN(date.getTime())) {
-                  dueDateValue = date.getDate(); // Extract day of month (1-31)
+              // Ensure it's in YYYY-MM-DD format
+              const dateStr = account.dueDate.trim();
+              if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                dueDateValue = dateStr;
+              } else {
+                try {
+                  const date = new Date(account.dueDate);
+                  if (!isNaN(date.getTime())) {
+                    dueDateValue = date.toISOString().split('T')[0];
+                  }
+                } catch (e) {
+                  console.warn('Invalid dueDate format in snapshot:', account.dueDate);
                 }
-              } catch (e) {
-                console.warn('Invalid dueDate format in snapshot:', account.dueDate);
               }
             } else if (typeof account.dueDate === 'number') {
-              dueDateValue = account.dueDate;
+              // Legacy: convert day of month to current month/year + day
+              const today = new Date();
+              const year = today.getFullYear();
+              const month = today.getMonth() + 1;
+              dueDateValue = `${year}-${String(month).padStart(2, '0')}-${String(account.dueDate).padStart(2, '0')}`;
             }
           }
           
@@ -513,7 +539,7 @@ export const useFinancialData = () => {
             balance: account.balance,
             interest_rate: account.interestRate,
             credit_limit: account.creditLimit || null,
-            due_date: dueDateValue, // INTEGER (day of month 1-31)
+            due_date: dueDateValue as any, // DATE string (YYYY-MM-DD)
             min_payment: account.minimumPayment || null,
             snapshot_id: snapshot?.id,
             is_hidden: hiddenCategories[category as keyof HiddenCategories]
@@ -592,38 +618,52 @@ export const useFinancialData = () => {
     if (updates.interestRate !== undefined) dbUpdates.interest_rate = updates.interestRate;
     if (updates.creditLimit !== undefined) dbUpdates.credit_limit = updates.creditLimit;
     
-    // Handle dueDate: convert date string to day-of-month integer (1-31) for database
-    // The database column is INTEGER (day of month), not DATE
+    // Handle dueDate: store as DATE string (YYYY-MM-DD) for database
+    // The database column is DATE type, which accepts YYYY-MM-DD strings
     if (updates.dueDate !== undefined) {
+      console.log('🔍 DEBUG updateAccountField: updates.dueDate =', updates.dueDate, 'type =', typeof updates.dueDate, 'value =', JSON.stringify(updates.dueDate));
       // Handle empty string, null, undefined as null
       if (!updates.dueDate || updates.dueDate === '') {
         dbUpdates.due_date = null;
         console.log('💳 Clearing dueDate (setting to null)');
       } else if (typeof updates.dueDate === 'string') {
-        try {
-          // Parse the date string (YYYY-MM-DD format from calendar input)
-          const date = new Date(updates.dueDate);
-          if (!isNaN(date.getTime())) {
-            // Extract day of month (1-31)
-            const dayOfMonth = date.getDate();
-            dbUpdates.due_date = dayOfMonth;
-            console.log('💳 Converting dueDate:', updates.dueDate, '-> day', dayOfMonth);
-          } else {
+        // Ensure it's in YYYY-MM-DD format
+        const dateStr = updates.dueDate.trim();
+        console.log('🔍 DEBUG: dateStr =', dateStr, 'matches pattern?', dateStr.match(/^\d{4}-\d{2}-\d{2}$/));
+        if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          // Already in correct format, use it directly
+          dbUpdates.due_date = dateStr as any; // Type assertion for DATE type
+          console.log('✅💳 Updating dueDate (valid format):', dateStr, '-> dbUpdates.due_date =', dbUpdates.due_date);
+        } else {
+          // Try to parse and format
+          try {
+            const date = new Date(updates.dueDate);
+            if (!isNaN(date.getTime())) {
+              dbUpdates.due_date = date.toISOString().split('T')[0] as any;
+              console.log('💳 Converting dueDate:', updates.dueDate, '->', dbUpdates.due_date);
+            } else {
+              dbUpdates.due_date = null;
+              console.warn('💳 Invalid dueDate format, setting to null:', updates.dueDate);
+            }
+          } catch (e) {
+            console.warn('💳 Error parsing dueDate, setting to null:', updates.dueDate, e);
             dbUpdates.due_date = null;
-            console.warn('💳 Invalid dueDate format, setting to null:', updates.dueDate);
           }
-        } catch (e) {
-          console.warn('💳 Error parsing dueDate, setting to null:', updates.dueDate, e);
-          dbUpdates.due_date = null;
         }
       } else if (typeof updates.dueDate === 'number') {
-        // Already a number (day of month), use it directly
-        dbUpdates.due_date = updates.dueDate;
-        console.log('💳 Using dueDate as day of month:', updates.dueDate);
+        // Legacy: if it's a number (day of month), convert to current month/year + day
+        console.warn('⚠️💳 WARNING: updates.dueDate is a NUMBER:', updates.dueDate, '- converting to date string');
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth() + 1;
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(updates.dueDate).padStart(2, '0')}`;
+        dbUpdates.due_date = dateStr as any;
+        console.log('💳 Converting legacy day-of-month to date:', updates.dueDate, '->', dateStr);
       } else {
         dbUpdates.due_date = null;
-        console.log('💳 dueDate is not a string or number, setting to null');
+        console.log('💳 dueDate is not a string or number, setting to null. Type:', typeof updates.dueDate);
       }
+      console.log('🔍 DEBUG: Final dbUpdates.due_date =', dbUpdates.due_date, 'type =', typeof dbUpdates.due_date);
     }
     
     if (updates.minimumPayment !== undefined) {
@@ -651,9 +691,10 @@ export const useFinancialData = () => {
     });
     
     // #region agent log
-    const updateLogData = {accountId:id,category,dbUpdates,userId:user.id,accountData:account};
+    const updateLogData = {accountId:id,category,dbUpdates,userId:user.id,accountData:account,updates:updates,updatesDueDate:updates.dueDate,updatesDueDateType:typeof updates.dueDate};
     console.log('🔍 DEBUG updateAccountField: About to update account', updateLogData);
-    fetch('http://127.0.0.1:7242/ingest/042d468b-bf7c-4059-a73f-d9ca40be77bd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinancialData.ts:633',message:'updateAccountField: About to update account',data:updateLogData,timestamp:Date.now(),runId:'debug-1',hypothesisId:'B'})}).catch(()=>{});
+    console.log('🔍 DEBUG updateAccountField: updates object =', JSON.stringify(updates, null, 2));
+    fetch('http://127.0.0.1:7242/ingest/042d468b-bf7c-4059-a73f-d9ca40be77bd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinancialData.ts:635',message:'updateAccountField: About to update account',data:updateLogData,timestamp:Date.now(),runId:'debug-2',hypothesisId:'B'})}).catch(()=>{});
     // #endregion
     
     // Update Supabase

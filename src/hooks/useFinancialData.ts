@@ -175,13 +175,24 @@ export const useFinancialData = () => {
               }
             }
           } else if (typeof account.due_date === 'number') {
-            // Legacy: It's stored as INTEGER (day of month) - convert to date string
-            // Use current month/year for display
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = today.getMonth() + 1;
-            dueDate = `${year}-${String(month).padStart(2, '0')}-${String(account.due_date).padStart(2, '0')}`;
-            console.log('📅 Converted legacy day-of-month to date:', account.due_date, '->', dueDate);
+            // Decode YYYYMMDD integer to YYYY-MM-DD string
+            // If >= 10000, it's YYYYMMDD format (e.g., 20260308 = March 8, 2026)
+            // If < 100, it's legacy day-of-month (1-31)
+            if (account.due_date >= 10000) {
+              // Decode YYYYMMDD format
+              const year = Math.floor(account.due_date / 10000);
+              const month = Math.floor((account.due_date % 10000) / 100);
+              const day = account.due_date % 100;
+              dueDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              console.log('📅 Decoded YYYYMMDD dueDate:', account.due_date, '->', dueDate);
+            } else {
+              // Legacy: day of month (1-31), convert to current month/year + day
+              const today = new Date();
+              const year = today.getFullYear();
+              const month = today.getMonth() + 1;
+              dueDate = `${year}-${String(month).padStart(2, '0')}-${String(account.due_date).padStart(2, '0')}`;
+              console.log('📅 Converted legacy day-of-month to date:', account.due_date, '->', dueDate);
+            }
           } else {
             // It's a DATE string (YYYY-MM-DD) - use it directly
             try {
@@ -333,33 +344,48 @@ export const useFinancialData = () => {
       const accountsToSave: any[] = [];
       Object.entries(accountData).forEach(([category, accounts]) => {
         accounts.forEach(account => {
-          // Store due_date as DATE string (YYYY-MM-DD) for database
-          // The database column is DATE type, which accepts YYYY-MM-DD strings
-          let dueDateValue: string | null = null;
+          // Encode due_date as YYYYMMDD integer for database (INTEGER column)
+          let dueDateValue: number | null = null;
           if (account.dueDate) {
+            console.log('🔍 DEBUG saveData: account.dueDate =', account.dueDate, 'type =', typeof account.dueDate, 'for account', account.name);
             if (typeof account.dueDate === 'string') {
-              // Ensure it's in YYYY-MM-DD format
+              // Parse YYYY-MM-DD string and encode as YYYYMMDD integer
               const dateStr = account.dueDate.trim();
+              console.log('🔍 DEBUG saveData: dateStr =', dateStr, 'matches pattern?', dateStr.match(/^\d{4}-\d{2}-\d{2}$/));
               if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                dueDateValue = dateStr;
+                const [year, month, day] = dateStr.split('-').map(Number);
+                dueDateValue = year * 10000 + month * 100 + day; // e.g., 20260308
+                console.log('✅ DEBUG saveData: Encoded dueDate:', dateStr, '->', dueDateValue);
               } else {
-                // Try to parse and format
+                // Try to parse and encode
                 try {
                   const date = new Date(account.dueDate);
                   if (!isNaN(date.getTime())) {
-                    dueDateValue = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+                    const year = date.getFullYear();
+                    const month = date.getMonth() + 1;
+                    const day = date.getDate();
+                    dueDateValue = year * 10000 + month * 100 + day;
                   }
                 } catch (e) {
                   console.warn('Invalid dueDate format:', account.dueDate);
                 }
               }
             } else if (typeof account.dueDate === 'number') {
-              // Legacy: convert day of month to current month/year + day
-              const today = new Date();
-              const year = today.getFullYear();
-              const month = today.getMonth() + 1;
-              dueDateValue = `${year}-${String(month).padStart(2, '0')}-${String(account.dueDate).padStart(2, '0')}`;
+              // If already YYYYMMDD format (>= 10000), use it; otherwise convert legacy day-of-month
+              if (account.dueDate >= 10000) {
+                dueDateValue = account.dueDate;
+              } else {
+                // Legacy: convert day of month to current month/year + day as YYYYMMDD
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = today.getMonth() + 1;
+                dueDateValue = year * 10000 + month * 100 + account.dueDate;
+              }
             }
+          }
+          
+          if (account.dueDate && dueDateValue === null) {
+            console.warn('⚠️ DEBUG saveData: Failed to encode dueDate for account', account.name, 'dueDate =', account.dueDate, 'type =', typeof account.dueDate);
           }
           
           accountsToSave.push({
@@ -370,7 +396,7 @@ export const useFinancialData = () => {
             balance: account.balance,
             interest_rate: account.interestRate,
             credit_limit: account.creditLimit || null,
-            due_date: dueDateValue as any, // DATE string (YYYY-MM-DD)
+            due_date: dueDateValue, // INTEGER (YYYYMMDD format)
             min_payment: account.minimumPayment || null,
             is_hidden: hiddenCategories[category as keyof HiddenCategories],
             statement_date: account.statementDate || null,
@@ -504,30 +530,39 @@ export const useFinancialData = () => {
       accountEntries.forEach(([category, accounts]) => {
         const accountsArr = Array.isArray(accounts) ? accounts : [];
         accountsArr.forEach(account => {
-          // Store due_date as DATE string (YYYY-MM-DD) for database
-          let dueDateValue: string | null = null;
+          // Encode due_date as YYYYMMDD integer for database (INTEGER column)
+          let dueDateValue: number | null = null;
           if (account.dueDate) {
             if (typeof account.dueDate === 'string') {
-              // Ensure it's in YYYY-MM-DD format
+              // Parse YYYY-MM-DD string and encode as YYYYMMDD integer
               const dateStr = account.dueDate.trim();
               if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                dueDateValue = dateStr;
+                const [year, month, day] = dateStr.split('-').map(Number);
+                dueDateValue = year * 10000 + month * 100 + day;
               } else {
                 try {
                   const date = new Date(account.dueDate);
                   if (!isNaN(date.getTime())) {
-                    dueDateValue = date.toISOString().split('T')[0];
+                    const year = date.getFullYear();
+                    const month = date.getMonth() + 1;
+                    const day = date.getDate();
+                    dueDateValue = year * 10000 + month * 100 + day;
                   }
                 } catch (e) {
                   console.warn('Invalid dueDate format in snapshot:', account.dueDate);
                 }
               }
             } else if (typeof account.dueDate === 'number') {
-              // Legacy: convert day of month to current month/year + day
-              const today = new Date();
-              const year = today.getFullYear();
-              const month = today.getMonth() + 1;
-              dueDateValue = `${year}-${String(month).padStart(2, '0')}-${String(account.dueDate).padStart(2, '0')}`;
+              // If already YYYYMMDD format (>= 10000), use it; otherwise convert legacy day-of-month
+              if (account.dueDate >= 10000) {
+                dueDateValue = account.dueDate;
+              } else {
+                // Legacy: convert day of month to current month/year + day as YYYYMMDD
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = today.getMonth() + 1;
+                dueDateValue = year * 10000 + month * 100 + account.dueDate;
+              }
             }
           }
           
@@ -539,7 +574,7 @@ export const useFinancialData = () => {
             balance: account.balance,
             interest_rate: account.interestRate,
             credit_limit: account.creditLimit || null,
-            due_date: dueDateValue as any, // DATE string (YYYY-MM-DD)
+            due_date: dueDateValue, // INTEGER (YYYYMMDD format)
             min_payment: account.minimumPayment || null,
             snapshot_id: snapshot?.id,
             is_hidden: hiddenCategories[category as keyof HiddenCategories]
@@ -618,29 +653,34 @@ export const useFinancialData = () => {
     if (updates.interestRate !== undefined) dbUpdates.interest_rate = updates.interestRate;
     if (updates.creditLimit !== undefined) dbUpdates.credit_limit = updates.creditLimit;
     
-    // Handle dueDate: store as DATE string (YYYY-MM-DD) for database
-    // The database column is DATE type, which accepts YYYY-MM-DD strings
+    // Handle dueDate: encode full date as YYYYMMDD integer for database
+    // The database column is INTEGER, so we encode the full date as YYYYMMDD (e.g., 20260308 for March 8, 2026)
     if (updates.dueDate !== undefined) {
-      console.log('🔍 DEBUG updateAccountField: updates.dueDate =', updates.dueDate, 'type =', typeof updates.dueDate, 'value =', JSON.stringify(updates.dueDate));
+      console.log('🔍 DEBUG updateAccountField dueDate: updates.dueDate =', updates.dueDate, 'type =', typeof updates.dueDate, 'account.dueDate =', account.dueDate);
       // Handle empty string, null, undefined as null
       if (!updates.dueDate || updates.dueDate === '') {
         dbUpdates.due_date = null;
         console.log('💳 Clearing dueDate (setting to null)');
       } else if (typeof updates.dueDate === 'string') {
-        // Ensure it's in YYYY-MM-DD format
+        // Parse YYYY-MM-DD string and convert to YYYYMMDD integer
         const dateStr = updates.dueDate.trim();
-        console.log('🔍 DEBUG: dateStr =', dateStr, 'matches pattern?', dateStr.match(/^\d{4}-\d{2}-\d{2}$/));
         if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          // Already in correct format, use it directly
-          dbUpdates.due_date = dateStr as any; // Type assertion for DATE type
-          console.log('✅💳 Updating dueDate (valid format):', dateStr, '-> dbUpdates.due_date =', dbUpdates.due_date);
+          // Extract year, month, day and combine as integer
+          const [year, month, day] = dateStr.split('-').map(Number);
+          const encodedDate = year * 10000 + month * 100 + day; // e.g., 20260308
+          dbUpdates.due_date = encodedDate;
+          console.log('💳 Encoding dueDate:', dateStr, '->', encodedDate);
         } else {
           // Try to parse and format
           try {
             const date = new Date(updates.dueDate);
             if (!isNaN(date.getTime())) {
-              dbUpdates.due_date = date.toISOString().split('T')[0] as any;
-              console.log('💳 Converting dueDate:', updates.dueDate, '->', dbUpdates.due_date);
+              const year = date.getFullYear();
+              const month = date.getMonth() + 1;
+              const day = date.getDate();
+              const encodedDate = year * 10000 + month * 100 + day;
+              dbUpdates.due_date = encodedDate;
+              console.log('💳 Converting dueDate:', updates.dueDate, '->', encodedDate);
             } else {
               dbUpdates.due_date = null;
               console.warn('💳 Invalid dueDate format, setting to null:', updates.dueDate);
@@ -651,19 +691,24 @@ export const useFinancialData = () => {
           }
         }
       } else if (typeof updates.dueDate === 'number') {
-        // Legacy: if it's a number (day of month), convert to current month/year + day
-        console.warn('⚠️💳 WARNING: updates.dueDate is a NUMBER:', updates.dueDate, '- converting to date string');
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = today.getMonth() + 1;
-        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(updates.dueDate).padStart(2, '0')}`;
-        dbUpdates.due_date = dateStr as any;
-        console.log('💳 Converting legacy day-of-month to date:', updates.dueDate, '->', dateStr);
+        // If it's already a number, check if it's YYYYMMDD format (>= 10000) or legacy day-of-month (< 100)
+        if (updates.dueDate >= 10000) {
+          // Already in YYYYMMDD format, use it directly
+          dbUpdates.due_date = updates.dueDate;
+          console.log('💳 Using dueDate as YYYYMMDD integer:', updates.dueDate);
+        } else {
+          // Legacy: day of month (1-31), convert to current month/year + day as YYYYMMDD
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = today.getMonth() + 1;
+          const encodedDate = year * 10000 + month * 100 + updates.dueDate;
+          dbUpdates.due_date = encodedDate;
+          console.log('💳 Converting legacy day-of-month to YYYYMMDD:', updates.dueDate, '->', encodedDate);
+        }
       } else {
         dbUpdates.due_date = null;
-        console.log('💳 dueDate is not a string or number, setting to null. Type:', typeof updates.dueDate);
+        console.log('💳 dueDate is not a string or number, setting to null');
       }
-      console.log('🔍 DEBUG: Final dbUpdates.due_date =', dbUpdates.due_date, 'type =', typeof dbUpdates.due_date);
     }
     
     if (updates.minimumPayment !== undefined) {

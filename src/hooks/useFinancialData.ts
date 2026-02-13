@@ -327,22 +327,22 @@ export const useFinancialData = () => {
       const accountsToSave: any[] = [];
       Object.entries(accountData).forEach(([category, accounts]) => {
         accounts.forEach(account => {
-          // Ensure due_date is properly formatted (DATE string YYYY-MM-DD or null)
-          let dueDateValue: string | null = null;
+          // Convert due_date from date string (YYYY-MM-DD) to day-of-month integer (1-31)
+          // The database column is INTEGER (day of month), not DATE
+          let dueDateValue: number | null = null;
           if (account.dueDate) {
-            // If it's already a date string, use it; otherwise try to format it
-            if (typeof account.dueDate === 'string' && account.dueDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-              dueDateValue = account.dueDate;
-            } else {
-              // Try to parse and format
+            if (typeof account.dueDate === 'string') {
               try {
                 const date = new Date(account.dueDate);
                 if (!isNaN(date.getTime())) {
-                  dueDateValue = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+                  dueDateValue = date.getDate(); // Extract day of month (1-31)
                 }
               } catch (e) {
                 console.warn('Invalid dueDate format:', account.dueDate);
               }
+            } else if (typeof account.dueDate === 'number') {
+              // Already a number (day of month), use it directly
+              dueDateValue = account.dueDate;
             }
           }
           
@@ -354,7 +354,7 @@ export const useFinancialData = () => {
             balance: account.balance,
             interest_rate: account.interestRate,
             credit_limit: account.creditLimit || null,
-            due_date: dueDateValue as any, // Type assertion - database accepts DATE strings
+            due_date: dueDateValue, // INTEGER (day of month 1-31)
             min_payment: account.minimumPayment || null,
             is_hidden: hiddenCategories[category as keyof HiddenCategories],
             statement_date: account.statementDate || null,
@@ -371,6 +371,12 @@ export const useFinancialData = () => {
       // SAFETY CHECK: Only delete if we have data to save, otherwise just skip
       // This prevents accidental data loss when React state is empty
       if (accountsToSave.length > 0) {
+        // #region agent log
+        const logDataBefore = {accountsCount:accountsToSave.length,accountsSample:accountsToSave.slice(0,3).map(a=>({account_id:a.account_id,name:a.name,category:a.category,balance:a.balance,due_date:a.due_date,min_payment:a.min_payment})),allAccounts:accountsToSave};
+        console.log('🔍 DEBUG saveData: About to insert accounts', logDataBefore);
+        fetch('http://127.0.0.1:7242/ingest/042d468b-bf7c-4059-a73f-d9ca40be77bd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinancialData.ts:373',message:'saveData: About to insert accounts',data:logDataBefore,timestamp:Date.now(),runId:'debug-1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+
         const { error: deleteError } = await supabase
           .from('user_accounts')
           .delete()
@@ -387,6 +393,12 @@ export const useFinancialData = () => {
           .insert(accountsToSave);
 
         if (accountsError) {
+          // #region agent log
+          const errorLogData = {error:accountsError,errorCode:accountsError?.code,errorMessage:accountsError?.message,errorDetails:accountsError?.details,errorHint:accountsError?.hint,accountsCount:accountsToSave.length,firstAccount:accountsToSave[0],allAccounts:accountsToSave};
+          console.error('🔍 DEBUG saveData: Insert error occurred', errorLogData);
+          console.error('🔍 DEBUG saveData: Full error object', JSON.stringify(accountsError, null, 2));
+          fetch('http://127.0.0.1:7242/ingest/042d468b-bf7c-4059-a73f-d9ca40be77bd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinancialData.ts:393',message:'saveData: Insert error occurred',data:errorLogData,timestamp:Date.now(),runId:'debug-1',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
           console.error('Error inserting accounts:', accountsError);
           throw accountsError;
         }
@@ -476,6 +488,23 @@ export const useFinancialData = () => {
       accountEntries.forEach(([category, accounts]) => {
         const accountsArr = Array.isArray(accounts) ? accounts : [];
         accountsArr.forEach(account => {
+          // Convert due_date from date string to day-of-month integer (1-31)
+          let dueDateValue: number | null = null;
+          if (account.dueDate) {
+            if (typeof account.dueDate === 'string') {
+              try {
+                const date = new Date(account.dueDate);
+                if (!isNaN(date.getTime())) {
+                  dueDateValue = date.getDate(); // Extract day of month (1-31)
+                }
+              } catch (e) {
+                console.warn('Invalid dueDate format in snapshot:', account.dueDate);
+              }
+            } else if (typeof account.dueDate === 'number') {
+              dueDateValue = account.dueDate;
+            }
+          }
+          
           accountsToSave.push({
             user_id: user.id,
             account_id: account.id,
@@ -484,7 +513,7 @@ export const useFinancialData = () => {
             balance: account.balance,
             interest_rate: account.interestRate,
             credit_limit: account.creditLimit || null,
-            due_date: account.dueDate || null,
+            due_date: dueDateValue, // INTEGER (day of month 1-31)
             min_payment: account.minimumPayment || null,
             snapshot_id: snapshot?.id,
             is_hidden: hiddenCategories[category as keyof HiddenCategories]
@@ -563,40 +592,37 @@ export const useFinancialData = () => {
     if (updates.interestRate !== undefined) dbUpdates.interest_rate = updates.interestRate;
     if (updates.creditLimit !== undefined) dbUpdates.credit_limit = updates.creditLimit;
     
-    // Handle dueDate: convert date string to proper format for database
-    // The database column is DATE type, but TypeScript types might say number
-    // We'll send it as a string in YYYY-MM-DD format which PostgreSQL DATE accepts
+    // Handle dueDate: convert date string to day-of-month integer (1-31) for database
+    // The database column is INTEGER (day of month), not DATE
     if (updates.dueDate !== undefined) {
       // Handle empty string, null, undefined as null
       if (!updates.dueDate || updates.dueDate === '') {
         dbUpdates.due_date = null;
         console.log('💳 Clearing dueDate (setting to null)');
       } else if (typeof updates.dueDate === 'string') {
-        // Ensure it's in YYYY-MM-DD format
-        const dateStr = updates.dueDate.trim();
-        if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          // Send as string - PostgreSQL DATE type accepts YYYY-MM-DD strings
-          dbUpdates.due_date = dateStr as any; // Type assertion to bypass TypeScript type mismatch
-          console.log('💳 Updating dueDate (valid format):', dateStr);
-        } else {
-          // Try to parse and format
-          try {
-            const date = new Date(updates.dueDate);
-            if (!isNaN(date.getTime())) {
-              dbUpdates.due_date = date.toISOString().split('T')[0] as any;
-              console.log('💳 Updating dueDate (parsed):', updates.dueDate, '->', dbUpdates.due_date);
-            } else {
-              dbUpdates.due_date = null;
-              console.warn('💳 Invalid dueDate format, setting to null:', updates.dueDate);
-            }
-          } catch (e) {
-            console.warn('💳 Error parsing dueDate, setting to null:', updates.dueDate, e);
+        try {
+          // Parse the date string (YYYY-MM-DD format from calendar input)
+          const date = new Date(updates.dueDate);
+          if (!isNaN(date.getTime())) {
+            // Extract day of month (1-31)
+            const dayOfMonth = date.getDate();
+            dbUpdates.due_date = dayOfMonth;
+            console.log('💳 Converting dueDate:', updates.dueDate, '-> day', dayOfMonth);
+          } else {
             dbUpdates.due_date = null;
+            console.warn('💳 Invalid dueDate format, setting to null:', updates.dueDate);
           }
+        } catch (e) {
+          console.warn('💳 Error parsing dueDate, setting to null:', updates.dueDate, e);
+          dbUpdates.due_date = null;
         }
+      } else if (typeof updates.dueDate === 'number') {
+        // Already a number (day of month), use it directly
+        dbUpdates.due_date = updates.dueDate;
+        console.log('💳 Using dueDate as day of month:', updates.dueDate);
       } else {
         dbUpdates.due_date = null;
-        console.log('💳 dueDate is not a string, setting to null');
+        console.log('💳 dueDate is not a string or number, setting to null');
       }
     }
     
@@ -624,6 +650,12 @@ export const useFinancialData = () => {
       userId: user.id 
     });
     
+    // #region agent log
+    const updateLogData = {accountId:id,category,dbUpdates,userId:user.id,accountData:account};
+    console.log('🔍 DEBUG updateAccountField: About to update account', updateLogData);
+    fetch('http://127.0.0.1:7242/ingest/042d468b-bf7c-4059-a73f-d9ca40be77bd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinancialData.ts:633',message:'updateAccountField: About to update account',data:updateLogData,timestamp:Date.now(),runId:'debug-1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    
     // Update Supabase
     // Match by account_id (React state ID stored in database) and category
     // Also match by name as a safety check
@@ -641,6 +673,12 @@ export const useFinancialData = () => {
         .select();
         
       if (error) {
+        // #region agent log
+        const updateErrorLogData = {error:error,errorCode:error?.code,errorMessage:error?.message,errorDetails:error?.details,errorHint:error?.hint,accountId:id,category,dbUpdates,userId:user.id};
+        console.error('🔍 DEBUG updateAccountField: Update error occurred', updateErrorLogData);
+        console.error('🔍 DEBUG updateAccountField: Full error object', JSON.stringify(error, null, 2));
+        fetch('http://127.0.0.1:7242/ingest/042d468b-bf7c-4059-a73f-d9ca40be77bd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFinancialData.ts:648',message:'updateAccountField: Update error occurred',data:updateErrorLogData,timestamp:Date.now(),runId:'debug-1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         console.error('❌ Error updating account:', error);
         console.error('❌ Error details:', JSON.stringify(error, null, 2));
         console.error('❌ Query params:', { 

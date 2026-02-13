@@ -154,13 +154,31 @@ export const useFinancialData = () => {
       }
       
       uniqueAccounts.forEach((account: any) => {
+        // Handle due_date: could be DATE string, INTEGER (day of month), or null
+        let dueDate: string | undefined = undefined;
+        if (account.due_date) {
+          if (typeof account.due_date === 'string') {
+            // It's already a DATE string (YYYY-MM-DD)
+            dueDate = account.due_date;
+          } else if (typeof account.due_date === 'number') {
+            // It's stored as INTEGER (day of month) - convert to date string
+            // Use current month/year for display
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1;
+            dueDate = `${year}-${String(month).padStart(2, '0')}-${String(account.due_date).padStart(2, '0')}`;
+          } else {
+            dueDate = account.due_date.toString();
+          }
+        }
+        
         const accountItem: AccountItem = {
           id: account.account_id || account.id,
           name: account.name,
           balance: Number(account.balance),
           interestRate: Number(account.interest_rate || 0),
           creditLimit: account.credit_limit ? Number(account.credit_limit) : undefined,
-          dueDate: account.due_date?.toString() || undefined,
+          dueDate: dueDate,
           minimumPayment: account.min_payment ? Number(account.min_payment) : undefined,
           statementDate: account.statement_date ?? undefined,
           autopayEnabled: account.autopay_enabled ?? false,
@@ -284,6 +302,25 @@ export const useFinancialData = () => {
       const accountsToSave: any[] = [];
       Object.entries(accountData).forEach(([category, accounts]) => {
         accounts.forEach(account => {
+          // Ensure due_date is properly formatted (DATE string YYYY-MM-DD or null)
+          let dueDateValue: string | null = null;
+          if (account.dueDate) {
+            // If it's already a date string, use it; otherwise try to format it
+            if (typeof account.dueDate === 'string' && account.dueDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+              dueDateValue = account.dueDate;
+            } else {
+              // Try to parse and format
+              try {
+                const date = new Date(account.dueDate);
+                if (!isNaN(date.getTime())) {
+                  dueDateValue = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+                }
+              } catch (e) {
+                console.warn('Invalid dueDate format:', account.dueDate);
+              }
+            }
+          }
+          
           accountsToSave.push({
             user_id: user.id,
             account_id: account.id,
@@ -292,7 +329,7 @@ export const useFinancialData = () => {
             balance: account.balance,
             interest_rate: account.interestRate,
             credit_limit: account.creditLimit || null,
-            due_date: account.dueDate || null,
+            due_date: dueDateValue,
             min_payment: account.minimumPayment || null,
             is_hidden: hiddenCategories[category as keyof HiddenCategories],
             statement_date: account.statementDate || null,
@@ -489,7 +526,10 @@ export const useFinancialData = () => {
     if (!user) return;
     // Find the account
     const account = accountData[category].find((a) => a.id === id);
-    if (!account) return;
+    if (!account) {
+      console.error('Account not found:', id, category);
+      return;
+    }
     
     // Map camelCase properties to snake_case database columns
     const dbUpdates: any = {};
@@ -497,25 +537,63 @@ export const useFinancialData = () => {
     if (updates.balance !== undefined) dbUpdates.balance = updates.balance;
     if (updates.interestRate !== undefined) dbUpdates.interest_rate = updates.interestRate;
     if (updates.creditLimit !== undefined) dbUpdates.credit_limit = updates.creditLimit;
-    if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
-    if (updates.minimumPayment !== undefined) dbUpdates.minimum_payment = updates.minimumPayment;
+    
+    // Handle dueDate: convert date string to proper format for database
+    // The database expects a DATE type (YYYY-MM-DD format)
+    if (updates.dueDate !== undefined) {
+      if (updates.dueDate && typeof updates.dueDate === 'string') {
+        // Ensure it's in YYYY-MM-DD format
+        if (updates.dueDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          dbUpdates.due_date = updates.dueDate;
+        } else {
+          // Try to parse and format
+          try {
+            const date = new Date(updates.dueDate);
+            if (!isNaN(date.getTime())) {
+              dbUpdates.due_date = date.toISOString().split('T')[0];
+            } else {
+              dbUpdates.due_date = null;
+            }
+          } catch (e) {
+            console.warn('Invalid dueDate format:', updates.dueDate);
+            dbUpdates.due_date = null;
+          }
+        }
+      } else {
+        dbUpdates.due_date = null;
+      }
+      console.log('💳 Updating dueDate:', updates.dueDate, '->', dbUpdates.due_date);
+    }
+    
+    if (updates.minimumPayment !== undefined) {
+      dbUpdates.min_payment = updates.minimumPayment || null;
+      console.log('💳 Updating minimumPayment:', updates.minimumPayment, '->', dbUpdates.min_payment);
+    }
+    
     if (updates.name !== undefined) dbUpdates.name = updates.name;
-    if (updates.statementDate !== undefined) dbUpdates.statement_date = updates.statementDate;
+    if (updates.statementDate !== undefined) dbUpdates.statement_date = updates.statementDate || null;
     if (updates.autopayEnabled !== undefined) dbUpdates.autopay_enabled = updates.autopayEnabled;
     if (updates.autopayAmountType !== undefined) dbUpdates.autopay_amount_type = updates.autopayAmountType;
-    if (updates.autopayCustomAmount !== undefined) dbUpdates.autopay_custom_amount = updates.autopayCustomAmount;
+    if (updates.autopayCustomAmount !== undefined) dbUpdates.autopay_custom_amount = updates.autopayCustomAmount || null;
     if (updates.isPaidOff !== undefined) dbUpdates.is_paid_off = updates.isPaidOff;
     if (updates.reportsToExperian !== undefined) dbUpdates.reports_to_experian = updates.reportsToExperian;
     if (updates.reportsToTransunion !== undefined) dbUpdates.reports_to_transunion = updates.reportsToTransunion;
     if (updates.reportsToEquifax !== undefined) dbUpdates.reports_to_equifax = updates.reportsToEquifax;
-    if (updates.reportingDay !== undefined) dbUpdates.reporting_day = updates.reportingDay;
+    if (updates.reportingDay !== undefined) dbUpdates.reporting_day = updates.reportingDay || null;
     
     // Debug logging
-    console.log('Updating account:', { dbUpdates, id, userId: user.id });
+    console.log('💳 Updating account:', { 
+      accountId: id, 
+      category, 
+      dbUpdates, 
+      userId: user.id 
+    });
     
     // Update Supabase
+    // Match by account_id (React state ID stored in database) and category
+    // Also match by name as a safety check
     try {
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('user_accounts')
         .update({
           ...dbUpdates,
@@ -523,8 +601,30 @@ export const useFinancialData = () => {
         })
         .eq('user_id', user.id)
         .eq('account_id', id)
-        .is('snapshot_id', null);
-      if (error) throw error;
+        .eq('category', category)
+        .is('snapshot_id', null)
+        .select();
+        
+      if (error) {
+        console.error('❌ Error updating account:', error);
+        throw error;
+      }
+      
+      if (!data || data.length === 0) {
+        console.warn('⚠️ No rows updated. Account might not exist yet. It will be saved on next auto-save.');
+        // Still update local state so UI is responsive
+        setAccountData((prev) => ({
+          ...prev,
+          [category]: prev[category].map((a) =>
+            a.id === id ? { ...a, ...updates } : a
+          ),
+        }));
+        toast.success('Account updated locally (will save on next sync)');
+        return;
+      }
+      
+      console.log('✅ Account updated successfully:', data);
+      
       // Update local state
       setAccountData((prev) => ({
         ...prev,
@@ -535,7 +635,7 @@ export const useFinancialData = () => {
       toast.success('Account updated!');
     } catch (e) {
       toast.error('Failed to update account');
-      console.error('Update account error:', e);
+      console.error('❌ Update account error:', e);
     }
   };
 

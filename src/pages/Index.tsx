@@ -48,7 +48,7 @@ const Index = () => {
             <div className="animate-fade-up">
               <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-blue-50 border border-blue-100 rounded-full text-xs sm:text-sm text-blue-700 mb-6 sm:mb-8">
                 <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span>Trusted by 10,000+ users</span>
+                <span>Visual finance, at a glance</span>
               </div>
             </div>
             

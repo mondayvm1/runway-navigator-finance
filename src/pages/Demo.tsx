@@ -38,7 +38,7 @@ const Demo = () => {
               {[...Array(5)].map((_, i) => (
                 <Star key={i} size={20} fill="currentColor" />
               ))}
-              <span className="ml-2 text-gray-600 font-medium">Trusted by 10,000+ users</span>
+              <span className="ml-2 text-gray-600 font-medium">Visual finance, beautifully simple</span>
             </div>
           </div>
           
@@ -59,11 +59,7 @@ const Demo = () => {
           </div>
 
           {/* Social Proof */}
-          <div className="flex justify-center items-center gap-8 text-sm text-gray-500 mb-12">
-            <div className="flex items-center gap-2">
-              <Users size={16} />
-              <span>10,000+ Active Users</span>
-            </div>
+            <div className="flex justify-center items-center gap-8 text-sm text-gray-500 mb-12">
             <div className="flex items-center gap-2">
               <Award size={16} />
               <span>4.9/5 Rating</span>
@@ -318,7 +314,7 @@ const Demo = () => {
                   <Sparkles className="mx-auto mb-3" size={32} />
                   <h3 className="text-xl font-bold mb-2">Ready to Transform Your Finances?</h3>
                   <p className="text-sm mb-6 opacity-90">
-                    Join 10,000+ users building wealth with our dashboard
+                    Build wealth with a clear, visual dashboard
                   </p>
                   <Button asChild size="lg" className="w-full text-white font-extrabold text-lg py-3 h-auto shadow-lg">
                     <Link to="/#auth" className="flex items-center justify-center">
@@ -336,7 +332,7 @@ const Demo = () => {
         {/* Benefits Section - Enhanced */}
         <div className="max-w-6xl mx-auto mb-20">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-gray-800">
-            Why 10,000+ Users Choose Our Dashboard
+            Why People Choose Our Dashboard
           </h2>
           <p className="text-center text-gray-600 mb-16 text-lg">
             The most comprehensive yet simple financial tracking solution

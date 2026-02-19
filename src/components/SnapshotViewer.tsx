@@ -330,6 +330,12 @@ const SnapshotViewer = ({ onClose, onRestoreSnapshot }: SnapshotViewerProps) => 
                         {formatCurrency(snapshot.investments)}
                       </div>
                     </div>
+                    <div className="flex-1 min-w-[72px] rounded-lg bg-purple-50 border border-purple-100 px-3 py-2.5 text-center">
+                      <div className="text-[10px] sm:text-xs font-medium text-purple-700 uppercase tracking-wide">Other Assets</div>
+                      <div className="text-sm sm:text-base font-bold text-purple-600 mt-0.5">
+                        {formatCurrency(snapshot.otherAssets)}
+                      </div>
+                    </div>
                     <div className="flex-1 min-w-[72px] rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-center">
                       <div className="text-[10px] sm:text-xs font-medium text-red-700 uppercase tracking-wide">Credit</div>
                       <div className="text-sm sm:text-base font-bold text-red-600 mt-0.5">
@@ -340,12 +346,6 @@ const SnapshotViewer = ({ onClose, onRestoreSnapshot }: SnapshotViewerProps) => 
                       <div className="text-[10px] sm:text-xs font-medium text-rose-700 uppercase tracking-wide">Monthly Expenses</div>
                       <div className="text-sm sm:text-base font-bold text-rose-600 mt-0.5">
                         {formatCurrency(snapshot.monthlyExpenses)}
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-[72px] rounded-lg bg-purple-50 border border-purple-100 px-3 py-2.5 text-center">
-                      <div className="text-[10px] sm:text-xs font-medium text-purple-700 uppercase tracking-wide">Other Assets</div>
-                      <div className="text-sm sm:text-base font-bold text-purple-600 mt-0.5">
-                        {formatCurrency(snapshot.otherAssets)}
                       </div>
                     </div>
                   </div>

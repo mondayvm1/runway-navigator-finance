@@ -317,43 +317,38 @@ const SnapshotViewer = ({ onClose, onRestoreSnapshot }: SnapshotViewerProps) => 
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <div className="text-sm text-gray-500">Cash</div>
-                      <div className="text-lg font-semibold text-green-600">
+                  <div className="flex flex-wrap items-stretch gap-3 sm:gap-4">
+                    <div className="flex-1 min-w-[72px] rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2.5 text-center">
+                      <div className="text-[10px] sm:text-xs font-medium text-emerald-700 uppercase tracking-wide">Cash</div>
+                      <div className="text-sm sm:text-base font-bold text-emerald-600 mt-0.5">
                         {formatCurrency(snapshot.cash)}
                       </div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-sm text-gray-500">Investments</div>
-                      <div className="text-lg font-semibold text-blue-600">
+                    <div className="flex-1 min-w-[72px] rounded-lg bg-violet-50 border border-violet-100 px-3 py-2.5 text-center">
+                      <div className="text-[10px] sm:text-xs font-medium text-violet-700 uppercase tracking-wide">Investments</div>
+                      <div className="text-sm sm:text-base font-bold text-violet-600 mt-0.5">
                         {formatCurrency(snapshot.investments)}
                       </div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-sm text-gray-500">Credit</div>
-                      <div className="text-lg font-semibold text-red-600">
+                    <div className="flex-1 min-w-[72px] rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-center">
+                      <div className="text-[10px] sm:text-xs font-medium text-red-700 uppercase tracking-wide">Credit</div>
+                      <div className="text-sm sm:text-base font-bold text-red-600 mt-0.5">
                         {formatCurrency(snapshot.credit)}
                       </div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-sm text-gray-500">Monthly Expenses</div>
-                      <div className="text-lg font-semibold text-purple-600">
+                    <div className="flex-1 min-w-[72px] rounded-lg bg-rose-50 border border-rose-200 px-3 py-2.5 text-center">
+                      <div className="text-[10px] sm:text-xs font-medium text-rose-700 uppercase tracking-wide">Monthly Expenses</div>
+                      <div className="text-sm sm:text-base font-bold text-rose-600 mt-0.5">
                         {formatCurrency(snapshot.monthlyExpenses)}
                       </div>
                     </div>
-                  </div>
-                  
-                  {snapshot.otherAssets > 0 && (
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <div className="text-center">
-                        <div className="text-sm text-gray-500">Other Assets</div>
-                        <div className="text-lg font-semibold text-purple-600">
-                          {formatCurrency(snapshot.otherAssets)}
-                        </div>
+                    <div className="flex-1 min-w-[72px] rounded-lg bg-purple-50 border border-purple-100 px-3 py-2.5 text-center">
+                      <div className="text-[10px] sm:text-xs font-medium text-purple-700 uppercase tracking-wide">Other Assets</div>
+                      <div className="text-sm sm:text-base font-bold text-purple-600 mt-0.5">
+                        {formatCurrency(snapshot.otherAssets)}
                       </div>
                     </div>
-                  )}
+                  </div>
                 </Card>
               ))}
             </div>

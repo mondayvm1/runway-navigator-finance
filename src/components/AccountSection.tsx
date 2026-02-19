@@ -84,7 +84,7 @@ const AccountSection = ({
             </span>
             {title === 'Credit' && accounts.length > 0 && (
               <div className="text-[10px] sm:text-xs text-slate-500 mt-0.5 hidden sm:block">
-                Available: ${accounts.reduce((sum, acc) => sum + (acc.creditLimit || 0) - acc.balance, 0).toLocaleString()}
+                Available: ${accounts.reduce((sum, acc) => sum + (Number(acc.creditLimit) || 0) - (Number(acc.balance) || 0), 0).toLocaleString()}
               </div>
             )}
           </div>

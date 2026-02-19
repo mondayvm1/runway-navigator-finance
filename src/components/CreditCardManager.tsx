@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CreditCard, Calendar, Calculator, AlertTriangle, CheckCircle2, Shield, FileText, Banknote, History } from 'lucide-react';
+import { CreditCard, Calendar, Calculator, AlertTriangle, CheckCircle2, Shield, FileText, Banknote, History, ChevronDown, ChevronRight } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/utils/formatters';
 import { AccountItem } from '@/hooks/useFinancialData';
@@ -24,8 +25,8 @@ const CreditSummary = ({ accounts }: CreditSummaryProps) => {
   const activeAccounts = accounts.filter(a => !a.isPaidOff);
   const paidOffAccounts = accounts.filter(a => a.isPaidOff);
   
-  const totalBalance = activeAccounts.reduce((sum, account) => sum + account.balance, 0);
-  const totalCreditLimit = accounts.reduce((sum, account) => sum + (account.creditLimit || 0), 0);
+  const totalBalance = activeAccounts.reduce((sum, account) => sum + (Number(account.balance) || 0), 0);
+  const totalCreditLimit = accounts.reduce((sum, account) => sum + (Number(account.creditLimit) || 0), 0);
   const totalAvailableCredit = totalCreditLimit - totalBalance;
   const overallUtilization = totalCreditLimit > 0 ? (totalBalance / totalCreditLimit) * 100 : 0;
   
@@ -106,15 +107,40 @@ const CreditSummary = ({ accounts }: CreditSummaryProps) => {
   );
 };
 
+const PAYMENTS_OPEN_KEY = 'runway-credit-payments-open';
+
 const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps) => {
   const [customPayment, setCustomPayment] = useState(account.minimumPayment || 0);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentNote, setPaymentNote] = useState('');
+  const [paymentsOpen, setPaymentsOpen] = useState(() => {
+    try {
+      const raw = localStorage.getItem(PAYMENTS_OPEN_KEY);
+      if (raw == null) return true;
+      const parsed = JSON.parse(raw);
+      return typeof parsed === 'object' && parsed !== null && account.id in parsed
+        ? Boolean(parsed[account.id])
+        : true;
+    } catch {
+      return true;
+    }
+  });
 
   // Sync customPayment when account.minimumPayment changes
   useEffect(() => {
     setCustomPayment(account.minimumPayment || 0);
   }, [account.minimumPayment]);
+
+  const setPaymentsOpenAndPersist = (open: boolean) => {
+    setPaymentsOpen(open);
+    try {
+      const raw = localStorage.getItem(PAYMENTS_OPEN_KEY);
+      const prev = raw ? JSON.parse(raw) : {};
+      localStorage.setItem(PAYMENTS_OPEN_KEY, JSON.stringify({ ...prev, [account.id]: open }));
+    } catch {
+      // ignore
+    }
+  };
 
   const effectiveBalance = account.isPaidOff ? 0 : account.balance;
 
@@ -221,70 +247,96 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
           </div>
         )}
 
-        {/* Make a payment */}
-        {!account.isPaidOff && effectiveBalance > 0 && (
-          <div className="bg-white p-3 rounded border border-emerald-200 space-y-3">
-            <div className="flex items-center gap-2">
-              <Banknote className="h-4 w-4 text-emerald-600" />
-              <h5 className="text-sm font-medium text-emerald-800">Make a payment</h5>
-            </div>
-            <p className="text-xs text-slate-600">
-              Record a payment to bring the balance down. Add an optional note to track what you paid.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div>
-                <Label className="text-xs text-gray-600">Amount</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  placeholder="0"
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-gray-600">Note (optional)</Label>
-                <Input
-                  type="text"
-                  placeholder="e.g. February statement"
-                  value={paymentNote}
-                  onChange={(e) => setPaymentNote(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && recordPayment()}
-                  className="h-8 text-sm"
-                />
-              </div>
-            </div>
-            <Button
-              onClick={recordPayment}
-              disabled={!paymentAmount || Number(paymentAmount) <= 0}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-            >
-              Record payment
-            </Button>
-          </div>
-        )}
+        {/* Payments: Make a payment + Recent payments (collapsible, state persisted) */}
+        {(!account.isPaidOff && effectiveBalance > 0) || recentPayments.length > 0 ? (
+          <Collapsible open={paymentsOpen} onOpenChange={setPaymentsOpenAndPersist}>
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="flex items-center gap-2 w-full text-left bg-white p-3 rounded border border-slate-200 hover:bg-slate-50 transition-colors"
+                aria-expanded={paymentsOpen}
+              >
+                <Banknote className="h-4 w-4 text-emerald-600" />
+                <span className="text-sm font-medium text-slate-800">Payments</span>
+                {recentPayments.length > 0 && (
+                  <span className="text-xs text-slate-500">({recentPayments.length} recorded)</span>
+                )}
+                {paymentsOpen ? (
+                  <ChevronDown className="h-4 w-4 text-slate-500 ml-auto" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-slate-500 ml-auto" />
+                )}
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="space-y-3 mt-2">
+                {/* Make a payment */}
+                {!account.isPaidOff && effectiveBalance > 0 && (
+                  <div className="bg-white p-3 rounded border border-emerald-200 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <h5 className="text-sm font-medium text-emerald-800">Make a payment</h5>
+                    </div>
+                    <p className="text-xs text-slate-600">
+                      Record a payment to bring the balance down. Add an optional note to track what you paid.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs text-gray-600">Amount</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          step={0.01}
+                          placeholder="0"
+                          value={paymentAmount}
+                          onChange={(e) => setPaymentAmount(e.target.value)}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-600">Note (optional)</Label>
+                        <Input
+                          type="text"
+                          placeholder="e.g. February statement"
+                          value={paymentNote}
+                          onChange={(e) => setPaymentNote(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && recordPayment()}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      onClick={recordPayment}
+                      disabled={!paymentAmount || Number(paymentAmount) <= 0}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    >
+                      Record payment
+                    </Button>
+                  </div>
+                )}
 
-        {/* Recent payments */}
-        {recentPayments.length > 0 && (
-          <div className="bg-white p-3 rounded border space-y-2">
-            <div className="flex items-center gap-2">
-              <History className="h-4 w-4 text-slate-600" />
-              <h5 className="text-sm font-medium text-slate-800">Recent payments</h5>
-            </div>
-            <ul className="space-y-1.5 max-h-40 overflow-y-auto">
-              {recentPayments.map((p, i) => (
-                <li key={`${p.date}-${p.amount}-${i}`} className="flex justify-between items-baseline text-xs py-1 border-b border-slate-100 last:border-0">
-                  <span className="text-slate-600">
-                    {new Date(p.date).toLocaleDateString()} — {p.note || 'Payment'}
-                  </span>
-                  <span className="font-medium text-emerald-600">−{formatCurrency(p.amount)}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+                {/* Recent payments */}
+                {recentPayments.length > 0 && (
+                  <div className="bg-white p-3 rounded border space-y-2">
+                    <div className="flex items-center gap-2">
+                      <History className="h-4 w-4 text-slate-600" />
+                      <h5 className="text-sm font-medium text-slate-800">Recent payments</h5>
+                    </div>
+                    <ul className="space-y-1.5 max-h-40 overflow-y-auto">
+                      {recentPayments.map((p, i) => (
+                        <li key={`${p.date}-${p.amount}-${i}`} className="flex justify-between items-baseline text-xs py-1 border-b border-slate-100 last:border-0">
+                          <span className="text-slate-600">
+                            {new Date(p.date).toLocaleDateString()} — {p.note || 'Payment'}
+                          </span>
+                          <span className="font-medium text-emerald-600">−{formatCurrency(p.amount)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        ) : null}
 
         {/* Credit Card Details */}
         <div className="grid grid-cols-2 gap-4">

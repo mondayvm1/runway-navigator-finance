@@ -253,7 +253,7 @@ const RunwayChart = ({
           {/* Stats Row - Dynamic based on slider position */}
           {(() => {
             const creditCardDebt = accountData.credit.reduce((sum, acc) => sum + acc.balance, 0);
-            const totalCreditLimit = accountData.credit.reduce((sum, acc) => sum + (acc.creditLimit || 0), 0);
+            const totalCreditLimit = accountData.credit.reduce((sum, acc) => sum + (Number(acc.creditLimit) || 0), 0);
             const availableCredit = Math.max(0, totalCreditLimit - creditCardDebt);
             
             // Calculate projected values at the slider's time horizon

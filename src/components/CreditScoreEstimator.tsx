@@ -51,7 +51,7 @@ const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => 
   };
   // Calculate credit utilization
   const totalBalance = creditAccounts.reduce((sum, acc) => sum + acc.balance, 0);
-  const totalLimit = creditAccounts.reduce((sum, acc) => sum + (acc.creditLimit || 0), 0);
+  const totalLimit = creditAccounts.reduce((sum, acc) => sum + (Number(acc.creditLimit) || 0), 0);
   const overallUtilization = totalLimit > 0 ? (totalBalance / totalLimit) * 100 : 0;
 
   // Count accounts with balances

@@ -45,8 +45,8 @@ const FinancialInsights = ({
   };
 
   const getCreditUtilization = () => {
-    const totalCreditUsed = creditAccounts.reduce((sum, account) => sum + account.balance, 0);
-    const totalCreditLimit = creditAccounts.reduce((sum, account) => sum + (account.creditLimit || 0), 0);
+    const totalCreditUsed = creditAccounts.reduce((sum, account) => sum + (Number(account.balance) || 0), 0);
+    const totalCreditLimit = creditAccounts.reduce((sum, account) => sum + (Number(account.creditLimit) || 0), 0);
     
     if (totalCreditLimit === 0) return 0;
     return (totalCreditUsed / totalCreditLimit) * 100;

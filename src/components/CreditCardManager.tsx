@@ -70,6 +70,25 @@ const CreditSummary = ({ accounts }: CreditSummaryProps) => {
         </div>
       </div>
       
+      {/* Per-card limit breakdown (so you can see what’s included / missing) */}
+      <div className="mt-3 pt-3 border-t border-blue-200">
+        <div className="text-xs text-gray-600 mb-1.5">Limit by card (sum = total limit)</div>
+        <ul className="space-y-1 text-xs">
+          {accounts.map((a) => {
+            const limit = Number(a.creditLimit) || 0;
+            const isMissing = limit === 0;
+            return (
+              <li key={a.id} className="flex justify-between items-center">
+                <span className="truncate max-w-[180px]" title={a.name}>{a.name}</span>
+                <span className={isMissing ? 'text-amber-600 font-medium' : 'text-slate-700'}>
+                  {isMissing ? 'Not set — enter limit below' : formatCurrency(limit)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
       {/* Overall Utilization Bar */}
       <div className="mt-3">
         <div className="flex justify-between text-xs text-gray-600 mb-1">

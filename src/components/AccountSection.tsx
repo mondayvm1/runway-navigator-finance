@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Plus, Trash2, ChevronDown, ChevronRight, Edit } from 'lucide-react';
+import { Eye, EyeOff, Plus, Trash2, ChevronDown, ChevronRight, Edit, ArrowDown, ArrowUp } from 'lucide-react';
 import { AccountItem } from '@/hooks/useFinancialData';
 import CreditCardManager, { CreditSummary } from './CreditCardManager';
 import InterestRateInput from './InterestRateInput';
@@ -39,6 +39,7 @@ const AccountSection = ({
 }: AccountSectionProps) => {
   const [editingNames, setEditingNames] = useState<{ [key: string]: boolean }>({});
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [creditSortDesc, setCreditSortDesc] = useState(true);
 
   const toggleNameEdit = (id: string) => {
     setEditingNames(prev => ({ ...prev, [id]: !prev[id] }));
@@ -50,6 +51,13 @@ const AccountSection = ({
   };
 
   const total = accounts.reduce((sum, account) => sum + account.balance, 0);
+
+  const displayAccounts =
+    title === 'Credit' && accounts.length > 0
+      ? [...accounts].sort((a, b) =>
+          creditSortDesc ? b.balance - a.balance : a.balance - b.balance
+        )
+      : accounts;
 
   return (
     <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80 p-3 sm:p-6 transition-all duration-300 hover:shadow-xl">
@@ -97,9 +105,26 @@ const AccountSection = ({
         <CreditSummary accounts={accounts} />
       )}
 
+      {/* Credit sort toggle */}
+      {title === 'Credit' && accounts.length > 1 && !isHidden && !isCollapsed && (
+        <div className="flex items-center gap-2 mb-2 sm:mb-3">
+          <span className="text-[10px] sm:text-xs text-slate-500">Sort by balance:</span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs gap-1 border-slate-200"
+            onClick={() => setCreditSortDesc((prev) => !prev)}
+            aria-label={creditSortDesc ? 'Biggest first (click for smallest first)' : 'Smallest first (click for biggest first)'}
+          >
+            {creditSortDesc ? <ArrowDown size={12} /> : <ArrowUp size={12} />}
+            {creditSortDesc ? 'Biggest first' : 'Smallest first'}
+          </Button>
+        </div>
+      )}
+
       {!isHidden && !isCollapsed && (
         <div className="space-y-2 sm:space-y-3">
-          {accounts.map((account) => (
+          {displayAccounts.map((account) => (
             <div key={account.id} className="p-3 sm:p-4 rounded-xl bg-slate-50/80 border border-slate-100 hover:bg-slate-100/80 hover:border-slate-200 transition-all duration-200">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
                 {editingNames[account.id] ? (

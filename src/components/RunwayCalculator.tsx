@@ -566,7 +566,7 @@ const RunwayCalculator = () => {
             
             <AccountSection 
               title="Credit" 
-              accounts={[...accountData.credit].sort((a, b) => b.balance - a.balance)}
+              accounts={accountData.credit}
               icon={<CreditCard size={18} className="text-red-600" />}
               isNegative={true}
               isHidden={hiddenCategories.credit}

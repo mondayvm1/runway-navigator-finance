@@ -74,7 +74,9 @@ const CreditSummary = ({ accounts }: CreditSummaryProps) => {
       <div className="mt-3 pt-3 border-t border-blue-200">
         <div className="text-xs text-gray-600 mb-1.5">Limit by card (sum = total limit)</div>
         <ul className="space-y-1 text-xs">
-          {accounts.map((a) => {
+          {[...accounts]
+            .sort((a, b) => (Number(b.creditLimit) || 0) - (Number(a.creditLimit) || 0))
+            .map((a) => {
             const limit = Number(a.creditLimit) || 0;
             const isMissing = limit === 0;
             return (

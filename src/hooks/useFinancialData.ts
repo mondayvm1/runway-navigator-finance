@@ -6,6 +6,12 @@ import { IncomeEvent } from '@/components/IncomeManager';
 import { useIncomeEvents } from './useIncomeEvents';
 import { useIncomeSettings } from './useIncomeSettings';
 
+export interface PaymentRecord {
+  date: string;
+  amount: number;
+  note?: string;
+}
+
 export interface AccountItem {
   id: string;
   name: string;
@@ -23,6 +29,7 @@ export interface AccountItem {
   reportsToTransunion?: boolean;
   reportsToEquifax?: boolean;
   reportingDay?: number;
+  paymentHistory?: PaymentRecord[];
 }
 
 export interface AccountData {
@@ -214,6 +221,14 @@ export const useFinancialData = () => {
           console.log('📅 Loaded dueDate for', account.name, ':', account.due_date, '->', dueDate);
         }
         
+        const paymentHistory: PaymentRecord[] = Array.isArray(account.payment_history)
+          ? account.payment_history.map((p: any) => ({
+              date: typeof p.date === 'string' ? p.date : new Date().toISOString().split('T')[0],
+              amount: Number(p.amount) || 0,
+              note: p.note != null ? String(p.note) : undefined,
+            }))
+          : [];
+
         const accountItem: AccountItem = {
           id: account.account_id || account.id,
           name: account.name,
@@ -231,6 +246,7 @@ export const useFinancialData = () => {
           reportsToTransunion: account.reports_to_transunion ?? true,
           reportsToEquifax: account.reports_to_equifax ?? true,
           reportingDay: account.reporting_day ?? undefined,
+          paymentHistory: paymentHistory.length > 0 ? paymentHistory : undefined,
         };
 
         const category = account.category || account.type;
@@ -475,6 +491,7 @@ export const useFinancialData = () => {
             autopay_amount_type: account.autopayAmountType || 'MINIMUM',
             autopay_custom_amount: account.autopayCustomAmount || null,
             is_paid_off: account.isPaidOff ?? false,
+            payment_history: Array.isArray(account.paymentHistory) ? account.paymentHistory : [],
           });
         });
       });
@@ -797,6 +814,7 @@ export const useFinancialData = () => {
     if (updates.reportsToTransunion !== undefined) dbUpdates.reports_to_transunion = updates.reportsToTransunion;
     if (updates.reportsToEquifax !== undefined) dbUpdates.reports_to_equifax = updates.reportsToEquifax;
     if (updates.reportingDay !== undefined) dbUpdates.reporting_day = updates.reportingDay || null;
+    if (updates.paymentHistory !== undefined) dbUpdates.payment_history = updates.paymentHistory;
     
     // Debug logging
     console.log('💳 Updating account:', { 

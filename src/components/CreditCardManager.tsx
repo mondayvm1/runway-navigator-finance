@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CreditCard, Calendar, Calculator, AlertTriangle, CheckCircle2, Shield, FileText } from 'lucide-react';
+import { CreditCard, Calendar, Calculator, AlertTriangle, CheckCircle2, Shield, FileText, Banknote, History } from 'lucide-react';
+import { toast } from 'sonner';
 import { formatCurrency } from '@/utils/formatters';
 import { AccountItem } from '@/hooks/useFinancialData';
 
@@ -107,6 +108,8 @@ const CreditSummary = ({ accounts }: CreditSummaryProps) => {
 
 const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps) => {
   const [customPayment, setCustomPayment] = useState(account.minimumPayment || 0);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentNote, setPaymentNote] = useState('');
 
   // Sync customPayment when account.minimumPayment changes
   useEffect(() => {
@@ -176,6 +179,27 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
   const utilizationRate = account.creditLimit ? (effectiveBalance / account.creditLimit) * 100 : 0;
   const scenarios = calculatePayoffScenarios();
 
+  const recordPayment = () => {
+    const amount = Number(paymentAmount);
+    if (!Number.isFinite(amount) || amount <= 0) return;
+    const capped = Math.min(amount, effectiveBalance);
+    const newBalance = Math.max(0, effectiveBalance - capped);
+    const record = {
+      date: new Date().toISOString().split('T')[0],
+      amount: capped,
+      note: paymentNote.trim() || undefined,
+    };
+    onUpdateAccount(account.id, {
+      balance: newBalance,
+      paymentHistory: [...(account.paymentHistory || []), record],
+    });
+    setPaymentAmount('');
+    setPaymentNote('');
+    toast.success(`Payment of ${formatCurrency(capped)} recorded. Balance updated.`);
+  };
+
+  const recentPayments = (account.paymentHistory || []).slice(-10).reverse();
+
   return (
     <Card className={`p-4 mt-2 ${account.isPaidOff ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
       <div className="space-y-4">
@@ -194,6 +218,71 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
         {account.isPaidOff && (
           <div className="bg-green-100 text-green-800 p-3 rounded text-sm text-center">
             🎉 This card is paid off! Balance treated as $0. Credit limit still counts toward available credit.
+          </div>
+        )}
+
+        {/* Make a payment */}
+        {!account.isPaidOff && effectiveBalance > 0 && (
+          <div className="bg-white p-3 rounded border border-emerald-200 space-y-3">
+            <div className="flex items-center gap-2">
+              <Banknote className="h-4 w-4 text-emerald-600" />
+              <h5 className="text-sm font-medium text-emerald-800">Make a payment</h5>
+            </div>
+            <p className="text-xs text-slate-600">
+              Record a payment to bring the balance down. Add an optional note to track what you paid.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs text-gray-600">Amount</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  placeholder="0"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-gray-600">Note (optional)</Label>
+                <Input
+                  type="text"
+                  placeholder="e.g. February statement"
+                  value={paymentNote}
+                  onChange={(e) => setPaymentNote(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && recordPayment()}
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+            <Button
+              onClick={recordPayment}
+              disabled={!paymentAmount || Number(paymentAmount) <= 0}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              Record payment
+            </Button>
+          </div>
+        )}
+
+        {/* Recent payments */}
+        {recentPayments.length > 0 && (
+          <div className="bg-white p-3 rounded border space-y-2">
+            <div className="flex items-center gap-2">
+              <History className="h-4 w-4 text-slate-600" />
+              <h5 className="text-sm font-medium text-slate-800">Recent payments</h5>
+            </div>
+            <ul className="space-y-1.5 max-h-40 overflow-y-auto">
+              {recentPayments.map((p, i) => (
+                <li key={`${p.date}-${p.amount}-${i}`} className="flex justify-between items-baseline text-xs py-1 border-b border-slate-100 last:border-0">
+                  <span className="text-slate-600">
+                    {new Date(p.date).toLocaleDateString()} — {p.note || 'Payment'}
+                  </span>
+                  <span className="font-medium text-emerald-600">−{formatCurrency(p.amount)}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 

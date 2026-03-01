@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,11 @@ const RunwayCalculator = () => {
 
   const [showSnapshotViewer, setShowSnapshotViewer] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [previousCashTotal, setPreviousCashTotal] = useState<number | null>(null);
+  const [isQuestOpen, setIsQuestOpen] = useState(false);
+  const [isArchetypeOpen, setIsArchetypeOpen] = useState(false);
+  const lastCashTotalRef = useRef<number | null>(null);
+  const cashTotal = accountData.cash.reduce((sum, account) => sum + account.balance, 0);
 
   // Check if user is new (no data) and show onboarding
   useEffect(() => {
@@ -133,6 +138,16 @@ const RunwayCalculator = () => {
 
     return () => clearTimeout(timeoutId);
   }, [accountData, monthlyExpenses, hiddenCategories, user, saveData]);
+
+  useEffect(() => {
+    if (lastCashTotalRef.current === null) {
+      lastCashTotalRef.current = cashTotal;
+      return;
+    }
+
+    setPreviousCashTotal(lastCashTotalRef.current);
+    lastCashTotalRef.current = cashTotal;
+  }, [cashTotal]);
 
   const calculateRunway = () => {
     console.log('=== RUNWAY CALCULATION START ===');
@@ -532,6 +547,7 @@ const RunwayCalculator = () => {
               title="Cash" 
               accounts={[...accountData.cash].sort((a, b) => b.balance - a.balance)}
               icon={<Wallet size={18} className="text-green-600" />}
+              previousTotal={previousCashTotal}
               isHidden={hiddenCategories.cash}
               onAddAccount={() => addAccount('cash')}
               onUpdateAccount={() => {}}
@@ -658,38 +674,49 @@ const RunwayCalculator = () => {
         />
       </div>
 
-      {/* Quest Journey - Always Open */}
+      {/* Quest Journey */}
       <div className="mt-6">
-        <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80 p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <h3 className="text-lg font-semibold text-slate-800">Financial Quest Journey</h3>
-          </div>
-          <FinancialQuestJourney
-                  netWorth={getTotalAssets() - getTotalLiabilities()}
-                  runway={runway.months}
-                  totalAssets={getTotalAssets()}
-                  totalLiabilities={getTotalLiabilities()}
-                  creditCardDebt={accountData.credit.reduce((sum, acc) => sum + acc.balance, 0)}
-                  monthlyObligations={
-                    accountData.credit.reduce((sum, acc) => sum + (acc.minimumPayment || 0), 0) +
-                    accountData.loans.reduce((sum, acc) => sum + (acc.minimumPayment || (acc.balance * 0.02)), 0)
-                  }
-                  paymentsCleared={0}
-                  totalPayments={
-                    accountData.credit.filter(acc => (acc.minimumPayment || 0) > 0).length +
-                    accountData.loans.filter(acc => acc.balance > 0).length
-                  }
-                />
+        <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80 overflow-hidden">
+          <Collapsible open={isQuestOpen} onOpenChange={setIsQuestOpen}>
+            <CollapsibleTrigger className="w-full p-5 hover:bg-slate-50/50 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-800">Financial Quest Journey</h3>
+                </div>
+                <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${isQuestOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-6 pt-0">
+                <FinancialQuestJourney
+                        netWorth={getTotalAssets() - getTotalLiabilities()}
+                        runway={runway.months}
+                        totalAssets={getTotalAssets()}
+                        totalLiabilities={getTotalLiabilities()}
+                        creditCardDebt={accountData.credit.reduce((sum, acc) => sum + acc.balance, 0)}
+                        monthlyObligations={
+                          accountData.credit.reduce((sum, acc) => sum + (acc.minimumPayment || 0), 0) +
+                          accountData.loans.reduce((sum, acc) => sum + (acc.minimumPayment || (acc.balance * 0.02)), 0)
+                        }
+                        paymentsCleared={0}
+                        totalPayments={
+                          accountData.credit.filter(acc => (acc.minimumPayment || 0) > 0).length +
+                          accountData.loans.filter(acc => acc.balance > 0).length
+                        }
+                      />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </div>
 
       {/* Financial Archetype - Collapsible at bottom */}
       <div className="mt-6">
         <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80 overflow-hidden">
-          <Collapsible defaultOpen={true}>
+          <Collapsible open={isArchetypeOpen} onOpenChange={setIsArchetypeOpen}>
             <CollapsibleTrigger className="w-full p-5 hover:bg-slate-50/50 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -701,7 +728,7 @@ const RunwayCalculator = () => {
                     Discover your archetype
                   </span>
                 </div>
-                <ChevronDown className="w-5 h-5 text-slate-400 transition-transform" />
+                <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${isArchetypeOpen ? 'rotate-180' : ''}`} />
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>

@@ -125,7 +125,7 @@ const IncomeManager = ({
       title="Income Planning"
       category="income-planning"
       icon={<TrendingUp className="h-5 w-5" />}
-      defaultOpen={true}
+      defaultOpen={false}
     >
       <div className="space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

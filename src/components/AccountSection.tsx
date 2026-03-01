@@ -12,6 +12,7 @@ interface AccountSectionProps {
   title: string;
   accounts: AccountItem[];
   icon: React.ReactNode;
+  previousTotal?: number | null;
   isNegative?: boolean;
   isHidden?: boolean;
   onAddAccount: () => void;
@@ -27,6 +28,7 @@ const AccountSection = ({
   title,
   accounts,
   icon,
+  previousTotal = null,
   isNegative = false,
   isHidden = false,
   onAddAccount,
@@ -51,6 +53,8 @@ const AccountSection = ({
   };
 
   const total = accounts.reduce((sum, account) => sum + account.balance, 0);
+  const totalChange = previousTotal === null ? 0 : total - previousTotal;
+  const hasTotalChange = previousTotal !== null && Math.abs(totalChange) > 0;
 
   const displayAccounts =
     title === 'Credit' && accounts.length > 0
@@ -82,6 +86,24 @@ const AccountSection = ({
             <span className={`text-base sm:text-xl font-bold ${isNegative ? 'text-red-600' : 'text-emerald-600'}`}>
               {isNegative ? '-' : ''}${Math.abs(total).toLocaleString()}
             </span>
+            {title === 'Cash' && (
+              <div
+                className={`mt-0.5 text-[10px] sm:text-xs font-medium flex items-center justify-end gap-1 ${
+                  hasTotalChange
+                    ? totalChange > 0
+                      ? 'text-emerald-600'
+                      : 'text-red-600'
+                    : 'text-slate-500'
+                }`}
+              >
+                {hasTotalChange ? (
+                  totalChange > 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />
+                ) : null}
+                <span>
+                  {hasTotalChange ? `${totalChange > 0 ? '+' : '-'}$${Math.abs(totalChange).toLocaleString()}` : 'No change'}
+                </span>
+              </div>
+            )}
             {title === 'Credit' && accounts.length > 0 && (
               <div className="text-[10px] sm:text-xs text-slate-500 mt-0.5 hidden sm:block">
                 Available: ${accounts.reduce((sum, acc) => sum + (Number(acc.creditLimit) || 0) - (Number(acc.balance) || 0), 0).toLocaleString()}

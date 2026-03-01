@@ -142,7 +142,7 @@ const CreditScoreEstimator = ({ creditAccounts }: CreditScoreEstimatorProps) => 
       title="Credit Score Estimator"
       category="credit-score"
       icon={<Award className="h-5 w-5 text-blue-500" />}
-      defaultOpen={true}
+      defaultOpen={false}
     >
       <div className="space-y-4 sm:space-y-6">
         {/* Estimated Score with Actual Comparison */}

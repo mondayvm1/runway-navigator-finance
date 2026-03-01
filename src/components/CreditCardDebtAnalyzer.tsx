@@ -106,7 +106,7 @@ const CreditCardDebtAnalyzer = ({ creditAccounts }: CreditCardDebtAnalyzerProps)
       title="Credit Card Debt Analysis"
       category="debt-analysis"
       icon={<AlertTriangle className="h-5 w-5 text-red-500" />}
-      defaultOpen={true}
+      defaultOpen={false}
     >
       <div className="space-y-4 sm:space-y-6">
         {/* How Fucked Are You */}

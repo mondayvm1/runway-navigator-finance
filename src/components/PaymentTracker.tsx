@@ -170,7 +170,7 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
         title="Payment Tracker"
         category="payment-tracker"
         icon={<CreditCard className="h-5 w-5 text-primary" />}
-        defaultOpen={true}
+        defaultOpen={false}
       >
         <Card className="p-6 bg-blue-50 border-blue-200">
           <p className="text-center text-slate-600">
@@ -186,7 +186,7 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
       title="Payment Tracker"
       category="payment-tracker"
       icon={<CreditCard className="h-5 w-5 text-primary" />}
-      defaultOpen={true}
+      defaultOpen={false}
     >
       <div className="space-y-4 sm:space-y-6">
         {/* Summary Stats */}

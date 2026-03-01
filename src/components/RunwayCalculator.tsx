@@ -66,11 +66,36 @@ const RunwayCalculator = () => {
 
   const [showSnapshotViewer, setShowSnapshotViewer] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [previousCashTotal, setPreviousCashTotal] = useState<number | null>(null);
+  const [savedCashTotal, setSavedCashTotal] = useState<number | null>(null);
+  const [savedCashBalances, setSavedCashBalances] = useState<Record<string, number>>({});
   const [isQuestOpen, setIsQuestOpen] = useState(false);
   const [isArchetypeOpen, setIsArchetypeOpen] = useState(false);
-  const lastCashTotalRef = useRef<number | null>(null);
-  const cashTotal = accountData.cash.reduce((sum, account) => sum + account.balance, 0);
+  const hasInitializedCashBaseline = useRef(false);
+
+  const buildCashBaseline = (cashAccounts: AccountItem[]) => {
+    const balanceMap: Record<string, number> = {};
+    let total = 0;
+
+    cashAccounts.forEach((account) => {
+      balanceMap[account.id] = account.balance;
+      total += account.balance;
+    });
+
+    return { balanceMap, total };
+  };
+
+  const syncCashBaseline = (cashAccounts: AccountItem[]) => {
+    const { balanceMap, total } = buildCashBaseline(cashAccounts);
+    setSavedCashBalances(balanceMap);
+    setSavedCashTotal(total);
+  };
+
+  const saveDataAndSyncCashBaseline = async () => {
+    const didSave = await saveData();
+    if (didSave) {
+      syncCashBaseline(accountData.cash);
+    }
+  };
 
   // Check if user is new (no data) and show onboarding
   useEffect(() => {
@@ -132,22 +157,21 @@ const RunwayCalculator = () => {
       if (user && (accountData.cash.length > 0 || accountData.investments.length > 0 || 
           accountData.credit.length > 0 || accountData.loans.length > 0 || 
           accountData.otherAssets.length > 0 || monthlyExpenses > 0)) {
-        saveData();
+        void saveDataAndSyncCashBaseline();
       }
     }, 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [accountData, monthlyExpenses, hiddenCategories, user, saveData]);
+  }, [accountData, monthlyExpenses, hiddenCategories, user]);
 
   useEffect(() => {
-    if (lastCashTotalRef.current === null) {
-      lastCashTotalRef.current = cashTotal;
+    if (!user || loading || hasInitializedCashBaseline.current) {
       return;
     }
 
-    setPreviousCashTotal(lastCashTotalRef.current);
-    lastCashTotalRef.current = cashTotal;
-  }, [cashTotal]);
+    syncCashBaseline(accountData.cash);
+    hasInitializedCashBaseline.current = true;
+  }, [user, loading, accountData.cash]);
 
   const calculateRunway = () => {
     console.log('=== RUNWAY CALCULATION START ===');
@@ -274,9 +298,9 @@ const RunwayCalculator = () => {
     setRunway(finalRunway);
   };
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     calculateRunway();
-    saveData();
+    await saveDataAndSyncCashBaseline();
     toast.success("Financial overview updated!");
   };
 
@@ -503,7 +527,7 @@ const RunwayCalculator = () => {
             </div>
           </div>
 
-          <EnhancedSnapshotManager onCreateSnapshot={handleCreateSnapshot} onSaveData={saveData} />
+          <EnhancedSnapshotManager onCreateSnapshot={handleCreateSnapshot} onSaveData={saveDataAndSyncCashBaseline} />
           
           <FloatingSupportMenu />
           
@@ -547,7 +571,8 @@ const RunwayCalculator = () => {
               title="Cash" 
               accounts={[...accountData.cash].sort((a, b) => b.balance - a.balance)}
               icon={<Wallet size={18} className="text-green-600" />}
-              previousTotal={previousCashTotal}
+              baselineTotal={savedCashTotal}
+              baselineBalances={savedCashBalances}
               isHidden={hiddenCategories.cash}
               onAddAccount={() => addAccount('cash')}
               onUpdateAccount={() => {}}

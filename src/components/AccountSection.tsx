@@ -12,7 +12,8 @@ interface AccountSectionProps {
   title: string;
   accounts: AccountItem[];
   icon: React.ReactNode;
-  previousTotal?: number | null;
+  baselineTotal?: number | null;
+  baselineBalances?: Record<string, number>;
   isNegative?: boolean;
   isHidden?: boolean;
   onAddAccount: () => void;
@@ -28,7 +29,8 @@ const AccountSection = ({
   title,
   accounts,
   icon,
-  previousTotal = null,
+  baselineTotal = null,
+  baselineBalances = {},
   isNegative = false,
   isHidden = false,
   onAddAccount,
@@ -53,8 +55,8 @@ const AccountSection = ({
   };
 
   const total = accounts.reduce((sum, account) => sum + account.balance, 0);
-  const totalChange = previousTotal === null ? 0 : total - previousTotal;
-  const hasTotalChange = previousTotal !== null && Math.abs(totalChange) > 0;
+  const totalChange = baselineTotal === null ? 0 : total - baselineTotal;
+  const hasTotalChange = baselineTotal !== null && Math.abs(totalChange) > 0;
 
   const displayAccounts =
     title === 'Credit' && accounts.length > 0
@@ -148,6 +150,34 @@ const AccountSection = ({
         <div className="space-y-2 sm:space-y-3">
           {displayAccounts.map((account) => (
             <div key={account.id} className="p-3 sm:p-4 rounded-xl bg-slate-50/80 border border-slate-100 hover:bg-slate-100/80 hover:border-slate-200 transition-all duration-200">
+              {(() => {
+                const hasBaselineBalance = Object.prototype.hasOwnProperty.call(baselineBalances, account.id);
+                const baselineBalance = hasBaselineBalance ? Number(baselineBalances[account.id]) : 0;
+                const accountChange = hasBaselineBalance ? account.balance - baselineBalance : account.balance;
+                const hasAccountChange = Math.abs(accountChange) > 0;
+
+                if (title !== 'Cash') return null;
+
+                return (
+                  <div
+                    className={`mb-2 text-[10px] sm:text-xs font-medium flex items-center gap-1 ${
+                      hasAccountChange
+                        ? accountChange > 0
+                          ? 'text-emerald-600'
+                          : 'text-red-600'
+                        : 'text-slate-500'
+                    }`}
+                  >
+                    {hasAccountChange ? (
+                      accountChange > 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />
+                    ) : null}
+                    <span>
+                      {hasAccountChange ? `${accountChange > 0 ? '+' : '-'}$${Math.abs(accountChange).toLocaleString()}` : 'No change since save'}
+                    </span>
+                  </div>
+                );
+              })()}
+
               <div className="flex items-center justify-between mb-2 sm:mb-3">
                 {editingNames[account.id] ? (
                   <Input

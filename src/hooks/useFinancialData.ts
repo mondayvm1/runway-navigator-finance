@@ -351,8 +351,8 @@ export const useFinancialData = () => {
     }
   };
 
-  const saveData = async () => {
-    if (!user) return;
+  const saveData = async (): Promise<boolean> => {
+    if (!user) return false;
 
     try {
       console.log('Saving financial data...');
@@ -592,9 +592,11 @@ export const useFinancialData = () => {
 
       console.log('Data saved successfully');
       toast.success('Data saved successfully!');
+      return true;
     } catch (error) {
       console.error('Error saving data:', error);
       toast.error('Failed to save data');
+      return false;
     }
   };
 

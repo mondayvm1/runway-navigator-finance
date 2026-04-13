@@ -463,7 +463,7 @@ const RunwayCalculator = () => {
                   <h2 className="text-base sm:text-xl font-semibold text-slate-800">Financial Dashboard</h2>
                   <div className="flex items-center gap-2">
                     <p className="text-xs sm:text-sm text-slate-500 truncate">{user?.email}</p>
-                    <span className="hidden sm:inline text-[10px] text-slate-300 font-mono select-none" title="Build version">#{__COMMIT_HASH__}</span>
+                    <span className="text-[10px] text-slate-400 font-mono select-none bg-slate-100 px-1.5 py-0.5 rounded" title="Build version">#{__COMMIT_HASH__}</span>
                   </div>
                 </div>
               </div>

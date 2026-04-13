@@ -58,6 +58,14 @@ export const useFinancialData = () => {
     otherAssets: []
   });
   const [monthlyExpenses, setMonthlyExpenses] = useState<number>(0);
+  const [savedAccountData, setSavedAccountData] = useState<AccountData>({
+    cash: [],
+    investments: [],
+    credit: [],
+    loans: [],
+    otherAssets: []
+  });
+  const [savedMonthlyExpenses, setSavedMonthlyExpenses] = useState<number>(0);
   const {
     incomeEvents,
     loading: incomeEventsLoading,
@@ -257,6 +265,7 @@ export const useFinancialData = () => {
       });
 
       setAccountData(groupedAccounts);
+      setSavedAccountData(JSON.parse(JSON.stringify(groupedAccounts)));
 
       // Load monthly expenses
       console.log('💰 ===== LOADING MONTHLY EXPENSES =====');
@@ -273,17 +282,14 @@ export const useFinancialData = () => {
       if (checkError) {
         console.error('❌ Error checking expenses:', checkError);
       }
-      
+
       // Find the most recent expense with snapshot_id IS NULL
-      // Check for null, undefined, or empty string (some databases might store empty string)
-      // Also try using Supabase's .is() filter as a fallback
-      let currentExpense = allExpenses?.find(exp => 
-        exp.snapshot_id === null || 
-        exp.snapshot_id === undefined || 
+      let currentExpense = allExpenses?.find(exp =>
+        exp.snapshot_id === null ||
+        exp.snapshot_id === undefined ||
         exp.snapshot_id === ''
       );
-      
-      // If not found with find, try a direct query with .is('snapshot_id', null)
+
       if (!currentExpense) {
         console.log('💰 Trying direct query with .is() filter...');
         const { data: directQueryExpense, error: directError } = await supabase
@@ -294,35 +300,24 @@ export const useFinancialData = () => {
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
-        
+
         if (!directError && directQueryExpense) {
           currentExpense = directQueryExpense;
           console.log('✅ Found expense with direct query:', directQueryExpense);
         }
       }
-      
+
       console.log('📊 Current expense (snapshot_id IS NULL):', JSON.stringify(currentExpense, null, 2));
-      
+
+      const loadedExpenseAmount = currentExpense ? Number(currentExpense.amount) : 0;
       if (currentExpense) {
-        const amount = Number(currentExpense.amount);
-        console.log('✅ ===== SETTING MONTHLY EXPENSES TO:', amount, '=====');
-        setMonthlyExpenses(amount);
+        console.log('✅ ===== SETTING MONTHLY EXPENSES TO:', loadedExpenseAmount, '=====');
+        setMonthlyExpenses(loadedExpenseAmount);
       } else {
         console.log('⚠️ ===== NO MONTHLY EXPENSES FOUND WITH snapshot_id IS NULL =====');
-        if (allExpenses && allExpenses.length > 0) {
-          console.log('Available expenses:', allExpenses.map(e => ({ 
-            id: e.id, 
-            amount: e.amount, 
-            snapshot_id: e.snapshot_id, 
-            snapshot_id_type: typeof e.snapshot_id,
-            snapshot_id_value: String(e.snapshot_id),
-            name: e.name 
-          })));
-        } else {
-          console.log('No expenses found in database at all');
-        }
         setMonthlyExpenses(0);
       }
+      setSavedMonthlyExpenses(loadedExpenseAmount);
       console.log('💰 ===== FINISHED LOADING MONTHLY EXPENSES =====');
 
       setDataFound(totalAccounts > 0);
@@ -591,6 +586,8 @@ export const useFinancialData = () => {
       }
 
       console.log('Data saved successfully');
+      setSavedAccountData(JSON.parse(JSON.stringify(accountData)));
+      setSavedMonthlyExpenses(monthlyExpenses);
       toast.success('Data saved successfully!');
       return true;
     } catch (error) {
@@ -1009,6 +1006,8 @@ export const useFinancialData = () => {
     setAccountData,
     monthlyExpenses,
     setMonthlyExpenses,
+    savedAccountData,
+    savedMonthlyExpenses,
     incomeEvents,
     incomeEnabled,
     updateIncomeEnabled,

@@ -23,8 +23,11 @@ interface SnapshotData {
   runwayMonths: number;
   changeFromPrevious?: {
     netWorth: number;
+    netWorthPct: number | null;
     totalAssets: number;
+    totalAssetsPct: number | null;
     totalLiabilities: number;
+    totalLiabilitiesPct: number | null;
   };
 }
 
@@ -138,11 +141,15 @@ const SnapshotChart = () => {
       for (let i = 1; i < enrichedSnapshots.length; i++) {
         const current = enrichedSnapshots[i];
         const previous = enrichedSnapshots[i - 1];
-        
+        const pct = (curr: number, prev: number) => prev !== 0 ? ((curr - prev) / Math.abs(prev)) * 100 : null;
+
         current.changeFromPrevious = {
           netWorth: current.netWorth - previous.netWorth,
+          netWorthPct: pct(current.netWorth, previous.netWorth),
           totalAssets: current.totalAssets - previous.totalAssets,
+          totalAssetsPct: pct(current.totalAssets, previous.totalAssets),
           totalLiabilities: current.totalLiabilities - previous.totalLiabilities,
+          totalLiabilitiesPct: pct(current.totalLiabilities, previous.totalLiabilities),
         };
       }
 
@@ -239,12 +246,24 @@ const SnapshotChart = () => {
           </div>
           {data.changeFromPrevious && (
             <div className="mt-3 pt-2 border-t border-gray-100">
-              <p className="text-xs text-gray-500 mb-1">Change from previous:</p>
-              <div className="text-xs space-y-1">
-                <div className={`flex justify-between ${data.changeFromPrevious.netWorth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  <span>Net Worth:</span>
-                  <span>{data.changeFromPrevious.netWorth >= 0 ? '+' : ''}{formatCurrency(data.changeFromPrevious.netWorth)}</span>
-                </div>
+              <p className="text-xs text-gray-500 mb-1.5">Change from previous snapshot:</p>
+              <div className="text-xs space-y-1.5">
+                {[
+                  { label: 'Net Worth', value: data.changeFromPrevious.netWorth, pct: data.changeFromPrevious.netWorthPct, isNegGood: false },
+                  { label: 'Assets', value: data.changeFromPrevious.totalAssets, pct: data.changeFromPrevious.totalAssetsPct, isNegGood: false },
+                  { label: 'Liabilities', value: data.changeFromPrevious.totalLiabilities, pct: data.changeFromPrevious.totalLiabilitiesPct, isNegGood: true },
+                ].map(({ label, value, pct, isNegGood }) => {
+                  const isGood = isNegGood ? value < 0 : value >= 0;
+                  return (
+                    <div key={label} className={`flex justify-between items-center ${isGood ? 'text-green-600' : 'text-red-600'}`}>
+                      <span className="text-gray-600">{label}:</span>
+                      <span className="font-medium">
+                        {value >= 0 ? '+' : ''}{formatCurrency(value)}
+                        {pct !== null && <span className="ml-1 opacity-70">({value >= 0 ? '+' : ''}{pct.toFixed(1)}%)</span>}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -445,36 +464,80 @@ const SnapshotChart = () => {
       </div>
       
       <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
-          <div className="font-semibold text-blue-900">Latest Net Worth</div>
-          <div className="text-xl font-bold text-blue-700">
-            {formatCurrency(snapshotData[snapshotData.length - 1]?.netWorth || 0)}
-          </div>
-          {snapshotData.length > 1 && (
-            <div className={`text-sm ${(snapshotData[snapshotData.length - 1]?.changeFromPrevious?.netWorth || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-              {(snapshotData[snapshotData.length - 1]?.changeFromPrevious?.netWorth || 0) >= 0 ? '+' : ''}
-              {formatCurrency(snapshotData[snapshotData.length - 1]?.changeFromPrevious?.netWorth || 0)} from previous
-            </div>
-          )}
-        </div>
-        
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-4 rounded-xl border border-emerald-100">
-          <div className="font-semibold text-emerald-900">Total Snapshots</div>
-          <div className="text-xl font-bold text-emerald-700">{snapshotData.length}</div>
-          <div className="text-sm text-emerald-600">
-            Tracking since {formatDate(snapshotData[0]?.created_at || '')}
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 p-4 rounded-xl border border-purple-100">
-          <div className="font-semibold text-purple-900">Current Runway</div>
-          <div className="text-xl font-bold text-purple-700">
-            {snapshotData[snapshotData.length - 1]?.runwayMonths || 0} months
-          </div>
-          <div className="text-sm text-purple-600">
-            Based on current cash & expenses
-          </div>
-        </div>
+        {(() => {
+          const latest = snapshotData[snapshotData.length - 1];
+          const first = snapshotData[0];
+          const nwChange = latest?.changeFromPrevious?.netWorth ?? 0;
+          const nwPct = latest?.changeFromPrevious?.netWorthPct ?? null;
+          const nwIsPos = nwChange >= 0;
+          // Overall from first snapshot
+          const overallNwChange = latest && first && snapshotData.length > 1 ? latest.netWorth - first.netWorth : null;
+          const overallNwPct = overallNwChange !== null && first?.netWorth !== 0 ? (overallNwChange / Math.abs(first.netWorth)) * 100 : null;
+          return (
+            <>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
+                <div className="font-semibold text-blue-900">Latest Net Worth</div>
+                <div className="text-xl font-bold text-blue-700">
+                  {formatCurrency(latest?.netWorth || 0)}
+                </div>
+                {snapshotData.length > 1 && (
+                  <div className={`text-sm mt-1 ${nwIsPos ? 'text-emerald-600' : 'text-red-600'}`}>
+                    {nwIsPos ? '+' : ''}{formatCurrency(nwChange)} from prev
+                    {nwPct !== null && <span className="ml-1 opacity-70">({nwIsPos ? '+' : ''}{nwPct.toFixed(1)}%)</span>}
+                  </div>
+                )}
+                {overallNwChange !== null && (
+                  <div className={`text-xs mt-0.5 ${overallNwChange >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    All-time: {overallNwChange >= 0 ? '+' : ''}{formatCurrency(overallNwChange)}
+                    {overallNwPct !== null && <span className="ml-1">({overallNwChange >= 0 ? '+' : ''}{overallNwPct.toFixed(1)}%)</span>}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-4 rounded-xl border border-emerald-100">
+                <div className="font-semibold text-emerald-900">Total Snapshots</div>
+                <div className="text-xl font-bold text-emerald-700">{snapshotData.length}</div>
+                <div className="text-sm text-emerald-600">
+                  Since {formatDate(first?.created_at || '')}
+                </div>
+                {snapshotData.length > 1 && (() => {
+                  const assetsChange = latest.totalAssets - first.totalAssets;
+                  const assetsPct = first.totalAssets !== 0 ? (assetsChange / Math.abs(first.totalAssets)) * 100 : null;
+                  const liabChange = latest.totalLiabilities - first.totalLiabilities;
+                  const liabPct = first.totalLiabilities !== 0 ? (liabChange / Math.abs(first.totalLiabilities)) * 100 : null;
+                  return (
+                    <div className="mt-1.5 space-y-0.5 text-xs">
+                      <div className={assetsChange >= 0 ? 'text-emerald-600' : 'text-red-500'}>
+                        Assets: {assetsChange >= 0 ? '+' : ''}{formatCurrency(assetsChange)}{assetsPct !== null && ` (${assetsChange >= 0 ? '+' : ''}${assetsPct.toFixed(1)}%)`}
+                      </div>
+                      <div className={liabChange <= 0 ? 'text-emerald-600' : 'text-red-500'}>
+                        Liabilities: {liabChange >= 0 ? '+' : ''}{formatCurrency(liabChange)}{liabPct !== null && ` (${liabChange >= 0 ? '+' : ''}${liabPct.toFixed(1)}%)`}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 p-4 rounded-xl border border-purple-100">
+                <div className="font-semibold text-purple-900">Current Runway</div>
+                <div className="text-xl font-bold text-purple-700">
+                  {latest?.runwayMonths || 0} months
+                </div>
+                {snapshotData.length > 1 && (() => {
+                  const runwayChange = (latest?.runwayMonths || 0) - (first?.runwayMonths || 0);
+                  return (
+                    <div className={`text-sm mt-1 ${runwayChange >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {runwayChange >= 0 ? '+' : ''}{runwayChange} mo all-time
+                    </div>
+                  );
+                })()}
+                <div className="text-sm text-purple-600 mt-0.5">
+                  Based on cash & expenses
+                </div>
+              </div>
+            </>
+          );
+        })()}
       </div>
       
       <div className="mt-4 text-sm text-slate-500">

@@ -39,6 +39,7 @@ const RunwayCalculator = () => {
     accountData,
     setAccountData,
     monthlyExpenses,
+    savedAccountData,
     incomeEvents,
     incomeEnabled,
     addIncomeEvent,
@@ -290,6 +291,21 @@ const RunwayCalculator = () => {
     return total;
   };
 
+  const getSavedTotalAssets = (): number => {
+    return (
+      savedAccountData.cash.reduce((sum, a) => sum + a.balance, 0) +
+      savedAccountData.investments.reduce((sum, a) => sum + a.balance, 0) +
+      savedAccountData.otherAssets.reduce((sum, a) => sum + a.balance, 0)
+    );
+  };
+
+  const getSavedTotalLiabilities = (): number => {
+    return (
+      savedAccountData.credit.reduce((sum, a) => sum + a.balance, 0) +
+      savedAccountData.loans.reduce((sum, a) => sum + a.balance, 0)
+    );
+  };
+
   const getDefaultAccountName = (category: keyof typeof accountData): string => {
     const categoryNames = {
       cash: 'Checking Account',
@@ -490,11 +506,13 @@ const RunwayCalculator = () => {
           <FloatingSupportMenu />
           
           <NetWorthSummary
-            assets={getTotalAssets()} 
+            assets={getTotalAssets()}
             liabilities={getTotalLiabilities()}
             creditCardDebt={accountData.credit.reduce((sum, acc) => sum + acc.balance, 0)}
             incomeEvents={incomeEvents}
             incomeEnabled={incomeEnabled}
+            previousAssets={getSavedTotalAssets()}
+            previousLiabilities={getSavedTotalLiabilities()}
           />
 
           <IncomeManager 

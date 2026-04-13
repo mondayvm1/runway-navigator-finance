@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { TrendingUp, TrendingDown, DollarSign, Target, Sparkles, ToggleLeft, ToggleRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Target, Sparkles, ToggleLeft, ToggleRight, ArrowUp, ArrowDown } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { IncomeEvent } from './IncomeManager';
 
@@ -10,16 +10,38 @@ interface NetWorthSummaryProps {
   creditCardDebt?: number;
   incomeEvents?: IncomeEvent[];
   incomeEnabled?: boolean;
+  previousAssets?: number;
+  previousLiabilities?: number;
 }
 
-const NetWorthSummary = ({ 
-  assets, 
-  liabilities, 
+const DeltaBadge = ({ current, previous, isNegativeGood = false }: { current: number; previous: number; isNegativeGood?: boolean }) => {
+  const diff = current - previous;
+  if (Math.abs(diff) < 0.01) return null;
+  const pct = previous !== 0 ? (diff / Math.abs(previous)) * 100 : null;
+  // isNegativeGood: for liabilities, going down is green
+  const isGood = isNegativeGood ? diff < 0 : diff > 0;
+  const colorClass = isGood ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : 'text-red-600 bg-red-50 border-red-200';
+  const Icon = diff > 0 ? ArrowUp : ArrowDown;
+  return (
+    <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-[10px] sm:text-xs font-semibold mt-1 ${colorClass}`}>
+      <Icon size={9} />
+      {diff > 0 ? '+' : ''}{formatCurrency(diff)}
+      {pct !== null && <span className="opacity-75">({diff > 0 ? '+' : ''}{pct.toFixed(1)}%)</span>}
+    </div>
+  );
+};
+
+const NetWorthSummary = ({
+  assets,
+  liabilities,
   creditCardDebt = 0,
   incomeEvents = [],
-  incomeEnabled = true 
+  incomeEnabled = true,
+  previousAssets,
+  previousLiabilities,
 }: NetWorthSummaryProps) => {
   const [showCreditOnly, setShowCreditOnly] = useState(false);
+  const hasSavedState = previousAssets !== undefined && previousLiabilities !== undefined;
   
   const displayedLiabilities = showCreditOnly ? creditCardDebt : liabilities;
   const netWorth = assets - displayedLiabilities;
@@ -62,6 +84,7 @@ const NetWorthSummary = ({
           </div>
           <div className="text-xs sm:text-sm text-slate-600 font-medium mb-0.5 sm:mb-1">Total Assets</div>
           <div className="text-lg sm:text-2xl font-bold text-emerald-600 truncate">{formatCurrency(assets)}</div>
+          {hasSavedState && <DeltaBadge current={assets} previous={previousAssets!} />}
         </div>
         
         <div className="bg-gradient-to-br from-red-50 to-red-100/50 p-3 sm:p-5 rounded-xl border border-red-100 text-center relative transition-all hover:shadow-md hover:-translate-y-0.5">
@@ -85,6 +108,7 @@ const NetWorthSummary = ({
             {showCreditOnly ? '🐉 CC Debt' : 'Liabilities'}
           </div>
           <div className="text-lg sm:text-2xl font-bold text-red-600 truncate">{formatCurrency(displayedLiabilities)}</div>
+          {hasSavedState && !showCreditOnly && <DeltaBadge current={liabilities} previous={previousLiabilities!} isNegativeGood />}
           {showCreditOnly && liabilities > creditCardDebt && (
             <div className="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-1 truncate">
               +{formatCurrency(liabilities - creditCardDebt)} slow
@@ -102,6 +126,7 @@ const NetWorthSummary = ({
           <div className={`text-lg sm:text-2xl font-bold truncate ${isPositive ? 'text-blue-600' : 'text-amber-600'}`}>
             {formatCurrency(netWorth)}
           </div>
+          {hasSavedState && <DeltaBadge current={netWorth} previous={previousAssets! - previousLiabilities!} />}
         </div>
 
         <div className={`p-3 sm:p-5 rounded-xl text-center transition-all hover:shadow-md hover:-translate-y-0.5 ${

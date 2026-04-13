@@ -51,6 +51,14 @@ export const useFinancialData = () => {
     otherAssets: []
   });
   const [monthlyExpenses, setMonthlyExpenses] = useState<number>(0);
+  const [savedAccountData, setSavedAccountData] = useState<AccountData>({
+    cash: [],
+    investments: [],
+    credit: [],
+    loans: [],
+    otherAssets: []
+  });
+  const [savedMonthlyExpenses, setSavedMonthlyExpenses] = useState<number>(0);
   const {
     incomeEvents,
     loading: incomeEventsLoading,
@@ -137,6 +145,7 @@ export const useFinancialData = () => {
       });
 
       setAccountData(groupedAccounts);
+      setSavedAccountData(JSON.parse(JSON.stringify(groupedAccounts)));
 
       // Load monthly expenses
       const { data: expenses, error: expensesError } = await supabase
@@ -151,9 +160,11 @@ export const useFinancialData = () => {
         throw expensesError;
       }
 
+      const loadedExpenses = expenses ? Number(expenses.amount) : 0;
       if (expenses) {
-        setMonthlyExpenses(Number(expenses.amount));
+        setMonthlyExpenses(loadedExpenses);
       }
+      setSavedMonthlyExpenses(loadedExpenses);
 
       setDataFound(totalAccounts > 0);
 
@@ -266,6 +277,8 @@ export const useFinancialData = () => {
       }
 
       console.log('Data saved successfully');
+      setSavedAccountData(JSON.parse(JSON.stringify(accountData)));
+      setSavedMonthlyExpenses(monthlyExpenses);
       toast.success('Data saved successfully!');
     } catch (error) {
       console.error('Error saving data:', error);
@@ -466,6 +479,8 @@ export const useFinancialData = () => {
     setAccountData,
     monthlyExpenses,
     setMonthlyExpenses,
+    savedAccountData,
+    savedMonthlyExpenses,
     incomeEvents,
     incomeEnabled,
     updateIncomeEnabled,

@@ -461,7 +461,10 @@ const RunwayCalculator = () => {
                 </div>
                 <div className="min-w-0 flex-1">
                   <h2 className="text-base sm:text-xl font-semibold text-slate-800">Financial Dashboard</h2>
-                  <p className="text-xs sm:text-sm text-slate-500 truncate">{user?.email}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs sm:text-sm text-slate-500 truncate">{user?.email}</p>
+                    <span className="hidden sm:inline text-[10px] text-slate-300 font-mono select-none" title="Build version">#{__COMMIT_HASH__}</span>
+                  </div>
                 </div>
               </div>
               <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 self-end sm:self-auto">

@@ -471,15 +471,17 @@ const RunwayCalculator = () => {
           <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-200/50 border border-white/80 p-4 sm:p-6 animate-fade-up">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
-                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                <div className="relative group w-8 h-8 sm:w-10 sm:h-10" title="">
+                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25 cursor-default">
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 bg-slate-800 text-white text-[10px] font-mono rounded shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                    {__APP_VERSION__}
+                  </div>
                 </div>
                 <div className="min-w-0 flex-1">
                   <h2 className="text-base sm:text-xl font-semibold text-slate-800">Financial Dashboard</h2>
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs sm:text-sm text-slate-500 truncate">{user?.email}</p>
-                    <span className="text-[10px] text-slate-400 font-mono select-none bg-slate-100 px-1.5 py-0.5 rounded" title="Build version">#{__COMMIT_HASH__}</span>
-                  </div>
+                  <p className="text-xs sm:text-sm text-slate-500 truncate">{user?.email}</p>
                 </div>
               </div>
               <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 self-end sm:self-auto">

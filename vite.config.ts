@@ -1,17 +1,17 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { execSync } from "child_process";
+import { readFileSync } from "fs";
 
-const commitHash = (() => {
-  try { return execSync("git rev-parse --short HEAD").toString().trim(); }
+const appVersion = (() => {
+  try { return readFileSync("VERSION", "utf-8").trim(); }
   catch { return "dev"; }
 })();
 
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
   define: {
-    __COMMIT_HASH__: JSON.stringify(commitHash),
+    __APP_VERSION__: JSON.stringify(appVersion),
   },
   server: {
     host: "::",

@@ -44,6 +44,25 @@ const AccountSection = ({
   const [editingNames, setEditingNames] = useState<{ [key: string]: boolean }>({});
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [creditSortDesc, setCreditSortDesc] = useState(true);
+  const [draftBalances, setDraftBalances] = useState<{ [key: string]: string }>({});
+
+  const commitBalance = (id: string) => {
+    if (!(id in draftBalances)) return;
+    const raw = draftBalances[id];
+    const numericValue = raw === '' ? 0 : Number(raw);
+    if (!isNaN(numericValue)) {
+      if (onUpdateAccountData) {
+        onUpdateAccountData(id, { balance: numericValue });
+      } else {
+        onUpdateAccount(id, numericValue);
+      }
+    }
+    setDraftBalances(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
 
   const toggleNameEdit = (id: string) => {
     setEditingNames(prev => ({ ...prev, [id]: !prev[id] }));
@@ -207,14 +226,15 @@ const AccountSection = ({
                   <Input
                     type="number"
                     placeholder="0"
-                    value={account.balance || ""}
+                    value={account.id in draftBalances ? draftBalances[account.id] : (account.balance || "")}
                     onChange={(e) => {
-                      const value = e.target.value;
-                      const numericValue = value === '' ? 0 : Number(value);
-                      if (onUpdateAccountData) {
-                        onUpdateAccountData(account.id, { balance: numericValue });
-                      } else {
-                        onUpdateAccount(account.id, numericValue);
+                      setDraftBalances(prev => ({ ...prev, [account.id]: e.target.value }));
+                    }}
+                    onBlur={() => commitBalance(account.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        commitBalance(account.id);
+                        e.currentTarget.blur();
                       }
                     }}
                     className="h-8 sm:h-9 text-sm"

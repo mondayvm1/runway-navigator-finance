@@ -171,28 +171,16 @@ const AccountSection = ({
             <div key={account.id} className="p-3 sm:p-4 rounded-xl bg-slate-50/80 border border-slate-100 hover:bg-slate-100/80 hover:border-slate-200 transition-all duration-200">
               {(() => {
                 const hasBaselineBalance = Object.prototype.hasOwnProperty.call(baselineBalances, account.id);
-                const baselineBalance = hasBaselineBalance ? Number(baselineBalances[account.id]) : 0;
-                const accountChange = hasBaselineBalance ? account.balance - baselineBalance : account.balance;
-                const hasAccountChange = Math.abs(accountChange) > 0;
-
-                if (title !== 'Cash') return null;
-
+                if (!hasBaselineBalance) return null;
+                const baselineBalance = Number(baselineBalances[account.id]);
+                const accountChange = account.balance - baselineBalance;
+                if (Math.abs(accountChange) < 0.01) return null;
+                // For liabilities (isNegative), going up is bad (red), going down is good (green)
+                const isGood = isNegative ? accountChange < 0 : accountChange > 0;
                 return (
-                  <div
-                    className={`mb-2 text-[10px] sm:text-xs font-medium flex items-center gap-1 ${
-                      hasAccountChange
-                        ? accountChange > 0
-                          ? 'text-emerald-600'
-                          : 'text-red-600'
-                        : 'text-slate-500'
-                    }`}
-                  >
-                    {hasAccountChange ? (
-                      accountChange > 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />
-                    ) : null}
-                    <span>
-                      {hasAccountChange ? `${accountChange > 0 ? '+' : '-'}$${Math.abs(accountChange).toLocaleString()}` : 'No change since save'}
-                    </span>
+                  <div className={`mb-2 text-[10px] sm:text-xs font-semibold flex items-center gap-1 px-1.5 py-0.5 rounded w-fit ${isGood ? 'text-emerald-700 bg-emerald-50' : 'text-red-700 bg-red-50'}`}>
+                    {accountChange > 0 ? <ArrowUp size={10} /> : <ArrowDown size={10} />}
+                    <span>{accountChange > 0 ? '+' : ''}{accountChange < 0 ? '-' : ''}${Math.abs(accountChange).toLocaleString()} since load</span>
                   </div>
                 );
               })()}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -67,35 +67,17 @@ const RunwayCalculator = () => {
 
   const [showSnapshotViewer, setShowSnapshotViewer] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [savedCashTotal, setSavedCashTotal] = useState<number | null>(null);
-  const [savedCashBalances, setSavedCashBalances] = useState<Record<string, number>>({});
   const [isQuestOpen, setIsQuestOpen] = useState(false);
   const [isArchetypeOpen, setIsArchetypeOpen] = useState(false);
-  const hasInitializedCashBaseline = useRef(false);
 
-  const buildCashBaseline = (cashAccounts: AccountItem[]) => {
-    const balanceMap: Record<string, number> = {};
-    let total = 0;
-
-    cashAccounts.forEach((account) => {
-      balanceMap[account.id] = account.balance;
-      total += account.balance;
-    });
-
-    return { balanceMap, total };
+  const getBaselineBalances = (category: keyof typeof accountData): Record<string, number> => {
+    const result: Record<string, number> = {};
+    savedAccountData[category].forEach(a => { result[a.id] = a.balance; });
+    return result;
   };
 
-  const syncCashBaseline = (cashAccounts: AccountItem[]) => {
-    const { balanceMap, total } = buildCashBaseline(cashAccounts);
-    setSavedCashBalances(balanceMap);
-    setSavedCashTotal(total);
-  };
-
-  const saveDataAndSyncCashBaseline = async () => {
-    const didSave = await saveData();
-    if (didSave) {
-      syncCashBaseline(accountData.cash);
-    }
+  const getBaselineTotal = (category: keyof typeof accountData): number => {
+    return savedAccountData[category].reduce((sum, a) => sum + a.balance, 0);
   };
 
   // Check if user is new (no data) and show onboarding
@@ -155,24 +137,15 @@ const RunwayCalculator = () => {
   // Auto-save data whenever it changes
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (user && (accountData.cash.length > 0 || accountData.investments.length > 0 || 
-          accountData.credit.length > 0 || accountData.loans.length > 0 || 
+      if (user && (accountData.cash.length > 0 || accountData.investments.length > 0 ||
+          accountData.credit.length > 0 || accountData.loans.length > 0 ||
           accountData.otherAssets.length > 0 || monthlyExpenses > 0)) {
-        void saveDataAndSyncCashBaseline();
+        void saveData();
       }
     }, 1000);
 
     return () => clearTimeout(timeoutId);
   }, [accountData, monthlyExpenses, hiddenCategories, user]);
-
-  useEffect(() => {
-    if (!user || loading || hasInitializedCashBaseline.current) {
-      return;
-    }
-
-    syncCashBaseline(accountData.cash);
-    hasInitializedCashBaseline.current = true;
-  }, [user, loading, accountData.cash]);
 
   const calculateRunway = () => {
     console.log('=== RUNWAY CALCULATION START ===');
@@ -301,7 +274,7 @@ const RunwayCalculator = () => {
 
   const handleCalculate = async () => {
     calculateRunway();
-    await saveDataAndSyncCashBaseline();
+    await saveData();
     toast.success("Financial overview updated!");
   };
 
@@ -546,7 +519,7 @@ const RunwayCalculator = () => {
             </div>
           </div>
 
-          <EnhancedSnapshotManager onCreateSnapshot={handleCreateSnapshot} onSaveData={saveDataAndSyncCashBaseline} />
+          <EnhancedSnapshotManager onCreateSnapshot={handleCreateSnapshot} onSaveData={saveData} />
           
           <FloatingSupportMenu />
           
@@ -588,12 +561,12 @@ const RunwayCalculator = () => {
           />
 
           <div className="space-y-4">
-            <AccountSection 
-              title="Cash" 
+            <AccountSection
+              title="Cash"
               accounts={[...accountData.cash].sort((a, b) => b.balance - a.balance)}
               icon={<Wallet size={18} className="text-green-600" />}
-              baselineTotal={savedCashTotal}
-              baselineBalances={savedCashBalances}
+              baselineTotal={getBaselineTotal('cash')}
+              baselineBalances={getBaselineBalances('cash')}
               isHidden={hiddenCategories.cash}
               onAddAccount={() => addAccount('cash')}
               onUpdateAccount={() => {}}
@@ -608,10 +581,12 @@ const RunwayCalculator = () => {
               onToggleHidden={() => setHiddenCategories(prev => ({ ...prev, cash: !prev.cash }))}
             />
             
-            <AccountSection 
-              title="Investments" 
+            <AccountSection
+              title="Investments"
               accounts={[...accountData.investments].sort((a, b) => b.balance - a.balance)}
               icon={<ChartPie size={18} className="text-blue-600" />}
+              baselineTotal={getBaselineTotal('investments')}
+              baselineBalances={getBaselineBalances('investments')}
               isHidden={hiddenCategories.investments}
               onAddAccount={() => addAccount('investments')}
               onUpdateAccount={() => {}}
@@ -626,10 +601,12 @@ const RunwayCalculator = () => {
               onToggleHidden={() => setHiddenCategories(prev => ({ ...prev, investments: !prev.investments }))}
             />
             
-            <AccountSection 
-              title="Credit" 
+            <AccountSection
+              title="Credit"
               accounts={accountData.credit}
               icon={<CreditCard size={18} className="text-red-600" />}
+              baselineTotal={getBaselineTotal('credit')}
+              baselineBalances={getBaselineBalances('credit')}
               isNegative={true}
               isHidden={hiddenCategories.credit}
               onAddAccount={() => addAccount('credit')}
@@ -645,10 +622,12 @@ const RunwayCalculator = () => {
               onToggleHidden={() => setHiddenCategories(prev => ({ ...prev, credit: !prev.credit }))}
             />
             
-            <AccountSection 
-              title="Loans" 
+            <AccountSection
+              title="Loans"
               accounts={[...accountData.loans].sort((a, b) => b.balance - a.balance)}
               icon={<BadgeEuro size={18} className="text-orange-600" />}
+              baselineTotal={getBaselineTotal('loans')}
+              baselineBalances={getBaselineBalances('loans')}
               isNegative={true}
               isHidden={hiddenCategories.loans}
               onAddAccount={() => addAccount('loans')}
@@ -664,10 +643,12 @@ const RunwayCalculator = () => {
               onToggleHidden={() => setHiddenCategories(prev => ({ ...prev, loans: !prev.loans }))}
             />
             
-            <AccountSection 
-              title="Other Assets" 
+            <AccountSection
+              title="Other Assets"
               accounts={[...accountData.otherAssets].sort((a, b) => b.balance - a.balance)}
               icon={<Coins size={18} className="text-purple-600" />}
+              baselineTotal={getBaselineTotal('otherAssets')}
+              baselineBalances={getBaselineBalances('otherAssets')}
               isHidden={hiddenCategories.otherAssets}
               onAddAccount={() => addAccount('otherAssets')}
               onUpdateAccount={() => {}}

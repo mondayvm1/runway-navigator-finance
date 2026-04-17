@@ -586,8 +586,6 @@ export const useFinancialData = () => {
       }
 
       console.log('Data saved successfully');
-      setSavedAccountData(JSON.parse(JSON.stringify(accountData)));
-      setSavedMonthlyExpenses(monthlyExpenses);
       toast.success('Data saved successfully!');
       return true;
     } catch (error) {

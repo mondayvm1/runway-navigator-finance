@@ -27,6 +27,7 @@ const CreditSummary = ({ accounts }: CreditSummaryProps) => {
   const totalCreditLimit = accounts.reduce((sum, account) => sum + (account.creditLimit || 0), 0);
   const totalAvailableCredit = totalCreditLimit - totalBalance;
   const overallUtilization = totalCreditLimit > 0 ? (totalBalance / totalCreditLimit) * 100 : 0;
+  const availablePercent = totalCreditLimit > 0 ? Math.max(0, 100 - overallUtilization) : 0;
   
   const accountsWithAutopay = accounts.filter(a => a.autopayEnabled).length;
   const accountsWithoutAutopay = accounts.filter(a => !a.isPaidOff && !a.autopayEnabled).length;
@@ -54,7 +55,7 @@ const CreditSummary = ({ accounts }: CreditSummaryProps) => {
         </div>
         
         <div className="text-center">
-          <div className="text-sm text-gray-600">Available Credit</div>
+          <div className="text-sm text-gray-600">Available Credit ({availablePercent.toFixed(1)}%)</div>
           <div className="text-lg font-bold text-green-600">
             {formatCurrency(totalAvailableCredit)}
           </div>
@@ -71,7 +72,7 @@ const CreditSummary = ({ accounts }: CreditSummaryProps) => {
       {/* Overall Utilization Bar */}
       <div className="mt-3">
         <div className="flex justify-between text-xs text-gray-600 mb-1">
-          <span>Overall Credit Utilization</span>
+          <span>{overallUtilization.toFixed(1)}% used • {availablePercent.toFixed(1)}% available</span>
           <span>{formatCurrency(totalBalance)} / {formatCurrency(totalCreditLimit)}</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3">

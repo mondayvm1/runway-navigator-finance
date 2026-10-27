@@ -53,7 +53,7 @@ const FloatingSupportMenu = () => {
       icon: Download,
       label: 'Export Data',
       description: 'ZIP with CSVs + JSON backup',
-      color: 'from-cyan-500 to-blue-500',
+      accent: 'border-l-cyan-400',
       onClick: handleExport,
     },
     {
@@ -61,7 +61,7 @@ const FloatingSupportMenu = () => {
       icon: Upload,
       label: 'Import Backup',
       description: 'Restore from a Pathline ZIP',
-      color: 'from-teal-500 to-cyan-500',
+      accent: 'border-l-cyan-400',
       onClick: handleImportClick,
     },
     {
@@ -69,7 +69,7 @@ const FloatingSupportMenu = () => {
       icon: Crown,
       label: 'Go VIP',
       description: 'Unlock premium features',
-      color: 'from-amber-500 to-orange-500',
+      accent: 'border-l-amber-400',
       href: '/vip'
     },
     {
@@ -77,7 +77,7 @@ const FloatingSupportMenu = () => {
       icon: Wrench,
       label: 'Troubleshooting',
       description: 'Fix data issues',
-      color: 'from-orange-500 to-red-500',
+      accent: 'border-l-amber-400',
       onClick: () => {
         setShowCleanupTool(true);
         setIsOpen(false);
@@ -88,7 +88,7 @@ const FloatingSupportMenu = () => {
       icon: MessageCircle,
       label: 'Send Message',
       description: 'Get in touch',
-      color: 'from-blue-500 to-indigo-500',
+      accent: 'border-l-violet-400',
       href: '/contact'
     },
     {
@@ -96,7 +96,7 @@ const FloatingSupportMenu = () => {
       icon: Heart,
       label: 'Support Development',
       description: 'Buy me a coffee',
-      color: 'from-pink-500 to-rose-500',
+      accent: 'border-l-violet-400',
       href: '/donate'
     },
     {
@@ -104,7 +104,7 @@ const FloatingSupportMenu = () => {
       icon: Rocket,
       label: 'Build Your App',
       description: 'Cross-platform development',
-      color: 'from-purple-500 to-violet-500',
+      accent: 'border-l-violet-400',
       href: '/build'
     },
     {
@@ -112,7 +112,7 @@ const FloatingSupportMenu = () => {
       icon: Handshake,
       label: 'Sponsorship & Affiliate',
       description: 'Partner with us',
-      color: 'from-emerald-500 to-teal-500',
+      accent: 'border-l-emerald-400',
       href: '/partners'
     }
   ];
@@ -123,7 +123,7 @@ const FloatingSupportMenu = () => {
       <div className="fixed bottom-6 right-6 z-50">
         {/* Menu Items */}
         <div className={cn(
-          "absolute bottom-16 right-0 flex flex-col gap-2 transition-all duration-300 origin-bottom-right",
+          "absolute bottom-16 right-0 flex min-w-[270px] flex-col gap-1.5 rounded-2xl border border-white/15 bg-gradient-to-br from-slate-950/95 via-indigo-950/95 to-slate-900/95 p-2.5 shadow-2xl shadow-indigo-950/30 backdrop-blur-2xl transition-all duration-300 origin-bottom-right",
           isOpen 
             ? "opacity-100 scale-100 translate-y-0" 
             : "opacity-0 scale-95 translate-y-4 pointer-events-none"
@@ -131,24 +131,21 @@ const FloatingSupportMenu = () => {
           {menuItems.map((item, index) => {
             const content = (
               <>
-                <div className={cn(
-                  "w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center flex-shrink-0",
-                  item.color
-                )}>
-                  <item.icon className="w-5 h-5 text-white" />
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/10">
+                  <item.icon className="h-4.5 w-4.5 text-indigo-100" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-slate-800 text-sm">{item.label}</p>
-                  <p className="text-xs text-slate-500 truncate">{item.description}</p>
+                  <p className="text-sm font-medium text-white">{item.label}</p>
+                  <p className="truncate text-xs text-indigo-200/70">{item.description}</p>
                 </div>
               </>
             );
 
             const className = cn(
-              "flex items-center gap-3 px-4 py-3 rounded-xl",
-              "bg-white/90 backdrop-blur-xl border border-white/50 shadow-lg shadow-slate-200/50",
-              "hover:bg-white hover:shadow-xl hover:scale-[1.02]",
-              "transition-all duration-200 text-left min-w-[220px]",
+              "flex min-w-[245px] items-center gap-3 rounded-xl border border-white/5 border-l-2 bg-white/[0.055] px-3 py-2.5",
+              "hover:border-white/15 hover:bg-white/[0.11] hover:translate-x-0.5",
+              "transition-all duration-200 text-left",
+              item.accent,
               "animate-fade-up"
             );
 

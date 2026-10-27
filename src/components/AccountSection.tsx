@@ -50,6 +50,10 @@ const AccountSection = ({
   };
 
   const total = accounts.reduce((sum, account) => sum + account.balance, 0);
+  const totalCreditLimit = accounts.reduce((sum, account) => sum + (account.creditLimit || 0), 0);
+  const availableCredit = Math.max(0, totalCreditLimit - total);
+  const usedPercent = totalCreditLimit > 0 ? Math.min(100, Math.max(0, (total / totalCreditLimit) * 100)) : 0;
+  const availablePercent = totalCreditLimit > 0 ? Math.max(0, 100 - usedPercent) : 0;
 
   return (
     <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80 p-3 sm:p-6 transition-all duration-300 hover:shadow-xl">
@@ -75,8 +79,18 @@ const AccountSection = ({
               {isNegative ? '-' : ''}${Math.abs(total).toLocaleString()}
             </span>
             {title === 'Credit' && accounts.length > 0 && (
-              <div className="text-[10px] sm:text-xs text-slate-500 mt-0.5 hidden sm:block">
-                Available: ${accounts.reduce((sum, acc) => sum + (acc.creditLimit || 0) - acc.balance, 0).toLocaleString()}
+              <div className="mt-1 min-w-[150px]">
+                <div className="flex items-center justify-end gap-1 text-[10px] sm:text-xs">
+                  <span className="font-semibold text-red-600">{usedPercent.toFixed(0)}% used</span>
+                  <span className="text-slate-300">•</span>
+                  <span className="font-semibold text-emerald-600">{availablePercent.toFixed(0)}% left</span>
+                </div>
+                <div className="mt-1 ml-auto h-1.5 w-28 overflow-hidden rounded-full bg-emerald-200">
+                  <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-red-500" style={{ width: `${usedPercent}%` }} />
+                </div>
+                <div className="mt-1 hidden text-[10px] text-slate-500 sm:block">
+                  {availableCredit.toLocaleString('en-US', { style: 'currency', currency: 'USD' })} available
+                </div>
               </div>
             )}
           </div>

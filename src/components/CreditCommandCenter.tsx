@@ -162,6 +162,15 @@ const simulate = (cards: SimulatedCard[], extraMonthly: number, strategy: 'avala
 
 const duration = (months: number) => `${Math.floor(months / 12)}y ${months % 12}m`;
 
+const ordinal = (value: number) => {
+  const remainder100 = value % 100;
+  if (remainder100 >= 11 && remainder100 <= 13) return `${value}th`;
+  if (value % 10 === 1) return `${value}st`;
+  if (value % 10 === 2) return `${value}nd`;
+  if (value % 10 === 3) return `${value}rd`;
+  return `${value}th`;
+};
+
 const CreditCommandCenter = ({ creditAccounts }: CreditCommandCenterProps) => {
   const { readings, saveReading } = useCreditMonitoring();
   const [weeklyIncome, setWeeklyIncome] = useState(600);
@@ -331,7 +340,7 @@ const CreditCommandCenter = ({ creditAccounts }: CreditCommandCenterProps) => {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="font-semibold text-slate-900">Projected payoff milestones</p>
-                  <p className="text-xs text-slate-500">“Month {maxPayoffMonth}” means the final card reaches $0 during your {maxPayoffMonth}th monthly payment - it does not mean {maxPayoffMonth} cards.</p>
+                  <p className="text-xs text-slate-500">“Month {maxPayoffMonth}” means the final card reaches $0 during your {ordinal(maxPayoffMonth)} monthly payment - it does not mean {maxPayoffMonth} cards.</p>
                 </div>
                 <Badge variant="secondary">{cards.length} cards total</Badge>
               </div>

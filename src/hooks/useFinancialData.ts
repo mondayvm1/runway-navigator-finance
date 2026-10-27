@@ -5,6 +5,10 @@ import { toast } from 'sonner';
 import { IncomeEvent } from '@/components/IncomeManager';
 import { useIncomeEvents } from './useIncomeEvents';
 import { useIncomeSettings } from './useIncomeSettings';
+import {
+  loadResilientFinancialData,
+  saveResilientFinancialData,
+} from '@/lib/resilientFinancialStore';
 
 export interface AccountItem {
   id: string;
@@ -93,6 +97,15 @@ export const useFinancialData = () => {
     setLoading(true);
     console.log('Loading financial data for user:', user.id);
 
+    const localFallback = loadResilientFinancialData(user.id);
+    if (localFallback) {
+      setAccountData(localFallback.accountData);
+      setSavedAccountData(JSON.parse(JSON.stringify(localFallback.accountData)));
+      setMonthlyExpenses(localFallback.monthlyExpenses);
+      setSavedMonthlyExpenses(localFallback.monthlyExpenses);
+      setDataFound(Object.values(localFallback.accountData).some((accounts) => accounts.length > 0));
+    }
+
     try {
       // Load accounts
       const { data: accounts, error: accountsError } = await supabase
@@ -161,12 +174,21 @@ export const useFinancialData = () => {
       }
 
       const loadedExpenses = expenses ? Number(expenses.amount) : 0;
+
+      // Local edits made during an outage win until the next successful save.
+      // The existing auto-save effect will retry them against Supabase.
+      if (localFallback?.pendingSync) {
+        toast.info('Recovered changes saved on this device. Cloud sync will retry automatically.');
+        return;
+      }
+
       if (expenses) {
         setMonthlyExpenses(loadedExpenses);
       }
       setSavedMonthlyExpenses(loadedExpenses);
 
       setDataFound(totalAccounts > 0);
+      saveResilientFinancialData(user.id, groupedAccounts, loadedExpenses, false);
 
       if (totalAccounts > 0 || expenses) {
         toast.success(`Data recovered! Found ${totalAccounts} accounts and ${expenses ? 'monthly expenses' : 'no monthly expenses'}`);
@@ -186,7 +208,11 @@ export const useFinancialData = () => {
 
     } catch (error) {
       console.error('Error loading data:', error);
-      toast.error('Failed to load financial data. Please try refreshing the page.');
+      if (localFallback) {
+        toast.warning('Cloud is unavailable. Showing the latest data saved on this device.');
+      } else {
+        toast.error('Cloud is unavailable and this device has no saved fallback yet.');
+      }
     } finally {
       setLoading(false);
     }
@@ -194,6 +220,8 @@ export const useFinancialData = () => {
 
   const saveData = async () => {
     if (!user) return;
+
+    saveResilientFinancialData(user.id, accountData, monthlyExpenses, true);
 
     try {
       console.log('Saving financial data...');
@@ -279,10 +307,11 @@ export const useFinancialData = () => {
       console.log('Data saved successfully');
       setSavedAccountData(JSON.parse(JSON.stringify(accountData)));
       setSavedMonthlyExpenses(monthlyExpenses);
+      saveResilientFinancialData(user.id, accountData, monthlyExpenses, false);
       toast.success('Data saved successfully!');
     } catch (error) {
       console.error('Error saving data:', error);
-      toast.error('Failed to save data');
+      toast.warning('Cloud save failed. Your changes are safe on this device and will retry automatically.');
     }
   };
 
@@ -405,6 +434,15 @@ export const useFinancialData = () => {
     // Debug logging
     console.log('Updating account:', { dbUpdates, id, userId: user.id });
     
+    const nextAccountData = {
+      ...accountData,
+      [category]: accountData[category].map((a) =>
+        a.id === id ? { ...a, ...updates } : a
+      ),
+    };
+    setAccountData(nextAccountData);
+    saveResilientFinancialData(user.id, nextAccountData, monthlyExpenses, true);
+
     // Update Supabase
     try {
       const { error } = await supabase
@@ -417,22 +455,18 @@ export const useFinancialData = () => {
         .eq('account_id', id)
         .is('snapshot_id', null);
       if (error) throw error;
-      // Update local state
-      setAccountData((prev) => ({
-        ...prev,
-        [category]: prev[category].map((a) =>
-          a.id === id ? { ...a, ...updates } : a
-        ),
-      }));
+      saveResilientFinancialData(user.id, nextAccountData, monthlyExpenses, false);
       toast.success('Account updated!');
     } catch (e) {
-      toast.error('Failed to update account');
+      toast.warning('Account updated on this device. Cloud sync will retry automatically.');
       console.error('Update account error:', e);
     }
   };
 
   const updateMonthlyExpenses = async (amount: number) => {
     if (!user) return;
+    setMonthlyExpenses(amount);
+    saveResilientFinancialData(user.id, accountData, amount, true);
     try {
       const { error } = await supabase
         .from('monthly_expenses')
@@ -443,10 +477,10 @@ export const useFinancialData = () => {
           updated_at: new Date().toISOString(),
         } as any);
       if (error) throw error;
-      setMonthlyExpenses(amount);
+      saveResilientFinancialData(user.id, accountData, amount, false);
       toast.success('Monthly expenses updated!');
     } catch (e) {
-      toast.error('Failed to update expenses');
+      toast.warning('Expenses updated on this device. Cloud sync will retry automatically.');
       console.error(e);
     }
   };

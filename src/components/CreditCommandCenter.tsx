@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ExternalLink, Gauge, Snowflake, TrendingDown, Zap } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, ExternalLink, Gauge, Snowflake, TrendingDown, TriangleAlert, Zap } from 'lucide-react';
 import { AccountItem } from '@/hooks/useFinancialData';
 import { CreditSource, useCreditMonitoring } from '@/hooks/useCreditMonitoring';
 import { formatCurrency } from '@/utils/formatters';
@@ -23,6 +23,34 @@ interface SimulatedCard {
   minimum: number;
 }
 
+interface MonthlyPayment {
+  id: string;
+  name: string;
+  minimum: number;
+  avalanche: number;
+  total: number;
+  endingBalance: number;
+}
+
+const APR_EVIDENCE: Record<string, { label: string; verified: boolean }> = {
+  'navy fed': { label: 'Aug 2026 statement', verified: true },
+  'discover': { label: 'Jan 2026 statement', verified: true },
+  'chase freedom': { label: 'Aug 2026 statement', verified: true },
+  'capital one venture': { label: 'Oct 2026 account snapshot', verified: true },
+  'capital one platinum': { label: 'Jan 2026 statement', verified: true },
+  'amex blue': { label: 'Oct 2026 account snapshot', verified: true },
+  'pnc core visa': { label: 'Oct 2026 account snapshot', verified: true },
+  'apple card': { label: 'Jan 2026 statement', verified: true },
+  'capone savor': { label: 'No statement downloaded - estimate', verified: false },
+  'capone quicksilver': { label: 'Dec 2025 statement', verified: true },
+  'amex white': { label: 'No statement downloaded - needs verification', verified: false },
+};
+
+const evidenceFor = (name: string) => APR_EVIDENCE[name.trim().toLowerCase()] || {
+  label: 'Needs statement verification',
+  verified: false,
+};
+
 const PROVIDERS: Array<{
   source: CreditSource;
   name: string;
@@ -37,14 +65,26 @@ const simulate = (cards: SimulatedCard[], extraMonthly: number, strategy: 'avala
   const debts = cards.map((card) => ({ ...card, remaining: card.balance, payoffMonth: 0 }));
   let months = 0;
   let interest = 0;
+  const schedule: Array<{ month: number; interest: number; payments: MonthlyPayment[] }> = [];
   const monthlyBudget = cards.reduce((sum, card) => sum + card.minimum, 0) + Math.max(0, extraMonthly);
 
   while (debts.some((card) => card.remaining > 0.01) && months < 600) {
     months += 1;
+    let monthInterest = 0;
+    const monthPayments = new Map<string, MonthlyPayment>();
+    debts.forEach((card) => monthPayments.set(card.id, {
+      id: card.id,
+      name: card.name,
+      minimum: 0,
+      avalanche: 0,
+      total: 0,
+      endingBalance: card.remaining,
+    }));
     debts.forEach((card) => {
       if (card.remaining <= 0) return;
       const monthlyInterest = card.remaining * (card.rate / 100 / 12);
       interest += monthlyInterest;
+      monthInterest += monthlyInterest;
       card.remaining += monthlyInterest;
     });
 
@@ -56,6 +96,9 @@ const simulate = (cards: SimulatedCard[], extraMonthly: number, strategy: 'avala
       const payment = Math.min(card.minimum, card.remaining, budgetRemaining);
       card.remaining -= payment;
       budgetRemaining -= payment;
+      const entry = monthPayments.get(card.id)!;
+      entry.minimum += payment;
+      entry.total += payment;
       if (card.remaining <= 0.01 && card.payoffMonth === 0) card.payoffMonth = months;
     });
 
@@ -70,14 +113,31 @@ const simulate = (cards: SimulatedCard[], extraMonthly: number, strategy: 'avala
       const payment = Math.min(budgetRemaining, card.remaining);
       card.remaining -= payment;
       budgetRemaining -= payment;
+      const entry = monthPayments.get(card.id)!;
+      entry.avalanche += payment;
+      entry.total += payment;
       if (card.remaining <= 0.01 && card.payoffMonth === 0) card.payoffMonth = months;
     }
+    debts.forEach((card) => {
+      monthPayments.get(card.id)!.endingBalance = Math.max(0, card.remaining);
+    });
+    schedule.push({
+      month: months,
+      interest: monthInterest,
+      payments: [...monthPayments.values()].filter((payment) => payment.total > 0.005),
+    });
   }
 
   return {
     months,
     interest,
     order: [...debts].sort((a, b) => a.payoffMonth - b.payoffMonth),
+    attackOrder: [...cards].sort((a, b) => (
+      strategy === 'avalanche'
+        ? b.rate - a.rate || a.balance - b.balance
+        : a.balance - b.balance || b.rate - a.rate
+    )),
+    schedule,
   };
 };
 
@@ -87,6 +147,7 @@ const CreditCommandCenter = ({ creditAccounts }: CreditCommandCenterProps) => {
   const { readings, saveReading } = useCreditMonitoring();
   const [weeklyIncome, setWeeklyIncome] = useState(600);
   const [extraMonthly, setExtraMonthly] = useState(520);
+  const [showAllMonths, setShowAllMonths] = useState(false);
 
   const cards = useMemo<SimulatedCard[]>(() => creditAccounts
     .filter((account) => account.balance > 0)
@@ -95,7 +156,7 @@ const CreditCommandCenter = ({ creditAccounts }: CreditCommandCenterProps) => {
       name: account.name,
       balance: account.balance,
       rate: account.interestRate || 0,
-      minimum: account.minimumPayment || Math.max(25, account.balance * 0.02),
+      minimum: account.minimumPayment ?? Math.max(25, account.balance * 0.02),
     })), [creditAccounts]);
 
   const totalDebt = cards.reduce((sum, card) => sum + card.balance, 0);
@@ -106,6 +167,7 @@ const CreditCommandCenter = ({ creditAccounts }: CreditCommandCenterProps) => {
   const avalancheTarget = [...cards].sort((a, b) => b.rate - a.rate || a.balance - b.balance)[0];
   const bestInterest = Math.min(avalanche.interest, snowball.interest);
   const maxPayoffMonth = Math.max(1, ...avalanche.order.map((card) => card.payoffMonth));
+  const visibleMonths = showAllMonths ? avalanche.schedule : avalanche.schedule.slice(0, 6);
 
   const handleScore = (source: CreditSource, value: string) => {
     if (value === '') {
@@ -219,20 +281,47 @@ const CreditCommandCenter = ({ creditAccounts }: CreditCommandCenterProps) => {
             <Card className="p-4 sm:p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="font-semibold text-slate-900">Avalanche payoff timeline</p>
-                  <p className="text-xs text-slate-500">Highest APR first; freed minimums roll into the next card.</p>
+                  <p className="font-semibold text-slate-900">Avalanche attack order</p>
+                  <p className="text-xs text-slate-500">This is the APR priority list - one row for each of your {cards.length} cards.</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-slate-500">Total card debt</p>
                   <p className="font-bold text-slate-900">{formatCurrency(totalDebt)}</p>
                 </div>
               </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                {avalanche.attackOrder.map((card, index) => {
+                  const evidence = evidenceFor(card.name);
+                  return (
+                  <div key={card.id} className="rounded-xl border border-slate-200 p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-medium text-slate-900"><span className="mr-2 text-indigo-600">#{index + 1}</span>{card.name}</span>
+                      <span className="shrink-0 font-semibold text-slate-900">{card.rate.toFixed(2)}%</span>
+                    </div>
+                    <div className="mt-1 flex items-center gap-1 text-[11px] text-slate-500">
+                      {evidence.verified ? <CheckCircle2 className="h-3 w-3 text-emerald-600" /> : <TriangleAlert className="h-3 w-3 text-amber-600" />}
+                      <span>{evidence.label}</span>
+                    </div>
+                  </div>
+                  );
+                })}
+              </div>
+            </Card>
+
+            <Card className="p-4 sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="font-semibold text-slate-900">Projected payoff milestones</p>
+                  <p className="text-xs text-slate-500">“Month 35” means that card reaches $0 during your 35th monthly payment - it does not mean 35 cards.</p>
+                </div>
+                <Badge variant="secondary">{cards.length} cards total</Badge>
+              </div>
               <div className="mt-4 space-y-4">
                 {avalanche.order.map((card, index) => (
                   <div key={card.id}>
                     <div className="mb-1 flex items-center justify-between gap-2 text-sm">
                       <span className="truncate font-medium"><span className="mr-2 text-indigo-600">#{index + 1}</span>{card.name}</span>
-                      <span className="shrink-0 text-slate-500">month {card.payoffMonth}</span>
+                      <span className="shrink-0 font-medium text-slate-700">paid off in month {card.payoffMonth}</span>
                     </div>
                     <Progress value={(card.payoffMonth / maxPayoffMonth) * 100} className="h-2.5" />
                     <div className="mt-1 flex justify-between text-[11px] text-slate-500">
@@ -244,12 +333,48 @@ const CreditCommandCenter = ({ creditAccounts }: CreditCommandCenterProps) => {
               </div>
             </Card>
 
+            <Card className="p-4 sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="font-semibold text-slate-900">Where your payment goes each month</p>
+                  <p className="text-xs text-slate-500">Minimum = required payment. Avalanche = extra cash plus minimums freed by cards already paid off.</p>
+                </div>
+                <Badge variant="outline">{formatCurrency(minimums + extraMonthly)}/month</Badge>
+              </div>
+              <div className="mt-4 space-y-3">
+                {visibleMonths.map((month) => (
+                  <div key={month.month} className="rounded-xl border border-slate-200 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-semibold text-slate-900">Month {month.month}</p>
+                      <p className="text-xs text-slate-500">{formatCurrency(month.interest)} interest added</p>
+                    </div>
+                    <div className="mt-2 space-y-1.5">
+                      {month.payments.map((payment) => (
+                        <div key={payment.id} className="flex flex-wrap items-center justify-between gap-x-3 text-sm">
+                          <span className="font-medium text-slate-700">{payment.name}</span>
+                          <span className="text-slate-600">
+                            {formatCurrency(payment.total)}
+                            <span className="ml-1 text-[11px] text-slate-400">({formatCurrency(payment.minimum)} minimum{payment.avalanche > 0.005 ? ` + ${formatCurrency(payment.avalanche)} avalanche` : ''})</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {avalanche.schedule.length > 6 && (
+                <Button variant="ghost" className="mt-3 w-full" onClick={() => setShowAllMonths((value) => !value)}>
+                  {showAllMonths ? <>Show first 6 months <ChevronUp className="ml-1 h-4 w-4" /></> : <>Show all {avalanche.schedule.length} months <ChevronDown className="ml-1 h-4 w-4" /></>}
+                </Button>
+              )}
+            </Card>
+
             <Card className="flex items-start gap-3 p-4 bg-emerald-50 border-emerald-200">
               <TrendingDown className="mt-0.5 h-5 w-5 text-emerald-600" />
               <div>
                 <p className="font-semibold text-emerald-900">Best current plan</p>
                 <p className="text-sm text-emerald-800">
-                  Use avalanche, keep every minimum on autopay, and direct {formatCurrency(extraMonthly)} extra to {avalancheTarget?.name}. Projected interest: {formatCurrency(bestInterest)}.
+                  Use avalanche, keep every minimum on autopay, and start the {formatCurrency(extraMonthly)} extra with {avalancheTarget?.name}; any amount left after it reaches $0 rolls immediately to the next card. Projected interest: {formatCurrency(bestInterest)}.
                 </p>
               </div>
             </Card>

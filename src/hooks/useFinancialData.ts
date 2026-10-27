@@ -443,7 +443,7 @@ export const useFinancialData = () => {
     if (updates.interestRate !== undefined) dbUpdates.interest_rate = updates.interestRate;
     if (updates.creditLimit !== undefined) dbUpdates.credit_limit = updates.creditLimit;
     if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
-    if (updates.minimumPayment !== undefined) dbUpdates.minimum_payment = updates.minimumPayment;
+    if (updates.minimumPayment !== undefined) dbUpdates.min_payment = updates.minimumPayment;
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.statementDate !== undefined) dbUpdates.statement_date = updates.statementDate;
     if (updates.autopayEnabled !== undefined) dbUpdates.autopay_enabled = updates.autopayEnabled;

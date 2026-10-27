@@ -20,6 +20,7 @@ import FinancialAllocationCharts from "./FinancialAllocationCharts";
 import PaymentTracker from "./PaymentTracker";
 import CreditCardDebtAnalyzer from "./CreditCardDebtAnalyzer";
 import CreditScoreEstimator from "./CreditScoreEstimator";
+import CreditCommandCenter from "./CreditCommandCenter";
 import FinancialQuestJourney from "./FinancialQuestJourney";
 import FloatingSupportMenu from "./FloatingSupportMenu";
 import FinancialArchetype from "./FinancialArchetype";
@@ -535,6 +536,8 @@ const RunwayCalculator = () => {
           />
 
           <PaymentTracker accountData={accountData} updateAccountField={updateAccountField} />
+
+          <CreditCommandCenter creditAccounts={accountData.credit} />
           
           <CreditCardDebtAnalyzer creditAccounts={accountData.credit} />
           

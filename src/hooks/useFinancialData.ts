@@ -6,6 +6,7 @@ import { IncomeEvent } from '@/components/IncomeManager';
 import { useIncomeEvents } from './useIncomeEvents';
 import { useIncomeSettings } from './useIncomeSettings';
 import {
+  dedupeAccountData,
   loadResilientFinancialData,
   saveResilientFinancialData,
 } from '@/lib/resilientFinancialStore';
@@ -157,8 +158,10 @@ export const useFinancialData = () => {
         }
       });
 
-      setAccountData(groupedAccounts);
-      setSavedAccountData(JSON.parse(JSON.stringify(groupedAccounts)));
+      const dedupedAccounts = dedupeAccountData(groupedAccounts);
+      const duplicateCount = totalAccounts - Object.values(dedupedAccounts).reduce((sum, items) => sum + items.length, 0);
+      setAccountData(dedupedAccounts);
+      setSavedAccountData(JSON.parse(JSON.stringify(dedupedAccounts)));
 
       // Load monthly expenses
       const { data: expenses, error: expensesError } = await supabase
@@ -188,10 +191,14 @@ export const useFinancialData = () => {
       setSavedMonthlyExpenses(loadedExpenses);
 
       setDataFound(totalAccounts > 0);
-      saveResilientFinancialData(user.id, groupedAccounts, loadedExpenses, false);
+      saveResilientFinancialData(user.id, dedupedAccounts, loadedExpenses, false);
 
       if (totalAccounts > 0 || expenses) {
-        toast.success(`Data recovered! Found ${totalAccounts} accounts and ${expenses ? 'monthly expenses' : 'no monthly expenses'}`);
+        const uniqueAccountCount = totalAccounts - duplicateCount;
+        toast.success(`Data recovered! Found ${uniqueAccountCount} accounts and ${expenses ? 'monthly expenses' : 'no monthly expenses'}`);
+        if (duplicateCount > 0) {
+          toast.warning(`Ignored ${duplicateCount} duplicate account records while loading.`);
+        }
       } else {
         const { data: snapshots } = await supabase
           .from('financial_snapshots')
@@ -226,8 +233,9 @@ export const useFinancialData = () => {
     try {
       console.log('Saving financial data...');
       
+      const dedupedAccounts = dedupeAccountData(accountData);
       const accountsToSave: any[] = [];
-      Object.entries(accountData).forEach(([category, accounts]) => {
+      Object.entries(dedupedAccounts).forEach(([category, accounts]) => {
         accounts.forEach(account => {
           accountsToSave.push({
             user_id: user.id,
@@ -251,52 +259,68 @@ export const useFinancialData = () => {
 
       console.log('Accounts to save:', accountsToSave);
 
-      // SAFETY CHECK: Only delete if we have data to save, otherwise just skip
-      // This prevents accidental data loss when React state is empty
+      // Update existing logical accounts in place. The former delete-then-insert
+      // flow could interleave across open tabs and duplicate every account.
       if (accountsToSave.length > 0) {
-        const { error: deleteError } = await supabase
+        const { data: existingRows, error: existingError } = await supabase
           .from('user_accounts')
-          .delete()
+          .select('account_id')
           .eq('user_id', user.id)
           .is('snapshot_id', null);
+        if (existingError) throw existingError;
 
-        if (deleteError) {
-          console.error('Error deleting existing accounts:', deleteError);
-          throw deleteError;
+        const existingIds = new Set((existingRows || []).map(row => row.account_id).filter(Boolean));
+        const currentIds = new Set(accountsToSave.map(account => account.account_id));
+
+        for (const account of accountsToSave) {
+          if (existingIds.has(account.account_id)) {
+            const { error } = await supabase
+              .from('user_accounts')
+              .update(account)
+              .eq('user_id', user.id)
+              .eq('account_id', account.account_id)
+              .is('snapshot_id', null);
+            if (error) throw error;
+          } else {
+            const { error } = await supabase.from('user_accounts').insert(account);
+            if (error) throw error;
+          }
         }
 
-        const { error: accountsError } = await supabase
-          .from('user_accounts')
-          .insert(accountsToSave);
-
-        if (accountsError) {
-          console.error('Error inserting accounts:', accountsError);
-          throw accountsError;
+        const removedIds = [...existingIds].filter(id => !currentIds.has(id as string)) as string[];
+        if (removedIds.length > 0) {
+          const { error } = await supabase
+            .from('user_accounts')
+            .delete()
+            .eq('user_id', user.id)
+            .is('snapshot_id', null)
+            .in('account_id', removedIds);
+          if (error) throw error;
         }
       } else {
         console.log('No accounts in state to save - skipping to prevent data loss');
       }
 
-      // Only update expenses if we have a value set
+      // Only update expenses if we have a value set. Update all legacy duplicate
+      // rows instead of creating another expense row.
       if (monthlyExpenses > 0) {
-        const { error: deleteExpensesError } = await supabase
+        const { data: existingExpenses, error: existingExpensesError } = await supabase
           .from('monthly_expenses')
-          .delete()
+          .select('id')
           .eq('user_id', user.id)
           .is('snapshot_id', null);
+        if (existingExpensesError) throw existingExpensesError;
 
-        if (deleteExpensesError) {
-          console.error('Error deleting existing expenses:', deleteExpensesError);
-          throw deleteExpensesError;
-        }
-
-        const { error: expensesError } = await supabase
-          .from('monthly_expenses')
-          .insert({
+        const expenseRecord = {
             user_id: user.id,
             amount: monthlyExpenses,
-            name: 'Monthly Expenses'
-          } as any);
+            name: 'Monthly Expenses',
+            updated_at: new Date().toISOString(),
+          } as any;
+        const expenseQuery = existingExpenses && existingExpenses.length > 0
+          ? supabase.from('monthly_expenses').update(expenseRecord).eq('user_id', user.id).is('snapshot_id', null)
+          : supabase.from('monthly_expenses').insert(expenseRecord);
+        const { error: expensesError } = await expenseQuery;
 
         if (expensesError) {
           console.error('Error inserting expenses:', expensesError);
@@ -305,9 +329,9 @@ export const useFinancialData = () => {
       }
 
       console.log('Data saved successfully');
-      setSavedAccountData(JSON.parse(JSON.stringify(accountData)));
+      setSavedAccountData(JSON.parse(JSON.stringify(dedupedAccounts)));
       setSavedMonthlyExpenses(monthlyExpenses);
-      saveResilientFinancialData(user.id, accountData, monthlyExpenses, false);
+      saveResilientFinancialData(user.id, dedupedAccounts, monthlyExpenses, false);
       toast.success('Data saved successfully!');
     } catch (error) {
       console.error('Error saving data:', error);

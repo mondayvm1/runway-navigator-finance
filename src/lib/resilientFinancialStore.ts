@@ -11,6 +11,22 @@ export interface ResilientFinancialData {
   pendingSync: boolean;
 }
 
+export const dedupeAccountData = (accountData: AccountData): AccountData => {
+  const dedupe = <T extends { id: string }>(accounts: T[]) => {
+    const byId = new Map<string, T>();
+    accounts.forEach(account => byId.set(account.id, account));
+    return [...byId.values()];
+  };
+
+  return {
+    cash: dedupe(accountData.cash || []),
+    investments: dedupe(accountData.investments || []),
+    credit: dedupe(accountData.credit || []),
+    loans: dedupe(accountData.loans || []),
+    otherAssets: dedupe(accountData.otherAssets || []),
+  };
+};
+
 const storageKey = (userId: string) => `${KEY_PREFIX}:${userId}`;
 
 export const loadResilientFinancialData = (userId: string): ResilientFinancialData | null => {
@@ -20,7 +36,10 @@ export const loadResilientFinancialData = (userId: string): ResilientFinancialDa
 
     const parsed = JSON.parse(raw) as ResilientFinancialData;
     if (parsed.version !== STORE_VERSION || !parsed.accountData) return null;
-    return parsed;
+    return {
+      ...parsed,
+      accountData: dedupeAccountData(parsed.accountData),
+    };
   } catch (error) {
     console.error('Unable to read the local Pathline fallback:', error);
     return null;
@@ -35,7 +54,7 @@ export const saveResilientFinancialData = (
 ) => {
   const record: ResilientFinancialData = {
     version: STORE_VERSION,
-    accountData,
+    accountData: dedupeAccountData(accountData),
     monthlyExpenses,
     savedAt: new Date().toISOString(),
     pendingSync,

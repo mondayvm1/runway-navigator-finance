@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,11 @@ const RunwayCalculator = () => {
     loadData,
     restoreFromSnapshotData,
   } = useFinancialData();
+  const saveDataRef = useRef(saveData);
+
+  useEffect(() => {
+    saveDataRef.current = saveData;
+  }, [saveData]);
 
   const [runway, setRunway] = useState({
     days: 0,
@@ -129,12 +134,12 @@ const RunwayCalculator = () => {
       if (user && (accountData.cash.length > 0 || accountData.investments.length > 0 || 
           accountData.credit.length > 0 || accountData.loans.length > 0 || 
           accountData.otherAssets.length > 0 || monthlyExpenses > 0)) {
-        saveData();
+        saveDataRef.current();
       }
     }, 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [accountData, monthlyExpenses, hiddenCategories, user, saveData]);
+  }, [accountData, monthlyExpenses, hiddenCategories, user]);
 
   const calculateRunway = () => {
     console.log('=== RUNWAY CALCULATION START ===');

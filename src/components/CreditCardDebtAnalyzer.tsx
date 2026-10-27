@@ -1,4 +1,8 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { AlertTriangle, TrendingUp, Target, Zap } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { AccountItem } from '@/hooks/useFinancialData';
@@ -19,6 +23,9 @@ interface DebtCard {
 }
 
 const CreditCardDebtAnalyzer = ({ creditAccounts }: CreditCardDebtAnalyzerProps) => {
+  const [extraPayment, setExtraPayment] = useState(520);
+  const [showAllAvalanche, setShowAllAvalanche] = useState(false);
+  const [showAllSnowball, setShowAllSnowball] = useState(false);
   // Filter to only cards with balances and interest rates
   const debtCards: DebtCard[] = creditAccounts
     .filter(acc => acc.balance > 0)
@@ -67,39 +74,59 @@ const CreditCardDebtAnalyzer = ({ creditAccounts }: CreditCardDebtAnalyzerProps)
   const fuckedness = getFuckednessLevel();
 
   // Calculate potential savings with avalanche method
-  const calculatePayoffWithStrategy = (cards: DebtCard[], extraPayment: number = 200) => {
-    let remainingCards = cards.map(c => ({ ...c, remaining: c.balance }));
+  const calculatePayoffWithStrategy = (cards: DebtCard[], monthlyExtra: number, strategy: 'avalanche' | 'snowball') => {
+    const remainingCards = cards.map(c => ({ ...c, remaining: c.balance }));
     let months = 0;
     let totalInterestPaid = 0;
     const totalMinPayment = cards.reduce((sum, c) => sum + c.minimumPayment, 0);
+    const monthlyBudget = totalMinPayment + Math.max(0, monthlyExtra);
 
     while (remainingCards.some(c => c.remaining > 0) && months < 600) {
       months++;
-      
-      // Pay minimum on all cards and interest
+
+      // Interest posts first, then the full fixed monthly budget is applied.
+      // Freed minimum payments roll forward instead of disappearing.
       remainingCards.forEach(card => {
         if (card.remaining > 0) {
           const interest = (card.remaining * card.interestRate / 100 / 12);
           totalInterestPaid += interest;
           card.remaining += interest;
-          const payment = Math.min(card.minimumPayment, card.remaining);
-          card.remaining -= payment;
         }
       });
 
-      // Apply extra payment to first card with balance (highest priority)
-      const targetCard = remainingCards.find(c => c.remaining > 0);
-      if (targetCard && extraPayment > 0) {
-        const payment = Math.min(extraPayment, targetCard.remaining);
-        targetCard.remaining -= payment;
+      let budgetRemaining = monthlyBudget;
+
+      // Keep every active account current with its minimum.
+      remainingCards.forEach(card => {
+        if (card.remaining <= 0 || budgetRemaining <= 0) return;
+        const payment = Math.min(card.minimumPayment, card.remaining, budgetRemaining);
+        card.remaining -= payment;
+        budgetRemaining -= payment;
+      });
+
+      const priorityOrder = remainingCards
+        .filter(card => card.remaining > 0)
+        .sort((a, b) => strategy === 'avalanche'
+          ? b.interestRate - a.interestRate || a.remaining - b.remaining
+          : a.remaining - b.remaining || b.interestRate - a.interestRate);
+
+      // Send every remaining dollar down the selected priority order.
+      for (const card of priorityOrder) {
+        if (card.remaining <= 0 || budgetRemaining <= 0) continue;
+        const payment = Math.min(card.remaining, budgetRemaining);
+        card.remaining -= payment;
+        budgetRemaining -= payment;
       }
     }
 
-    return { months, totalInterestPaid };
+    const paidOff = remainingCards.every(card => card.remaining <= 0.01);
+    return { months, totalInterestPaid, paidOff, monthlyBudget };
   };
 
-  const avalancheResult = calculatePayoffWithStrategy(avalancheOrder);
-  const snowballResult = calculatePayoffWithStrategy(snowballOrder);
+  const avalancheResult = calculatePayoffWithStrategy(avalancheOrder, extraPayment, 'avalanche');
+  const snowballResult = calculatePayoffWithStrategy(snowballOrder, extraPayment, 'snowball');
+  const visibleAvalancheCards = showAllAvalanche ? avalancheOrder : avalancheOrder.slice(0, 3);
+  const visibleSnowballCards = showAllSnowball ? snowballOrder : snowballOrder.slice(0, 3);
 
   return (
     <CollapsibleSection
@@ -155,9 +182,24 @@ const CreditCardDebtAnalyzer = ({ creditAccounts }: CreditCardDebtAnalyzerProps)
             Pay minimums, put extra toward <strong>highest rate first</strong>.
           </p>
 
+          <div className="mb-4 rounded-lg border border-blue-200 bg-white/80 p-3">
+            <Label htmlFor="avalanche-extra-payment" className="text-xs text-blue-900">Extra monthly payment</Label>
+            <Input
+              id="avalanche-extra-payment"
+              type="number"
+              min={0}
+              value={extraPayment}
+              onChange={(event) => setExtraPayment(Math.max(0, Number(event.target.value) || 0))}
+              className="mt-1 bg-white"
+            />
+            <p className="mt-1 text-[11px] text-gray-600">
+              Total card budget: {formatCurrency(avalancheResult.monthlyBudget)}/month including minimums.
+            </p>
+          </div>
+
           <div className="space-y-2 mb-3 sm:mb-4">
             <p className="text-xs sm:text-sm font-semibold text-blue-800">Attack Order:</p>
-            {avalancheOrder.slice(0, 3).map((card, idx) => (
+            {visibleAvalancheCards.map((card, idx) => (
               <div key={card.id} className="bg-white p-2 sm:p-3 rounded border-l-4 border-blue-500">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
@@ -174,17 +216,19 @@ const CreditCardDebtAnalyzer = ({ creditAccounts }: CreditCardDebtAnalyzerProps)
               </div>
             ))}
             {avalancheOrder.length > 3 && (
-              <p className="text-[10px] sm:text-xs text-gray-500 pl-3">...and {avalancheOrder.length - 3} more</p>
+              <Button variant="ghost" size="sm" onClick={() => setShowAllAvalanche(value => !value)} className="h-auto px-3 py-1 text-xs text-blue-700">
+                {showAllAvalanche ? 'Show fewer cards' : `Show all ${avalancheOrder.length} cards (+${avalancheOrder.length - 3} more)`}
+              </Button>
             )}
           </div>
 
           <div className="bg-green-50 p-3 sm:p-4 rounded border border-green-200">
-            <p className="text-xs sm:text-sm font-semibold text-green-800">With $200/mo extra:</p>
+            <p className="text-xs sm:text-sm font-semibold text-green-800">With {formatCurrency(extraPayment)}/mo extra:</p>
             <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-2">
               <div>
                 <p className="text-[10px] sm:text-xs text-gray-600">Debt-free in:</p>
                 <p className="text-base sm:text-lg font-bold text-green-700">
-                  {Math.floor(avalancheResult.months / 12)}y {avalancheResult.months % 12}m
+                  {avalancheResult.paidOff ? `${Math.floor(avalancheResult.months / 12)}y ${avalancheResult.months % 12}m` : '50+ years'}
                 </p>
               </div>
               <div>
@@ -210,7 +254,7 @@ const CreditCardDebtAnalyzer = ({ creditAccounts }: CreditCardDebtAnalyzerProps)
 
           <div className="space-y-2 mb-3 sm:mb-4">
             <p className="text-xs sm:text-sm font-semibold text-purple-800">Attack Order:</p>
-            {snowballOrder.slice(0, 3).map((card, idx) => (
+            {visibleSnowballCards.map((card, idx) => (
               <div key={card.id} className="bg-white p-2 sm:p-3 rounded border-l-4 border-purple-500">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
@@ -224,17 +268,19 @@ const CreditCardDebtAnalyzer = ({ creditAccounts }: CreditCardDebtAnalyzerProps)
               </div>
             ))}
             {snowballOrder.length > 3 && (
-              <p className="text-[10px] sm:text-xs text-gray-500 pl-3">...and {snowballOrder.length - 3} more</p>
+              <Button variant="ghost" size="sm" onClick={() => setShowAllSnowball(value => !value)} className="h-auto px-3 py-1 text-xs text-purple-700">
+                {showAllSnowball ? 'Show fewer cards' : `Show all ${snowballOrder.length} cards (+${snowballOrder.length - 3} more)`}
+              </Button>
             )}
           </div>
 
           <div className="bg-yellow-50 p-3 sm:p-4 rounded border border-yellow-200">
-            <p className="text-xs sm:text-sm font-semibold text-yellow-800">With $200/mo extra:</p>
+            <p className="text-xs sm:text-sm font-semibold text-yellow-800">With {formatCurrency(extraPayment)}/mo extra:</p>
             <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-2">
               <div>
                 <p className="text-[10px] sm:text-xs text-gray-600">Debt-free in:</p>
                 <p className="text-base sm:text-lg font-bold text-yellow-700">
-                  {Math.floor(snowballResult.months / 12)}y {snowballResult.months % 12}m
+                  {snowballResult.paidOff ? `${Math.floor(snowballResult.months / 12)}y ${snowballResult.months % 12}m` : '50+ years'}
                 </p>
               </div>
               <div>

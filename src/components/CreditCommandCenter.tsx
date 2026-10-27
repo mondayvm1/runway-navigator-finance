@@ -37,6 +37,7 @@ const simulate = (cards: SimulatedCard[], extraMonthly: number, strategy: 'avala
   const debts = cards.map((card) => ({ ...card, remaining: card.balance, payoffMonth: 0 }));
   let months = 0;
   let interest = 0;
+  const monthlyBudget = cards.reduce((sum, card) => sum + card.minimum, 0) + Math.max(0, extraMonthly);
 
   while (debts.some((card) => card.remaining > 0.01) && months < 600) {
     months += 1;
@@ -47,9 +48,14 @@ const simulate = (cards: SimulatedCard[], extraMonthly: number, strategy: 'avala
       card.remaining += monthlyInterest;
     });
 
+    let budgetRemaining = monthlyBudget;
+
+    // Pay every active card's minimum first.
     debts.forEach((card) => {
-      if (card.remaining <= 0) return;
-      card.remaining -= Math.min(card.minimum, card.remaining);
+      if (card.remaining <= 0 || budgetRemaining <= 0) return;
+      const payment = Math.min(card.minimum, card.remaining, budgetRemaining);
+      card.remaining -= payment;
+      budgetRemaining -= payment;
       if (card.remaining <= 0.01 && card.payoffMonth === 0) card.payoffMonth = months;
     });
 
@@ -58,9 +64,13 @@ const simulate = (cards: SimulatedCard[], extraMonthly: number, strategy: 'avala
         ? b.rate - a.rate || a.remaining - b.remaining
         : a.remaining - b.remaining || b.rate - a.rate
     ));
-    if (active[0]) {
-      active[0].remaining -= Math.min(extraMonthly, active[0].remaining);
-      if (active[0].remaining <= 0.01 && active[0].payoffMonth === 0) active[0].payoffMonth = months;
+    // Roll the extra payment and every freed minimum through the priority list.
+    for (const card of active) {
+      if (budgetRemaining <= 0) break;
+      const payment = Math.min(budgetRemaining, card.remaining);
+      card.remaining -= payment;
+      budgetRemaining -= payment;
+      if (card.remaining <= 0.01 && card.payoffMonth === 0) card.payoffMonth = months;
     }
   }
 
@@ -93,6 +103,7 @@ const CreditCommandCenter = ({ creditAccounts }: CreditCommandCenterProps) => {
   const monthlyIncome = weeklyIncome * 52 / 12;
   const avalanche = useMemo(() => simulate(cards, extraMonthly, 'avalanche'), [cards, extraMonthly]);
   const snowball = useMemo(() => simulate(cards, extraMonthly, 'snowball'), [cards, extraMonthly]);
+  const avalancheTarget = [...cards].sort((a, b) => b.rate - a.rate || a.balance - b.balance)[0];
   const bestInterest = Math.min(avalanche.interest, snowball.interest);
   const maxPayoffMonth = Math.max(1, ...avalanche.order.map((card) => card.payoffMonth));
 
@@ -238,7 +249,7 @@ const CreditCommandCenter = ({ creditAccounts }: CreditCommandCenterProps) => {
               <div>
                 <p className="font-semibold text-emerald-900">Best current plan</p>
                 <p className="text-sm text-emerald-800">
-                  Use avalanche, keep every minimum on autopay, and direct {formatCurrency(extraMonthly)} extra to {avalanche.order[0]?.name}. Projected interest: {formatCurrency(bestInterest)}.
+                  Use avalanche, keep every minimum on autopay, and direct {formatCurrency(extraMonthly)} extra to {avalancheTarget?.name}. Projected interest: {formatCurrency(bestInterest)}.
                 </p>
               </div>
             </Card>

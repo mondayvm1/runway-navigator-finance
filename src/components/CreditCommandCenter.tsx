@@ -38,12 +38,12 @@ const APR_EVIDENCE: Record<string, { label: string; verified: boolean }> = {
   'chase freedom': { label: 'Aug 2026 statement', verified: true },
   'capital one venture': { label: 'Oct 2026 account snapshot', verified: true },
   'capital one platinum': { label: 'Jan 2026 statement', verified: true },
-  'amex blue': { label: 'Oct 2026 account snapshot', verified: true },
+  'amex blue': { label: 'Sep 2026 statement', verified: true },
   'pnc core visa': { label: 'Oct 2026 account snapshot', verified: true },
   'apple card': { label: 'Jan 2026 statement', verified: true },
-  'capone savor': { label: 'No statement downloaded - estimate', verified: false },
+  'capone savor': { label: 'Oct 2026 statement', verified: true },
   'capone quicksilver': { label: 'Dec 2025 statement', verified: true },
-  'amex white': { label: 'No statement downloaded - needs verification', verified: false },
+  'amex white': { label: 'Transaction export only - Basic Card statement needed', verified: false },
 };
 
 const evidenceFor = (name: string) => APR_EVIDENCE[name.trim().toLowerCase()] || {

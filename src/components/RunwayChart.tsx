@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -62,8 +62,24 @@ const RunwayChart = ({
   const [enabledIncomeEvents, setEnabledIncomeEvents] = useState<Set<string>>(() => {
     return new Set(incomeEvents.map(e => e.id));
   });
+  const knownIncomeEventIds = useRef(new Set(incomeEvents.map(event => event.id)));
 
-  // Update enabled events when incomeEvents change (new events added)
+  // Income events load after the chart on restored accounts. Keep existing
+  // choices while automatically enabling events that arrive later.
+  useEffect(() => {
+    setEnabledIncomeEvents(previous => {
+      const currentIds = new Set(incomeEvents.map(event => event.id));
+      const next = new Set([...previous].filter(id => currentIds.has(id)));
+      incomeEvents.forEach(event => {
+        if (!knownIncomeEventIds.current.has(event.id)) next.add(event.id);
+      });
+      knownIncomeEventIds.current = currentIds;
+
+      const unchanged = next.size === previous.size && [...next].every(id => previous.has(id));
+      return unchanged ? previous : next;
+    });
+  }, [incomeEvents]);
+
   const toggleIncomeEvent = (eventId: string) => {
     setEnabledIncomeEvents(prev => {
       const newSet = new Set(prev);
@@ -113,8 +129,9 @@ const RunwayChart = ({
   };
 
   // Calculate runway based on SELECTED categories, not total runway prop
-  const savingsAmount = getSavingsAmount();
-  const calculatedRunwayMonths = monthlyExpenses > 0 ? savingsAmount / monthlyExpenses : 0;
+  const savingsAmount = Number.isFinite(getSavingsAmount()) ? getSavingsAmount() : 0;
+  const safeMonthlyExpenses = Number.isFinite(monthlyExpenses) && monthlyExpenses > 0 ? monthlyExpenses : 0;
+  const calculatedRunwayMonths = safeMonthlyExpenses > 0 ? savingsAmount / safeMonthlyExpenses : 0;
   // If income is enabled, add the additional months from income
   const displayRunwayMonths = incomeEnabled 
     ? calculatedRunwayMonths + runway.additionalMonthsFromIncome 
@@ -264,7 +281,7 @@ const RunwayChart = ({
               // Process each month up to the visible months
               for (let month = 1; month <= visibleMonths; month++) {
                 // Subtract expenses
-                projectedFunds -= monthlyExpenses;
+                projectedFunds -= safeMonthlyExpenses;
                 
                 // Add income if enabled
                 if (incomeEnabled && filteredIncomeEvents.length > 0) {
@@ -274,21 +291,23 @@ const RunwayChart = ({
                   filteredIncomeEvents.forEach(event => {
                     const eventStart = new Date(event.date);
                     const eventEnd = event.endDate ? new Date(event.endDate) : null;
+                    const eventAmount = Number(event.amount);
+                    if (Number.isNaN(eventStart.getTime()) || !Number.isFinite(eventAmount)) return;
                     
                     // Check if income event is active in this month
                     if (currentDate >= eventStart && (!eventEnd || currentDate <= eventEnd)) {
                       if (event.frequency === 'monthly') {
-                        projectedFunds += event.amount;
+                        projectedFunds += eventAmount;
                       } else if (event.frequency === 'yearly') {
                         const eventMonth = eventStart.getMonth();
                         if (currentDate.getMonth() === eventMonth) {
-                          projectedFunds += event.amount;
+                          projectedFunds += eventAmount;
                         }
                       } else if (event.frequency === 'one-time') {
                         const sameMonth = currentDate.getMonth() === eventStart.getMonth() && 
                                          currentDate.getFullYear() === eventStart.getFullYear();
                         if (sameMonth) {
-                          projectedFunds += event.amount;
+                          projectedFunds += eventAmount;
                         }
                       }
                     }
@@ -304,8 +323,8 @@ const RunwayChart = ({
             };
             
             const projected = calculateProjectedValues();
-            const projectedRunwayFromThatPoint = projected.projectedFunds > 0 && monthlyExpenses > 0 
-              ? projected.projectedFunds / monthlyExpenses 
+            const projectedRunwayFromThatPoint = projected.projectedFunds > 0 && safeMonthlyExpenses > 0
+              ? projected.projectedFunds / safeMonthlyExpenses
               : 0;
             
             // Status indicator for projected funds
@@ -339,7 +358,7 @@ const RunwayChart = ({
                 </div>
                 <div className="text-center p-3 bg-gradient-to-b from-amber-500/10 to-transparent rounded-lg">
                   <p className="text-xs text-amber-600 dark:text-amber-400 mb-1 font-medium">🔥 Total Burn</p>
-                  <p className="text-lg font-bold text-foreground">{formatCurrency(monthlyExpenses * visibleMonths)}</p>
+                  <p className="text-lg font-bold text-foreground">{formatCurrency(safeMonthlyExpenses * visibleMonths)}</p>
                   <p className="text-xs text-muted-foreground">over {visibleMonths} months</p>
                 </div>
                 <div className="text-center p-3 bg-gradient-to-b from-destructive/10 to-transparent rounded-lg">

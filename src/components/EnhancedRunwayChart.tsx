@@ -1,4 +1,4 @@
-import { XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart, Bar, ComposedChart } from 'recharts';
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 import { IncomeEvent } from './IncomeManager';
 
@@ -14,53 +14,65 @@ interface EnhancedRunwayChartProps {
 const EnhancedRunwayChart = ({ 
   savings, 
   monthlyExpenses, 
-  months, 
+  months: _months,
   incomeEvents = [],
   incomeEnabled = true,
   visibleMonths = 12
 }: EnhancedRunwayChartProps) => {
   
+  const safeSavings = Number.isFinite(savings) ? savings : 0;
+  const safeMonthlyExpenses = Number.isFinite(monthlyExpenses) && monthlyExpenses > 0
+    ? monthlyExpenses
+    : 0;
+  const safeVisibleMonths = Number.isFinite(visibleMonths)
+    ? Math.min(60, Math.max(1, Math.round(visibleMonths)))
+    : 12;
+
   const generateChartData = () => {
-    if (monthlyExpenses <= 0) return [];
+    if (safeMonthlyExpenses <= 0) return [];
     
     const data = [];
-    let balanceWithIncome = savings;
-    let balanceWithoutIncome = savings;
+    let balanceWithIncome = safeSavings;
+    let balanceWithoutIncome = safeSavings;
     const today = new Date();
     
     // Use visibleMonths as the chart horizon
-    const endMonth = visibleMonths;
+    const endMonth = safeVisibleMonths;
     
     for (let i = 0; i <= endMonth; i++) {
       const projectionDate = new Date(today);
       projectionDate.setMonth(today.getMonth() + i);
       const projectionMonth = projectionDate.getFullYear() * 12 + projectionDate.getMonth();
       
-      // Calculate income for this month
+      // Month zero represents today. Cash flow begins in month one.
       let incomeThisMonth = 0;
-      if (incomeEnabled && incomeEvents.length > 0) {
+      if (i > 0 && incomeEnabled && incomeEvents.length > 0) {
         incomeThisMonth = incomeEvents.reduce((total, event) => {
           const eventDate = new Date(event.date);
+          const amount = Number(event.amount);
+          if (Number.isNaN(eventDate.getTime()) || !Number.isFinite(amount)) return total;
           const eventStartMonth = eventDate.getFullYear() * 12 + eventDate.getMonth();
           
           if (event.frequency === 'one-time') {
             // One-time payment: only add in the exact month it occurs
             if (projectionMonth === eventStartMonth) {
-              return total + event.amount;
+              return total + amount;
             }
           } else if (event.frequency === 'monthly') {
             // Monthly recurring: add every month starting from event date
             const endDate = event.endDate ? new Date(event.endDate) : null;
-            const eventEndMonth = endDate ? endDate.getFullYear() * 12 + endDate.getMonth() : Infinity;
+            const eventEndMonth = endDate && !Number.isNaN(endDate.getTime())
+              ? endDate.getFullYear() * 12 + endDate.getMonth()
+              : Infinity;
             
             if (projectionMonth >= eventStartMonth && projectionMonth <= eventEndMonth) {
-              return total + event.amount;
+              return total + amount;
             }
           } else if (event.frequency === 'yearly') {
             // Yearly: only on anniversary months
             const monthsSinceStart = projectionMonth - eventStartMonth;
             if (monthsSinceStart >= 0 && monthsSinceStart % 12 === 0) {
-              return total + event.amount;
+              return total + amount;
             }
           }
           
@@ -69,14 +81,15 @@ const EnhancedRunwayChart = ({
       }
       
       // Calculate net cashflow for this month (income - expenses)
-      const netCashflow = incomeThisMonth - monthlyExpenses;
+      const expensesThisMonth = i === 0 ? 0 : safeMonthlyExpenses;
+      const netCashflow = incomeThisMonth - expensesThisMonth;
       
       // First: add income for this month to the "with income" balance
       balanceWithIncome += incomeThisMonth;
       
       // Then: subtract expenses from both balances
-      balanceWithIncome -= monthlyExpenses;
-      balanceWithoutIncome -= monthlyExpenses;
+      balanceWithIncome -= expensesThisMonth;
+      balanceWithoutIncome -= expensesThisMonth;
       
       // Record the data point
       data.push({
@@ -85,7 +98,7 @@ const EnhancedRunwayChart = ({
         balanceWithIncome: Math.max(0, balanceWithIncome),
         balanceWithoutIncome: Math.max(0, balanceWithoutIncome),
         income: incomeThisMonth,
-        expenses: monthlyExpenses,
+        expenses: expensesThisMonth,
         netCashflow: netCashflow,
         projectedFunds: balanceWithIncome, // Can go negative to show deficit
         monthLabel: projectionDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
@@ -102,6 +115,19 @@ const EnhancedRunwayChart = ({
   };
 
   const chartData = generateChartData();
+
+  if (chartData.length === 0) {
+    return (
+      <div className="w-full h-80 mt-4 flex items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center">
+        <div>
+          <p className="font-medium text-foreground">Add monthly expenses to build your runway chart</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your timeline will appear as soon as a monthly expense amount is available.
+          </p>
+        </div>
+      </div>
+    );
+  }
   
   const customTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -142,7 +168,7 @@ const EnhancedRunwayChart = ({
   const minProjectedFunds = Math.min(...chartData.map(d => d.projectedFunds));
   const maxProjectedFunds = Math.max(...chartData.map(d => d.projectedFunds));
   const yAxisMin = Math.min(0, minProjectedFunds * 1.1);
-  const yAxisMax = maxProjectedFunds * 1.1;
+  const yAxisMax = Math.max(100, maxProjectedFunds * 1.1);
 
   return (
     <div className="w-full h-80 mt-4">

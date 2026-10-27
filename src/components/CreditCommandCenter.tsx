@@ -46,7 +46,26 @@ const APR_EVIDENCE: Record<string, { label: string; verified: boolean }> = {
   'amex white': { label: 'Transaction export only - Basic Card statement needed', verified: false },
 };
 
+const MINIMUM_EVIDENCE: Record<string, { label: string; verified: boolean }> = {
+  'navy fed': { label: 'Aug 2026 statement', verified: true },
+  'discover': { label: 'Oct 2026 account snapshot', verified: true },
+  'chase freedom': { label: 'Aug 2026 statement', verified: true },
+  'capital one venture': { label: 'Oct 2026 account snapshot', verified: true },
+  'capital one platinum': { label: 'Oct 2026 account snapshot', verified: true },
+  'amex blue': { label: 'Sep 2026 statement', verified: true },
+  'pnc core visa': { label: 'Oct 2026 account snapshot', verified: true },
+  'apple card': { label: 'Oct 2026 account snapshot', verified: true },
+  'capone savor': { label: 'Oct 2026 statement', verified: true },
+  'capone quicksilver': { label: 'Current $14 balance - pay in full', verified: false },
+  'amex white': { label: 'Needs Basic Card statement', verified: false },
+};
+
 const evidenceFor = (name: string) => APR_EVIDENCE[name.trim().toLowerCase()] || {
+  label: 'Needs statement verification',
+  verified: false,
+};
+
+const minimumEvidenceFor = (name: string) => MINIMUM_EVIDENCE[name.trim().toLowerCase()] || {
   label: 'Needs statement verification',
   verified: false,
 };
@@ -312,24 +331,37 @@ const CreditCommandCenter = ({ creditAccounts }: CreditCommandCenterProps) => {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="font-semibold text-slate-900">Projected payoff milestones</p>
-                  <p className="text-xs text-slate-500">“Month 35” means that card reaches $0 during your 35th monthly payment - it does not mean 35 cards.</p>
+                  <p className="text-xs text-slate-500">“Month {maxPayoffMonth}” means the final card reaches $0 during your {maxPayoffMonth}th monthly payment - it does not mean {maxPayoffMonth} cards.</p>
                 </div>
                 <Badge variant="secondary">{cards.length} cards total</Badge>
               </div>
               <div className="mt-4 space-y-4">
-                {avalanche.order.map((card, index) => (
-                  <div key={card.id}>
+                {avalanche.order.map((card, index) => {
+                  const payoffPayment = avalanche.schedule[card.payoffMonth - 1]?.payments.find((payment) => payment.id === card.id);
+                  const minimumEvidence = minimumEvidenceFor(card.name);
+                  return (
+                  <div key={card.id} className="rounded-xl border border-slate-200 p-3">
                     <div className="mb-1 flex items-center justify-between gap-2 text-sm">
                       <span className="truncate font-medium"><span className="mr-2 text-indigo-600">#{index + 1}</span>{card.name}</span>
                       <span className="shrink-0 font-medium text-slate-700">paid off in month {card.payoffMonth}</span>
                     </div>
                     <Progress value={(card.payoffMonth / maxPayoffMonth) * 100} className="h-2.5" />
-                    <div className="mt-1 flex justify-between text-[11px] text-slate-500">
+                    <div className="mt-1 flex flex-wrap justify-between gap-x-3 text-[11px] text-slate-500">
                       <span>{formatCurrency(card.balance)} at {card.rate.toFixed(1)}%</span>
-                      <span>{formatCurrency(card.minimum)} minimum</span>
+                      <span>{formatCurrency(card.minimum)} required minimum</span>
+                    </div>
+                    {payoffPayment && (
+                      <p className="mt-1 text-xs font-medium text-slate-700">
+                        Payoff-month payment: {formatCurrency(payoffPayment.total)} = {formatCurrency(payoffPayment.minimum)} minimum + {formatCurrency(payoffPayment.avalanche)} avalanche
+                      </p>
+                    )}
+                    <div className="mt-1 flex items-center gap-1 text-[11px] text-slate-500">
+                      {minimumEvidence.verified ? <CheckCircle2 className="h-3 w-3 text-emerald-600" /> : <TriangleAlert className="h-3 w-3 text-amber-600" />}
+                      <span>Minimum source: {minimumEvidence.label}</span>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </Card>
 

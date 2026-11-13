@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { parseDueDay } from '@/utils/dueDates';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -245,7 +246,7 @@ export const useFinancialData = () => {
             balance: account.balance,
             interest_rate: account.interestRate,
             credit_limit: account.creditLimit || null,
-            due_date: account.dueDate || null,
+            due_date: parseDueDay(account.dueDate),
             min_payment: account.minimumPayment || null,
             is_hidden: hiddenCategories[category as keyof HiddenCategories],
             statement_date: account.statementDate || null,
@@ -367,7 +368,7 @@ export const useFinancialData = () => {
             balance: account.balance,
             interest_rate: account.interestRate,
             credit_limit: account.creditLimit || null,
-            due_date: account.dueDate || null,
+            due_date: parseDueDay(account.dueDate),
             min_payment: account.minimumPayment || null,
             snapshot_id: snapshot?.id,
             is_hidden: hiddenCategories[category as keyof HiddenCategories]
@@ -442,7 +443,8 @@ export const useFinancialData = () => {
     if (updates.balance !== undefined) dbUpdates.balance = updates.balance;
     if (updates.interestRate !== undefined) dbUpdates.interest_rate = updates.interestRate;
     if (updates.creditLimit !== undefined) dbUpdates.credit_limit = updates.creditLimit;
-    if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
+    // The column is an integer day of the month; a date string makes the whole update fail.
+    if (updates.dueDate !== undefined) dbUpdates.due_date = parseDueDay(updates.dueDate);
     if (updates.minimumPayment !== undefined) dbUpdates.min_payment = updates.minimumPayment;
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.statementDate !== undefined) dbUpdates.statement_date = updates.statementDate;

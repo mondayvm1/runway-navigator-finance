@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CreditCard, DollarSign, CheckCircle2, XCircle, Pencil, Trash2 } from 'lucide-react';
+import { CreditCard, DollarSign, CheckCircle2, XCircle, Pencil, Trash2, AlertTriangle, CalendarClock } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { AccountData, AccountItem } from '@/hooks/useFinancialData';
 import CollapsibleSection from './CollapsibleSection';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getDueInfo, toDateInputValue, DueInfo, DueUrgency } from '@/utils/dueDates';
 
 interface Payment {
   id: string; // unique composite id per payment (e.g., "credit:uuid")
   accountId: string; // original account id in DB
   name: string;
   amount: number;
-  dueDate?: Date;
+  due: DueInfo | null;
+  rawDueDate?: string;
   isPaid: boolean;
   category: 'credit' | 'loan' | 'other';
 }
@@ -64,7 +66,8 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
           accountId: account.id,
           name: account.name,
           amount: min,
-          dueDate: account.dueDate ? new Date(account.dueDate) : undefined,
+          due: getDueInfo(account.dueDate),
+          rawDueDate: account.dueDate,
           isPaid: false,
           category: 'credit',
         });
@@ -85,7 +88,8 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
           accountId: account.id,
           name: account.name,
           amount: amt,
-          dueDate: account.dueDate ? new Date(account.dueDate) : undefined,
+          due: getDueInfo(account.dueDate),
+          rawDueDate: account.dueDate,
           isPaid: false,
           category: 'loan',
         });
@@ -97,12 +101,12 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
       .filter(p => !deletedIds.has(p.id))
       .sort((a, b) => {
         // If both have due dates, sort by date (earliest first)
-        if (a.dueDate && b.dueDate) {
-          return a.dueDate.getTime() - b.dueDate.getTime();
+        if (a.due && b.due) {
+          return a.due.daysUntil - b.due.daysUntil;
         }
         // If only one has a due date, prioritize it
-        if (a.dueDate && !b.dueDate) return -1;
-        if (!a.dueDate && b.dueDate) return 1;
+        if (a.due && !b.due) return -1;
+        if (!a.due && b.due) return 1;
         // If neither has due date, sort by amount descending
         return b.amount - a.amount;
       });
@@ -139,7 +143,7 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
     setEditing(p);
     setEditName(p.name);
     setEditAmount(Number(p.amount.toFixed(2)));
-    setEditDueDate(p.dueDate ? p.dueDate.toISOString().slice(0, 10) : '');
+    setEditDueDate(toDateInputValue(p.rawDueDate));
     setEditOpen(true);
   };
 
@@ -163,6 +167,26 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
 
   const totalPaid = payments.filter(p => p.isPaid).reduce((sum, p) => sum + p.amount, 0);
   const totalRemaining = payments.filter(p => !p.isPaid).reduce((sum, p) => sum + p.amount, 0);
+
+  // What needs attention first: anything unpaid that was just due or is due within 10 days.
+  const nextUp = payments.filter(p => !p.isPaid && p.due && p.due.urgency !== 'later');
+  const needsNow = nextUp.filter(p => p.due && (p.due.urgency === 'overdue' || p.due.urgency === 'today' || p.due.urgency === 'soon'));
+  const missingDueDates = payments.filter(p => !p.due).length;
+
+  const urgencyText: Record<DueUrgency, string> = {
+    overdue: 'text-red-700',
+    today: 'text-red-700',
+    soon: 'text-amber-700',
+    upcoming: 'text-slate-700',
+    later: 'text-slate-500',
+  };
+  const urgencyBorder: Record<DueUrgency, string> = {
+    overdue: 'border-red-400 hover:border-red-500',
+    today: 'border-red-400 hover:border-red-500',
+    soon: 'border-amber-400 hover:border-amber-500',
+    upcoming: 'border-blue-300 hover:border-blue-400',
+    later: 'border-blue-300 hover:border-blue-400',
+  };
 
   if (payments.length === 0) {
     return (
@@ -212,6 +236,41 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
           </Card>
         </div>
 
+        {/* Next up: the short list that needs attention */}
+        {(nextUp.length > 0 || missingDueDates > 0) && (
+          <Card className={`p-3 sm:p-4 ${needsNow.length > 0 ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200'}`}>
+            <div className="flex items-center gap-2 mb-2">
+              {needsNow.length > 0 ? (
+                <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 flex-shrink-0" />
+              ) : (
+                <CalendarClock className="h-4 w-4 sm:h-5 sm:w-5 text-slate-500 flex-shrink-0" />
+              )}
+              <h3 className="text-sm sm:text-base font-bold text-slate-800">
+                {needsNow.length > 0
+                  ? `${needsNow.length} payment${needsNow.length === 1 ? '' : 's'} need${needsNow.length === 1 ? 's' : ''} you now`
+                  : nextUp.length > 0 ? 'Next up' : 'Add due dates to get warnings'}
+              </h3>
+            </div>
+            {nextUp.length > 0 && (
+              <ul className="space-y-1">
+                {nextUp.slice(0, 5).map((p) => (
+                  <li key={p.id} className="flex items-baseline justify-between gap-3 text-xs sm:text-sm">
+                    <span className="truncate text-slate-700">{p.name}</span>
+                    <span className={`whitespace-nowrap font-semibold ${urgencyText[p.due!.urgency]}`}>
+                      {formatCurrency(p.amount)} · {p.due!.label} · {p.due!.detail}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {missingDueDates > 0 && (
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-2">
+                {missingDueDates} payment{missingDueDates === 1 ? ' has' : 's have'} no due date, so Pathline cannot warn you about {missingDueDates === 1 ? 'it' : 'them'}. Tap the pencil on a tile to add one.
+              </p>
+            )}
+          </Card>
+        )}
+
         {/* Payment Tiles */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {payments.map((payment) => (
@@ -235,7 +294,7 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
               >
                 {/* Front Face - Unpaid */}
                 <Card
-                  className="absolute w-full h-full backface-hidden p-3 sm:p-5 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 hover:border-blue-400 transition-colors"
+                  className={`absolute w-full h-full backface-hidden p-3 sm:p-5 bg-gradient-to-br from-blue-50 to-blue-100 border-2 transition-colors ${urgencyBorder[payment.due?.urgency ?? 'later']}`}
                   style={{
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden'
@@ -265,8 +324,8 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
                       <p className="text-xl sm:text-2xl font-bold text-blue-600">{formatCurrency(payment.amount)}</p>
                     </div>
                     <div className="text-[10px] sm:text-xs text-slate-600 mt-2">
-                      {payment.dueDate ? (
-                        <p className="font-semibold">📅 {payment.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                      {payment.due ? (
+                        <p className={`font-semibold ${urgencyText[payment.due.urgency]}`}>📅 {payment.due.label} · {payment.due.detail}</p>
                       ) : (
                         <p className="text-slate-400">No due date</p>
                       )}
@@ -308,8 +367,8 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
                       <p className="text-xl sm:text-2xl font-bold text-green-600">{formatCurrency(payment.amount)}</p>
                     </div>
                     <div className="text-[10px] sm:text-xs text-slate-600 mt-2">
-                      {payment.dueDate ? (
-                        <p className="font-semibold text-slate-500">📅 {payment.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                      {payment.due ? (
+                        <p className="font-semibold text-slate-500">📅 {payment.due.label}</p>
                       ) : (
                         <p className="text-slate-400">No due date</p>
                       )}
@@ -381,7 +440,7 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
               />
             </div>
             <div>
-              <Label htmlFor="edit-due">Due Date (optional)</Label>
+              <Label htmlFor="edit-due">Due date (repeats every month on this day)</Label>
               <Input
                 id="edit-due"
                 type="date"

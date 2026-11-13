@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getDueInfo, toDateInputValue } from '@/utils/dueDates';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -164,8 +165,7 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
   };
 
   const getNextPaymentDate = () => {
-    if (!account.dueDate) return null;
-    return new Date(account.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return getDueInfo(account.dueDate)?.label ?? null;
   };
 
   const availableCredit = (account.creditLimit || 0) - effectiveBalance;
@@ -229,7 +229,7 @@ const CreditCardManager = ({ account, onUpdateAccount }: CreditCardManagerProps)
             <Label className="text-xs text-gray-600">Due Date</Label>
             <Input
               type="date"
-              value={account.dueDate || ""}
+              value={toDateInputValue(account.dueDate)}
               onChange={(e) => onUpdateAccount(account.id, { 
                 dueDate: e.target.value 
               })}

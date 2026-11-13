@@ -701,12 +701,12 @@ const RunwayCalculator = () => {
                   creditCardDebt={accountData.credit.reduce((sum, acc) => sum + acc.balance, 0)}
                   monthlyObligations={
                     accountData.credit.reduce((sum, acc) => sum + (acc.minimumPayment || 0), 0) +
-                    accountData.loans.reduce((sum, acc) => sum + (acc.minimumPayment || (acc.balance * 0.02)), 0)
+                    accountData.loans.reduce((sum, acc) => sum + (acc.minimumPayment || 0), 0)
                   }
                   paymentsCleared={0}
                   totalPayments={
                     accountData.credit.filter(acc => (acc.minimumPayment || 0) > 0).length +
-                    accountData.loans.filter(acc => acc.balance > 0).length
+                    accountData.loans.filter(acc => (acc.minimumPayment || 0) > 0).length
                   }
                 />
         </div>

@@ -74,13 +74,12 @@ const PaymentTracker = ({ accountData, updateAccountField }: PaymentTrackerProps
       }
     });
 
-    // Loans: prefer explicit minimumPayment, fallback to 2% estimate
+    // Loans: only a payment that was actually entered. A percent-of-balance guess is
+    // badly wrong for loans (it showed thousands a month on student loans with $0 due).
     accountData.loans.forEach((account) => {
       const amt = account.minimumPayment && account.minimumPayment > 0
         ? account.minimumPayment
-        : account.balance > 0
-          ? account.balance * 0.02
-          : 0;
+        : 0;
       if (amt > 0) {
         const key = `loan:${account.id}`;
         map.set(key, {
